@@ -6,7 +6,7 @@ export default function MembershipSuccessPage() {
   useEffect(() => {
     const timer = setTimeout(() => {
       window.location.href = "/book";
-    }, 4000);
+    }, 3000);
 
     return () => clearTimeout(timer);
   }, []);

@@ -464,7 +464,6 @@ function SingleEntryBookingPageContent() {
     <>
       <div className="min-h-screen bg-emerald-950 text-white pb-28">
         <TopNav />
-        <HeaderSpacer />
 
         <div className="max-w-xl mx-auto px-4 py-6">
           <h1 className="text-3xl text-white text-center font-semibold">

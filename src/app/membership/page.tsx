@@ -109,46 +109,52 @@ export default function SignupPage() {
   }
 
   async function handleCheckout() {
-    setError("");
+  setError("");
 
-    if (!selectedPlan) {
-      setError("Please choose a membership option.");
-      return;
-    }
-
-    if (!accountCreated) {
-      setError("Please create your account first.");
-      return;
-    }
-
-    if (!waiverAccepted) {
-      setError("Please confirm you have read the health waiver.");
-      return;
-    }
-
-    setCheckoutLoading(true);
-
-    try {
-      /**
-       * Replace these URLs with your real Stripe checkout endpoints / routes.
-       *
-       * Example ideas:
-       * "/api/stripe/checkout-membership"
-       * "/api/stripe/checkout-7day-pass"
-       *
-       * Or hosted payment links if that’s what you’re already using.
-       */
-      const checkoutUrl =
-        selectedPlan === "weekly"
-          ? "/api/stripe/checkout-membership"
-          : "/api/stripe/checkout-7day-pass";
-
-      window.location.href = checkoutUrl;
-    } catch (e: any) {
-      setError(e?.message || "Unable to start checkout");
-      setCheckoutLoading(false);
-    }
+  if (!selectedPlan) {
+    setError("Please choose a membership option.");
+    return;
   }
+
+  if (!accountCreated) {
+    setError("Please create your account first.");
+    return;
+  }
+
+  if (!waiverAccepted) {
+    setError("Please confirm you have read the health waiver.");
+    return;
+  }
+
+  setCheckoutLoading(true);
+
+  try {
+    const res = await fetch("/api/stripe/membership-checkout", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        plan: selectedPlan,
+      }),
+    });
+
+    const json = await res.json().catch(() => null);
+
+    if (!res.ok) {
+      throw new Error(json?.error || "Unable to start checkout");
+    }
+
+    if (!json?.url) {
+      throw new Error("No checkout URL returned");
+    }
+
+    window.location.href = json.url;
+  } catch (e: any) {
+    setError(e?.message || "Unable to start checkout");
+    setCheckoutLoading(false);
+  }
+}
 
   function handleGoToLogin() {
     setShowSuccessModal(false);
@@ -329,7 +335,7 @@ export default function SignupPage() {
 
               <div className="mt-5">
                 <a
-                  href="/waiver"
+                  href="/health-waiver"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-sm text-white/80 underline underline-offset-4 hover:text-white"
