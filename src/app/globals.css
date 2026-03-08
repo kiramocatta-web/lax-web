@@ -1,0 +1,61 @@
+@import "tailwindcss";
+
+html,
+body {
+  height: 100%;
+}
+
+.calendar-shell .fc {
+  font-family: inherit;
+}
+
+.calendar-shell .fc-toolbar {
+  padding: 0.5rem;
+}
+
+.calendar-shell .fc-toolbar-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.calendar-shell .fc-button {
+  border-radius: 9999px !important;
+  border: 1px solid rgba(15, 23, 42, 0.08) !important;
+  background: white !important;
+  color: #0f172a !important;
+  box-shadow: none !important;
+}
+
+.calendar-shell .fc-button:hover {
+  background: #f8fafc !important;
+}
+
+.calendar-shell .fc-button-active {
+  background: #dcfce7 !important;
+  color: #065f46 !important;
+  border-color: #bbf7d0 !important;
+}
+
+.calendar-shell .fc-theme-standard td,
+.calendar-shell .fc-theme-standard th,
+.calendar-shell .fc-theme-standard .fc-scrollgrid {
+  border-color: rgba(15, 23, 42, 0.08);
+}
+
+.calendar-shell .fc-timegrid-slot,
+.calendar-shell .fc-timegrid-axis,
+.calendar-shell .fc-col-header-cell {
+  background: white;
+}
+
+.calendar-shell .fc-event {
+  border: none !important;
+  border-radius: 14px !important;
+  padding: 2px 4px !important;
+  background: #065f46 !important;
+}
+
+.calendar-shell .fc-event-title,
+.calendar-shell .fc-event-time {
+  font-weight: 600;
+}
