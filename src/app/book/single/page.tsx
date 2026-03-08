@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import StickyCheckoutBar from "@/components/StickyCheckoutBar";
 import TopNav from "@/components/TopNav";
@@ -90,7 +90,7 @@ const PRICE_BY_DURATION_CENTS: Record<number, number> = {
   120: 2500,
 };
 
-export default function SingleEntryBookingPage() {
+function SingleEntryBookingPageContent() {
   const searchParams = useSearchParams();
   const rescheduleBookingId = searchParams.get("reschedule_booking_id");
 
@@ -293,8 +293,8 @@ export default function SingleEntryBookingPage() {
   };
 
   const canFitBeforeClose = (startMinute: number) => {
-  return startMinute + duration <= CLOSE_HOUR * 60;
-};
+    return startMinute + duration <= CLOSE_HOUR * 60;
+  };
 
   const spotsLeftForDuration = (startMinute: number) => {
     const blocks = duration / INTERVAL_MINUTES;
@@ -464,7 +464,7 @@ export default function SingleEntryBookingPage() {
     <>
       <div className="min-h-screen bg-emerald-950 text-white pb-28">
         <TopNav />
-       
+        <HeaderSpacer />
 
         <div className="max-w-xl mx-auto px-4 py-6">
           <h1 className="text-3xl text-white text-center font-semibold">
@@ -615,60 +615,60 @@ export default function SingleEntryBookingPage() {
 
           <div className="space-y-3 max-h-[55vh] overflow-y-auto pr-1">
             {slotMinutes
-  .filter((m) => !isPastStartTime(m))
-  .filter((m) => canFitBeforeClose(m))
-  .map((m) => {
-              const label = minutesToLabel(m);
-              const left = spotsLeftForDuration(m);
-              const isPast = isPastStartTime(m);
-              const isUnavailable =
-                loading || rescheduleLoading || !canStartAt(m) || left <= 0;
-              const isSelected = selectedStartMinute === m;
+              .filter((m) => !isPastStartTime(m))
+              .filter((m) => canFitBeforeClose(m))
+              .map((m) => {
+                const label = minutesToLabel(m);
+                const left = spotsLeftForDuration(m);
+                const isPast = isPastStartTime(m);
+                const isUnavailable =
+                  loading || rescheduleLoading || !canStartAt(m) || left <= 0;
+                const isSelected = selectedStartMinute === m;
 
-              let statusText = `${left} of ${MAX_CAPACITY} spots left`;
+                let statusText = `${left} of ${MAX_CAPACITY} spots left`;
 
-              if (isPast) {
-                statusText = "Passed";
-              } else if (isUnavailable) {
-                statusText = "Full";
-              } else if (left <= 1) {
-                statusText = `${left} spot left`;
-              }
+                if (isPast) {
+                  statusText = "Passed";
+                } else if (isUnavailable) {
+                  statusText = "Full";
+                } else if (left <= 1) {
+                  statusText = `${left} spot left`;
+                }
 
-              return (
-                <button
-                  key={m}
-                  disabled={isUnavailable || paying}
-                  onClick={() => setSelectedStartMinute(m)}
-                  className={`w-full text-left p-4 rounded-xl transition ${getSlotClass(
-                    {
-                      isUnavailable,
-                      isSelected,
-                      left,
-                      isPast,
-                    }
-                  )}`}
-                >
-                  <div className="flex justify-between items-center gap-3">
-                    <span className="text-lg font-medium">{label}</span>
-                    <span
-                      className={`text-sm ${getAvailabilityTextClass(
+                return (
+                  <button
+                    key={m}
+                    disabled={isUnavailable || paying}
+                    onClick={() => setSelectedStartMinute(m)}
+                    className={`w-full text-left p-4 rounded-xl transition ${getSlotClass(
+                      {
+                        isUnavailable,
+                        isSelected,
                         left,
-                        isUnavailable
-                      )}`}
-                    >
-                      {statusText}
-                    </span>
-                  </div>
-
-                  {isSelected && selectedEndMinute !== null ? (
-                    <div className="mt-2 text-sm opacity-80">
-                      {minutesToLabel(m)} → {minutesToLabel(selectedEndMinute)}
+                        isPast,
+                      }
+                    )}`}
+                  >
+                    <div className="flex justify-between items-center gap-3">
+                      <span className="text-lg font-medium">{label}</span>
+                      <span
+                        className={`text-sm ${getAvailabilityTextClass(
+                          left,
+                          isUnavailable
+                        )}`}
+                      >
+                        {statusText}
+                      </span>
                     </div>
-                  ) : null}
-                </button>
-              );
-            })}
+
+                    {isSelected && selectedEndMinute !== null ? (
+                      <div className="mt-2 text-sm opacity-80">
+                        {minutesToLabel(m)} → {minutesToLabel(selectedEndMinute)}
+                      </div>
+                    ) : null}
+                  </button>
+                );
+              })}
           </div>
 
           <StickyCheckoutBar
@@ -727,5 +727,23 @@ export default function SingleEntryBookingPage() {
         </div>
       )}
     </>
+  );
+}
+
+export default function SingleEntryBookingPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-emerald-950 text-white">
+          <TopNav />
+          <HeaderSpacer />
+          <div className="max-w-xl mx-auto px-4 py-10">
+            <div className="text-white/80">Loading booking page...</div>
+          </div>
+        </div>
+      }
+    >
+      <SingleEntryBookingPageContent />
+    </Suspense>
   );
 }

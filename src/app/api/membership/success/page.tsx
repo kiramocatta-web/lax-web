@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 type Booking = {
@@ -26,14 +26,13 @@ type VerifyResponse = {
 };
 
 function formatTime(t: string) {
-  // "07:15:00" -> "7:15 AM"
   const [hh, mm] = t.split(":");
   const d = new Date();
   d.setHours(Number(hh), Number(mm), 0, 0);
   return d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 }
 
-export default function BookSuccessPage() {
+function BookSuccessPageContent() {
   const sp = useSearchParams();
   const sessionId = sp.get("session_id");
 
@@ -76,12 +75,16 @@ export default function BookSuccessPage() {
 
   const amount =
     data?.amount_total != null
-      ? new Intl.NumberFormat("en-AU", { style: "currency", currency: "AUD" }).format(
-          data.amount_total / 100
-        )
+      ? new Intl.NumberFormat("en-AU", {
+          style: "currency",
+          currency: "AUD",
+        }).format(data.amount_total / 100)
       : "—";
 
-  const paid = data?.payment_status === "paid" || data?.payment_status === "no_payment_required";
+  const paid =
+    data?.payment_status === "paid" ||
+    data?.payment_status === "no_payment_required";
+
   const b = data?.booking;
 
   return (
@@ -106,7 +109,10 @@ export default function BookSuccessPage() {
             <h1 className="text-3xl font-semibold">
               {paid ? "Membership Started ✅" : "Payment pending"}
             </h1>
-            <p className="mt-2 text-white/70">Status: {data?.payment_status ?? "—"}</p>
+
+            <p className="mt-2 text-white/70">
+              Status: {data?.payment_status ?? "—"}
+            </p>
 
             <div className="mt-6 bg-white/10 rounded-2xl p-4 space-y-2">
               {b ? (
@@ -127,7 +133,9 @@ export default function BookSuccessPage() {
                     Amount: <span className="text-white">{amount}</span>
                   </div>
                   <div className="text-sm text-white/70">
-                    Email: <span className="text-white">{b.customer_email ?? "—"}</span>
+                    Email: <span className="text-white">
+                      {b.customer_email ?? "—"}
+                    </span>
                   </div>
                 </>
               ) : (
@@ -139,7 +147,9 @@ export default function BookSuccessPage() {
                     Amount: <span className="text-white">{amount}</span>
                   </div>
                   <div className="text-sm text-white/70">
-                    Email: <span className="text-white">{data?.customer_email ?? "—"}</span>
+                    Email: <span className="text-white">
+                      {data?.customer_email ?? "—"}
+                    </span>
                   </div>
                 </>
               )}
@@ -152,11 +162,26 @@ export default function BookSuccessPage() {
               >
                 Book another session
               </a>
-              
             </div>
           </>
         )}
       </div>
     </div>
+  );
+}
+
+export default function BookSuccessPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-emerald-950 text-white">
+          <div className="max-w-xl mx-auto px-4 py-10">
+            <div className="text-white/80">Loading...</div>
+          </div>
+        </div>
+      }
+    >
+      <BookSuccessPageContent />
+    </Suspense>
   );
 }

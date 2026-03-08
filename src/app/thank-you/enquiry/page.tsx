@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 
-export default function EnquiryThankYouPage() {
+function EnquiryThankYouPageContent() {
   const searchParams = useSearchParams();
   const from = searchParams.get("from");
 
@@ -30,10 +30,25 @@ export default function EnquiryThankYouPage() {
             : "Your enquiry has been sent. The team will get back to you shortly."}
         </p>
 
-        <p className="mt-6 text-sm text-white/60">
-          Redirecting shortly...
-        </p>
+        <p className="mt-6 text-sm text-white/60">Redirecting shortly...</p>
       </div>
     </div>
+  );
+}
+
+export default function EnquiryThankYouPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-emerald-950 text-white flex items-center justify-center px-6">
+          <div className="max-w-xl text-center">
+            <h1 className="text-4xl sm:text-5xl font-semibold">Thank you</h1>
+            <p className="mt-6 text-sm text-white/60">Loading...</p>
+          </div>
+        </div>
+      }
+    >
+      <EnquiryThankYouPageContent />
+    </Suspense>
   );
 }
