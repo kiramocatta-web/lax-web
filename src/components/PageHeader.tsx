@@ -4,11 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import { createBrowserClient } from "@supabase/ssr";
 import Image from "next/image";
 
-type ProfileRow = {
-  role: string | null;
-  membership_plan: string | null;
-};
-
 export default function PageHeader() {
   const supabase = useMemo(
     () =>
@@ -20,7 +15,6 @@ export default function PageHeader() {
   );
 
   const [loggedIn, setLoggedIn] = useState(false);
-  const [bookingHref, setBookingHref] = useState("/book/single");
 
   useEffect(() => {
     let mounted = true;
@@ -31,28 +25,7 @@ export default function PageHeader() {
       } = await supabase.auth.getSession();
 
       if (!mounted) return;
-
-      if (!session?.user) {
-        setLoggedIn(false);
-        setBookingHref("/book/single");
-        return;
-      }
-
-      setLoggedIn(true);
-
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("role,membership_plan")
-        .eq("id", session.user.id)
-        .maybeSingle<ProfileRow>();
-
-      const role = String(profile?.role ?? "").toLowerCase();
-      const membershipPlan = String(profile?.membership_plan ?? "").toLowerCase();
-
-      const isAffiliate = role === "affiliate";
-      const isMember = ["weekly", "pass7"].includes(membershipPlan);
-
-      setBookingHref(isAffiliate || isMember ? "/book" : "/book/single");
+      setLoggedIn(!!session?.user);
     }
 
     loadHeaderState();
@@ -84,7 +57,7 @@ export default function PageHeader() {
         </a>
 
         <nav className="hidden md:flex items-center gap-8 text-sm uppercase tracking-[0.12em] text-white/90">
-          <a href={bookingHref} className="transition hover:text-white">
+          <a href="/book" className="transition hover:text-white">
             Book
           </a>
           <a href="/profile" className="transition hover:text-white">
