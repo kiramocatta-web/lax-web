@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createBrowserClient } from "@supabase/ssr";
 
 type Plan = "weekly" | "pass7" | null;
@@ -23,12 +23,52 @@ export default function SignupPage() {
 
   const [loading, setLoading] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
 
   const [error, setError] = useState("");
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const [accountCreated, setAccountCreated] = useState(false);
   const [waiverAccepted, setWaiverAccepted] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadSession() {
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        if (!mounted) return;
+
+        if (session?.user) {
+          setAccountCreated(true);
+          setEmail(session.user.email ?? "");
+
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("phone")
+            .eq("id", session.user.id)
+            .maybeSingle();
+
+          if (!mounted) return;
+
+          if (profile?.phone) {
+            setPhone(profile.phone);
+          }
+        }
+      } finally {
+        if (mounted) setCheckingSession(false);
+      }
+    }
+
+    loadSession();
+
+    return () => {
+      mounted = false;
+    };
+  }, [supabase]);
 
   function validatePhone(value: string) {
     return /^04\d{8}$/.test(value);
@@ -109,75 +149,74 @@ export default function SignupPage() {
   }
 
   async function handleCheckout() {
-  setError("");
+    setError("");
 
-  if (!selectedPlan) {
-    setError("Please choose a membership option.");
-    return;
-  }
-
-  if (!accountCreated) {
-    setError("Please create your account first.");
-    return;
-  }
-
-  if (!waiverAccepted) {
-    setError("Please confirm you have read the health waiver.");
-    return;
-  }
-
-  setCheckoutLoading(true);
-
-  try {
-    const res = await fetch("/api/stripe/membership-checkout", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        plan: selectedPlan,
-      }),
-    });
-
-    const json = await res.json().catch(() => null);
-
-    if (!res.ok) {
-      throw new Error(json?.error || "Unable to start checkout");
+    if (!selectedPlan) {
+      setError("Please choose a membership option.");
+      return;
     }
 
-    if (!json?.url) {
-      throw new Error("No checkout URL returned");
+    if (!accountCreated) {
+      setError("Please create your account first.");
+      return;
     }
 
-    window.location.href = json.url;
-  } catch (e: any) {
-    setError(e?.message || "Unable to start checkout");
-    setCheckoutLoading(false);
+    if (!waiverAccepted) {
+      setError("Please confirm you have read the health waiver.");
+      return;
+    }
+
+    setCheckoutLoading(true);
+
+    try {
+      const res = await fetch("/api/stripe/membership-checkout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          plan: selectedPlan,
+        }),
+      });
+
+      const json = await res.json().catch(() => null);
+
+      if (!res.ok) {
+        throw new Error(json?.error || "Unable to start checkout");
+      }
+
+      if (!json?.url) {
+        throw new Error("No checkout URL returned");
+      }
+
+      window.location.href = json.url;
+    } catch (e: any) {
+      setError(e?.message || "Unable to start checkout");
+      setCheckoutLoading(false);
+    }
   }
-}
 
   function handleGoToLogin() {
     setShowSuccessModal(false);
     window.location.href = "/login";
   }
 
-  const showAccountSection = !!selectedPlan;
-  const showWaiverSection = accountCreated;
+  const showAccountSection = !!selectedPlan && !checkingSession && !accountCreated;
+  const showWaiverSection = !!selectedPlan && !checkingSession && accountCreated;
 
   return (
     <>
       <div className="min-h-screen bg-emerald-950 px-4 pb-12 text-white">
-  <div className="mx-auto max-w-3xl pt-8 sm:pt-14">
-    <div className="pb-14 text-center">
-      <h1 className="mt-4 text-4xl sm:text-5xl font-semibold tracking-tight">
-        Membership
-      </h1>
-      <p className="mt-5 text-base sm:text-lg text-white/70">
-        Which one could we tempt you with?
-      </p>
-    </div>
+        <div className="mx-auto max-w-3xl pt-8 sm:pt-14">
+          <div className="pb-14 text-center">
+            <h1 className="mt-4 text-4xl sm:text-5xl font-semibold tracking-tight">
+              Membership
+            </h1>
+            <p className="mt-5 text-base sm:text-lg text-white/70">
+              Which one could we tempt you with?
+            </p>
+          </div>
 
-          {/* PLAN SELECTION */}
           <div className="mt-16 grid gap-4 sm:grid-cols-2">
             <button
               type="button"
@@ -228,7 +267,17 @@ export default function SignupPage() {
             </button>
           </div>
 
-          {/* ACCOUNT SECTION */}
+          {selectedPlan && accountCreated && !checkingSession ? (
+            <div className="mt-8 rounded-3xl border border-emerald-300/20 bg-emerald-500/10 p-5">
+              <p className="font-semibold text-emerald-200">
+                You’re already signed in.
+              </p>
+              <p className="mt-1 text-sm text-white/75">
+                Great — just confirm the waiver and continue to payment.
+              </p>
+            </div>
+          ) : null}
+
           <div
             className={`mt-8 overflow-hidden transition-all duration-500 ${
               showAccountSection
@@ -246,65 +295,55 @@ export default function SignupPage() {
                 </p>
               </div>
 
-              {!accountCreated ? (
-                <form onSubmit={handleSignup} className="space-y-4">
-                  <input
-                    type="email"
-                    placeholder="Email"
-                    required
-                    autoComplete="email"
-                    className="w-full rounded-2xl border border-black/10 p-3 text-black outline-none focus:border-black"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
+              <form onSubmit={handleSignup} className="space-y-4">
+                <input
+                  type="email"
+                  placeholder="Email"
+                  required
+                  autoComplete="email"
+                  className="w-full rounded-2xl border border-black/10 p-3 text-black outline-none focus:border-black"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
 
-                  <input
-                    type="password"
-                    placeholder="Password"
-                    required
-                    autoComplete="new-password"
-                    className="w-full rounded-2xl border border-black/10 p-3 text-black outline-none focus:border-black"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
+                <input
+                  type="password"
+                  placeholder="Password"
+                  required
+                  autoComplete="new-password"
+                  className="w-full rounded-2xl border border-black/10 p-3 text-black outline-none focus:border-black"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
 
-                  <input
-                    type="tel"
-                    placeholder="Phone (04xxxxxxxx)"
-                    required
-                    autoComplete="tel"
-                    className="w-full rounded-2xl border border-black/10 p-3 text-black outline-none focus:border-black"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                  />
+                <input
+                  type="tel"
+                  placeholder="Phone (04xxxxxxxx)"
+                  required
+                  autoComplete="tel"
+                  className="w-full rounded-2xl border border-black/10 p-3 text-black outline-none focus:border-black"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                />
 
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full rounded-2xl bg-black py-3 text-white font-semibold transition hover:opacity-90 disabled:opacity-50"
-                  >
-                    {loading ? "Creating..." : "Create Account"}
-                  </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full rounded-2xl bg-black py-3 text-white font-semibold transition hover:opacity-90 disabled:opacity-50"
+                >
+                  {loading ? "Creating..." : "Create Account"}
+                </button>
 
-                  <a
-                    href="/login"
-                    className="block text-center text-sm text-black/60 hover:text-black"
-                  >
-                    Already have an account? Log in →
-                  </a>
-                </form>
-              ) : (
-                <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-900">
-                  <p className="font-semibold">Account created.</p>
-                  <p className="mt-1 text-sm text-emerald-800/80">
-                    Perfect — you’re ready for the final step.
-                  </p>
-                </div>
-              )}
+                <a
+                  href="/login"
+                  className="block text-center text-sm text-black/60 hover:text-black"
+                >
+                  Already have an account? Log in →
+                </a>
+              </form>
             </div>
           </div>
 
-          {/* WAIVER + CHECKOUT */}
           <div
             className={`mt-8 overflow-hidden transition-all duration-500 ${
               showWaiverSection

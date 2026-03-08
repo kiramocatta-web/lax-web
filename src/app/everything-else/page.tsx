@@ -15,7 +15,7 @@ const tools = [
   },
   {
     title: "Magnesium Hot Plunge",
-    image: "/mag_hot_tub.jpg",
+    image: "/mag_hot_tub.JPG",
     alt: "Magnesium hot plunge at Lax",
     text: "Sink into the magnesium hot plunge, where warm water infused with magnesium helps relax muscles, ease tension, and support recovery. The soothing heat promotes circulation, deep relaxation, and nervous system reset, leaving your body feeling calm, loose, and restored.",
   },
@@ -67,10 +67,6 @@ export default function EverythingElsePage() {
     <main className="min-h-screen bg-black text-white">
       <section className="mx-auto w-full max-w-6xl px-5 py-16 sm:px-6 sm:py-24">
         {/* HERO */}
-        <div className="max-w-3xl">
-          <p className="text-sm uppercase tracking-[0.25em] text-white/45">
-            More About Lax
-          </p>
           <h1 className="mt-4 text-4xl font-light leading-tight sm:text-5xl">
             More about the space, the tools, and the vision behind Lax.
           </h1>
@@ -78,7 +74,6 @@ export default function EverythingElsePage() {
             Explore the recovery tools, what they can support, who we are, and
             the answers to the questions people ask most.
           </p>
-        </div>
 
         {/* TOOLS FLOW */}
         <section className="mt-14 space-y-6 sm:space-y-8">
