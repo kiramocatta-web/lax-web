@@ -27,7 +27,7 @@ export default function SiteHeader() {
 
   const [memberHref, setMemberHref] = useState("/membership");
   const [singleHref, setSingleHref] = useState("/book/single");
-  const [profileHref, setProfileHref] = useState("/login");
+  const [profileHref, setProfileHref] = useState("/profile");
 
   useEffect(() => {
     let mounted = true;
@@ -42,7 +42,7 @@ export default function SiteHeader() {
       if (!session?.user) {
         setMemberHref("/membership");
         setSingleHref("/book/single");
-        setProfileHref("/login");
+        setProfileHref("/profile");
         return;
       }
 
@@ -70,7 +70,7 @@ export default function SiteHeader() {
 
   return (
     <header className="relative z-50 w-full bg-emerald-950">
-      <div className="mx-auto flex h-24 max-w-7xl items-center justify-between px-6 sm:px-8">
+      <div className="mx-auto flex h-24 max-w-7xl items-center gap-3 px-4 sm:px-8">
         <a href="/" className="shrink-0">
           <Image
             src="/logo-home.png"
@@ -78,22 +78,24 @@ export default function SiteHeader() {
             width={170}
             height={90}
             priority
-            className="h-auto w-[120px] sm:w-[150px]"
+            className="h-auto w-[88px] sm:w-[110px] md:w-[140px]"
           />
         </a>
 
-        <nav className="flex items-center gap-6 text-xl font-light uppercase tracking-[0.08em] text-white sm:gap-10">
-          <a href={memberHref} className="hover:text-white/75">
-            MEMBER
-          </a>
+        <nav className="min-w-0 flex-1 overflow-x-auto">
+          <div className="flex min-w-max items-center justify-end gap-4 whitespace-nowrap text-sm font-light uppercase tracking-[0.08em] text-white sm:gap-6 sm:text-base md:gap-10 md:text-xl">
+            <a href={memberHref} className="shrink-0 hover:text-white/75">
+              MEMBER
+            </a>
 
-          <a href={singleHref} className="hover:text-white/75">
-            SINGLE
-          </a>
+            <a href={singleHref} className="shrink-0 hover:text-white/75">
+              SINGLE
+            </a>
 
-          <a href={profileHref} className="hover:text-white/75">
-            PROFILE
-          </a>
+            <a href={profileHref} className="shrink-0 hover:text-white/75">
+              PROFILE
+            </a>
+          </div>
         </nav>
       </div>
     </header>
