@@ -365,7 +365,7 @@ export default function BookMembersClient() {
               setSelectedStartMinute(null);
               setPausedUntil(null);
             }}
-            className="w-full bg-white text-black p-3 rounded-xl"
+            className="w-full max-w-full  box-border bg-white text-black p-3 rounded-xl appearance-none"
           />
 
           <select

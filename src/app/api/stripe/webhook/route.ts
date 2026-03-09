@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
+import { Resend } from "resend";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!,
-);
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 function addDaysISO(days: number) {
   const d = new Date();
@@ -48,6 +49,77 @@ function mapSubStatus(
 function getSubscriptionCurrentPeriodEndISO(sub: Stripe.Subscription | null) {
   if (!sub) return null;
   return unixToISO((sub as any).current_period_end);
+}
+
+function formatAmount(amount: number | null | undefined, currency?: string | null) {
+  if (amount == null) return "—";
+  const dollars = amount / 100;
+  const code = (currency || "AUD").toUpperCase();
+  return `${code} $${dollars.toFixed(2)}`;
+}
+
+async function sendAdminBookingEmail(session: Stripe.Checkout.Session) {
+  const notifyTo = process.env.BOOKING_NOTIFICATION_EMAIL;
+  const fromEmail = process.env.RESEND_FROM_EMAIL;
+
+  if (!notifyTo || !fromEmail) {
+    console.warn("Missing BOOKING_NOTIFICATION_EMAIL or RESEND_FROM_EMAIL");
+    return;
+  }
+
+  const metadata = session.metadata ?? {};
+
+  const customerName =
+    session.customer_details?.name ||
+    metadata.customer_name ||
+    metadata.full_name ||
+    "Unknown";
+
+  const customerEmail =
+    session.customer_details?.email ||
+    metadata.customer_email ||
+    "Unknown";
+
+  const bookingDate = metadata.booking_date || metadata.date || "—";
+  const startTime = metadata.start_time || "—";
+  const endTime = metadata.end_time || "—";
+  const duration = metadata.duration_minutes || metadata.duration || "—";
+  const peopleCount = metadata.people_count || "—";
+  const bookingType = metadata.booking_type || metadata.plan || session.mode || "—";
+
+  const amountText = formatAmount(session.amount_total, session.currency);
+
+  const subject =
+    metadata.booking_date || metadata.start_time
+      ? `New booking made – ${bookingDate} ${startTime}`
+      : `New checkout completed – Lax N Lounge`;
+
+  try {
+    await resend.emails.send({
+      from: fromEmail,
+      to: notifyTo,
+      subject,
+      html: `
+        <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+          <h2>New booking / checkout completed</h2>
+          <p><strong>Name:</strong> ${customerName}</p>
+          <p><strong>Email:</strong> ${customerEmail}</p>
+          <p><strong>Date:</strong> ${bookingDate}</p>
+          <p><strong>Start time:</strong> ${startTime}</p>
+          <p><strong>End time:</strong> ${endTime}</p>
+          <p><strong>Duration:</strong> ${duration}</p>
+          <p><strong>People:</strong> ${peopleCount}</p>
+          <p><strong>Type:</strong> ${bookingType}</p>
+          <p><strong>Amount:</strong> ${amountText}</p>
+          <p><strong>Stripe session ID:</strong> ${session.id}</p>
+          <hr />
+          <p style="color:#666;">Sent automatically from Lax N Lounge webhook.</p>
+        </div>
+      `,
+    });
+  } catch (err) {
+    console.error("Failed to send admin booking email:", err);
+  }
 }
 
 async function applyAffiliateCredit(affiliateUserId: string) {
@@ -288,6 +360,8 @@ export async function POST(req: Request) {
       if (affiliateUserId) {
         await applyAffiliateCredit(affiliateUserId);
       }
+
+      await sendAdminBookingEmail(expanded);
 
       return NextResponse.json({ received: true });
     }

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { sendBookingEmail } from "@/lib/email/sendBookingEmail";
+import { sendAdminBookingNotification } from "@/lib/email/sendAdminBookingNotification";
 
 export const runtime = "nodejs";
 
@@ -262,18 +263,34 @@ export async function POST(req: Request) {
     }
 
     try {
-      if (customerEmail) {
-        await sendBookingEmail({
-          to: customerEmail,
-          bookingDate: booking_date,
-          startTime: start_time,
-          endTime: end_time,
-          peopleCount: people_count,
-        });
-      }
-    } catch (e) {
-      console.warn("sendBookingEmail failed:", e);
-    }
+  if (customerEmail) {
+    await sendBookingEmail({
+      to: customerEmail,
+      bookingDate: booking_date,
+      startTime: start_time,
+      endTime: end_time,
+      peopleCount: people_count,
+    });
+  }
+} catch (e) {
+  console.warn("sendBookingEmail failed:", e);
+}
+
+try {
+  await sendAdminBookingNotification({
+    bookingId: inserted.id,
+    bookingDate: booking_date,
+    startTime: start_time,
+    endTime: end_time,
+    peopleCount: people_count,
+    customerEmail,
+    customerPhone: customer_phone,
+    totalAmountCents: session.amount_total ?? null,
+    rescheduled: Boolean(originalBookingToReschedule),
+  });
+} catch (e) {
+  console.warn("sendAdminBookingNotification failed:", e);
+}
 
     return NextResponse.json({
       ...baseResponse,
