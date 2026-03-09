@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { sendBookingEmail } from "@/lib/email/sendBookingEmail";
-
+import { sendAdminBookingNotification } from "@/lib/email/sendAdminBookingNotification";
 
 export const runtime = "nodejs";
 
@@ -31,10 +31,15 @@ export async function POST(req: Request) {
 
     const secret = process.env.STRIPE_SECRET_KEY;
     if (!secret) {
-      return NextResponse.json({ error: "Missing STRIPE_SECRET_KEY" }, { status: 500 });
+      return NextResponse.json(
+        { error: "Missing STRIPE_SECRET_KEY" },
+        { status: 500 }
+      );
     }
 
-    const stripe = new Stripe(secret, { apiVersion: "2025-01-27.acacia" as any });
+    const stripe = new Stripe(secret, {
+      apiVersion: "2025-01-27.acacia" as any,
+    });
 
     const session = await stripe.checkout.sessions.retrieve(session_id, {
       expand: ["customer", "payment_intent"],
@@ -80,11 +85,10 @@ export async function POST(req: Request) {
     const duration_minutes = Number(md.duration_minutes);
     const people_count = Number(md.people_count ?? "1");
     const customer_phone =
-      session.customer_details?.phone ??
-      md.customer_phone ??
-      null;
+      session.customer_details?.phone ?? md.customer_phone ?? null;
     const user_id = md.user_id?.trim() || null;
-    const rescheduleBookingId = Number(md.reschedule_booking_id ?? "0") || null;
+    const rescheduleBookingId =
+      Number(md.reschedule_booking_id ?? "0") || null;
 
     if (!customer_phone) {
       return NextResponse.json(
@@ -93,7 +97,11 @@ export async function POST(req: Request) {
       );
     }
 
-    if (!booking_date || !Number.isFinite(start_minute) || !Number.isFinite(duration_minutes)) {
+    if (
+      !booking_date ||
+      !Number.isFinite(start_minute) ||
+      !Number.isFinite(duration_minutes)
+    ) {
       return NextResponse.json(
         {
           ...baseResponse,
@@ -135,11 +143,12 @@ export async function POST(req: Request) {
       | null = null;
 
     if (rescheduleBookingId) {
-      const { data: originalBooking, error: originalBookingErr } = await supabaseAdmin
-        .from("bookings")
-        .select("id,booking_type,status,booking_date,start_time,user_id")
-        .eq("id", rescheduleBookingId)
-        .single();
+      const { data: originalBooking, error: originalBookingErr } =
+        await supabaseAdmin
+          .from("bookings")
+          .select("id,booking_type,status,booking_date,start_time,user_id")
+          .eq("id", rescheduleBookingId)
+          .single();
 
       if (originalBookingErr || !originalBooking) {
         return NextResponse.json(
@@ -148,30 +157,52 @@ export async function POST(req: Request) {
         );
       }
 
-      if (String(originalBooking.booking_type ?? "").toLowerCase() !== "single") {
+      if (
+        String(originalBooking.booking_type ?? "").toLowerCase() !== "single"
+      ) {
         return NextResponse.json(
-          { ...baseResponse, error: "Only single bookings can be rescheduled here." },
+          {
+            ...baseResponse,
+            error: "Only single bookings can be rescheduled here.",
+          },
           { status: 403 }
         );
       }
 
-      if (["cancelled", "rescheduled"].includes(String(originalBooking.status ?? "").toLowerCase())) {
+      if (
+        ["cancelled", "rescheduled"].includes(
+          String(originalBooking.status ?? "").toLowerCase()
+        )
+      ) {
         return NextResponse.json(
-          { ...baseResponse, error: "This booking can no longer be rescheduled." },
+          {
+            ...baseResponse,
+            error: "This booking can no longer be rescheduled.",
+          },
           { status: 400 }
         );
       }
 
-      if (user_id && originalBooking.user_id && originalBooking.user_id !== user_id) {
+      if (
+        user_id &&
+        originalBooking.user_id &&
+        originalBooking.user_id !== user_id
+      ) {
         return NextResponse.json(
-          { ...baseResponse, error: "Original booking does not belong to this user." },
+          {
+            ...baseResponse,
+            error: "Original booking does not belong to this user.",
+          },
           { status: 403 }
         );
       }
 
       if (!originalBooking.booking_date || !originalBooking.start_time) {
         return NextResponse.json(
-          { ...baseResponse, error: "Original booking is missing date/time." },
+          {
+            ...baseResponse,
+            error: "Original booking is missing date/time.",
+          },
           { status: 400 }
         );
       }
@@ -263,34 +294,34 @@ export async function POST(req: Request) {
     }
 
     try {
-  if (customerEmail) {
-    await sendBookingEmail({
-      to: customerEmail,
-      bookingDate: booking_date,
-      startTime: start_time,
-      endTime: end_time,
-      peopleCount: people_count,
-    });
-  }
-} catch (e) {
-  console.warn("sendBookingEmail failed:", e);
-}
+      if (customerEmail) {
+        await sendBookingEmail({
+          to: customerEmail,
+          bookingDate: booking_date,
+          startTime: start_time,
+          endTime: end_time,
+          peopleCount: people_count,
+        });
+      }
+    } catch (e) {
+      console.warn("sendBookingEmail failed:", e);
+    }
 
-try {
-  await sendAdminBookingNotification({
-    bookingId: inserted.id,
-    bookingDate: booking_date,
-    startTime: start_time,
-    endTime: end_time,
-    peopleCount: people_count,
-    customerEmail,
-    customerPhone: customer_phone,
-    totalAmountCents: session.amount_total ?? null,
-    rescheduled: Boolean(originalBookingToReschedule),
-  });
-} catch (e) {
-  console.warn("sendAdminBookingNotification failed:", e);
-}
+    try {
+      await sendAdminBookingNotification({
+        bookingId: inserted.id,
+        bookingDate: booking_date,
+        startTime: start_time,
+        endTime: end_time,
+        peopleCount: people_count,
+        customerEmail,
+        customerPhone: customer_phone,
+        totalAmountCents: session.amount_total ?? null,
+        rescheduled: Boolean(originalBookingToReschedule),
+      });
+    } catch (e) {
+      console.warn("sendAdminBookingNotification failed:", e);
+    }
 
     return NextResponse.json({
       ...baseResponse,
