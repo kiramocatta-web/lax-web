@@ -5,6 +5,8 @@ import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
+import "@fullcalendar/daygrid/index.css";
+import "@fullcalendar/timegrid/index.css";
 
 type BookingEvent = {
   id: string;

@@ -104,6 +104,9 @@ type AdminDashboardClientProps = {
   stripeSubs: StripeSubRow[];
   comeBackRecipients: ComeBackRecipientRow[];
   comeBackTemplates: EmailTemplateRow[];
+  totalWebsiteClicks: number;
+  todayWebsiteClicks: number;
+  uniqueVisitorsTotal: number;
 };
 
 type AdminView =
@@ -258,6 +261,10 @@ export default function AdminDashboardClient({
   stripeSubs,
   comeBackRecipients,
   comeBackTemplates,
+  totalWebsiteClicks,
+  todayWebsiteClicks,
+  uniqueVisitorsTotal,
+
 }: AdminDashboardClientProps) {
   const [view, setView] = useState<AdminView>("members");
 
@@ -774,6 +781,23 @@ We’d love to welcome you back in for a reset soon 🤍
             <p className="text-xl mt-1">{adminEmail}</p>
             <p className="text-white/50 text-sm mt-1">Phone: {adminPhone}</p>
           </div>
+
+          <div className="mt-6 grid md:grid-cols-3 gap-4">
+  <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
+    <p className="text-sm text-white/60">Website clicks altogether</p>
+    <p className="mt-2 text-3xl font-semibold">{totalWebsiteClicks}</p>
+  </div>
+
+  <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
+    <p className="text-sm text-white/60">Website clicks today</p>
+    <p className="mt-2 text-3xl font-semibold">{todayWebsiteClicks}</p>
+  </div>
+
+  <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
+    <p className="text-sm text-white/60">Unique visitors total</p>
+    <p className="mt-2 text-3xl font-semibold">{uniqueVisitorsTotal}</p>
+  </div>
+</div>
 
           <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6">
             <div className="text-lg font-semibold">Dashboard View</div>

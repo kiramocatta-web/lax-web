@@ -10,6 +10,11 @@ type AdminProfileRow = {
   phone: string | null;
 };
 
+type WebsiteClickRow = {
+  created_at: string;
+  visitor_id: string | null;
+};
+
 type MemberRow = {
   id: string;
   email: string | null;
@@ -221,6 +226,47 @@ export default async function AdminPage() {
     redirect("/profile");
   }
 
+    const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+
+  const [
+    { count: totalWebsiteClicks, error: totalWebsiteClicksError },
+    { count: todayWebsiteClicks, error: todayWebsiteClicksError },
+    { data: websiteVisitorsRaw, error: websiteVisitorsError },
+  ] = await Promise.all([
+    supabase
+      .from("website_clicks")
+      .select("*", { count: "exact", head: true }),
+
+    supabase
+      .from("website_clicks")
+      .select("*", { count: "exact", head: true })
+      .gte("created_at", startOfToday.toISOString()),
+
+    supabase
+      .from("website_clicks")
+      .select("visitor_id")
+      .not("visitor_id", "is", null),
+  ]);
+
+  if (totalWebsiteClicksError) {
+    logSupabaseError("Total website clicks query", totalWebsiteClicksError);
+  }
+
+  if (todayWebsiteClicksError) {
+    logSupabaseError("Today website clicks query", todayWebsiteClicksError);
+  }
+
+  if (websiteVisitorsError) {
+    logSupabaseError("Website visitors query", websiteVisitorsError);
+  }
+
+  const uniqueVisitorsTotal = new Set(
+    ((websiteVisitorsRaw ?? []) as { visitor_id: string | null }[])
+      .map((row) => row.visitor_id)
+      .filter((id): id is string => Boolean(id))
+  ).size;
+  
   const { data: membersRaw, error: membersError } = await supabase
     .from("profiles")
     .select(
