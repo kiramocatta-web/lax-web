@@ -736,8 +736,8 @@ export default function ProfilePage() {
               </h2>
 
               <p className="mt-3 text-white/70">
-                Create an account to view your booking history, manage your
-                details, and keep everything in one place.
+                Create an account to view your booking history, reschedule
+                and manage your details, and keep everything in one place.
               </p>
             </div>
 
