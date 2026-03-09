@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 import Image from "next/image";
 
 type ProfileRow = {
-  role: string | null;
   membership_plan: string | null;
 };
 
@@ -24,7 +23,9 @@ export default function SiteHeader() {
   );
 
   const [loggedIn, setLoggedIn] = useState(false);
-  const [bookingHref, setBookingHref] = useState("/book/single");
+  const [singleHref, setSingleHref] = useState("/book/single");
+  const [memberHref, setMemberHref] = useState("/membership");
+  const [profileHref, setProfileHref] = useState("/login");
 
   useEffect(() => {
     let mounted = true;
@@ -38,11 +39,15 @@ export default function SiteHeader() {
 
       if (!session?.user) {
         setLoggedIn(false);
-        setBookingHref("/book/single");
+        setSingleHref("/book/single");
+        setMemberHref("/membership");
+        setProfileHref("/login");
         return;
       }
 
       setLoggedIn(true);
+      setProfileHref("/profile");
+      setSingleHref("/book/single");
 
       const { data: profile } = await supabase
         .from("profiles")
@@ -53,7 +58,8 @@ export default function SiteHeader() {
       if (!mounted) return;
 
       const isMember = !!profile?.membership_plan;
-      setBookingHref(isMember ? "/book/members" : "/book/single");
+
+      setMemberHref(isMember ? "/book/members" : "/membership");
     }
 
     loadHeaderState();
@@ -65,34 +71,35 @@ export default function SiteHeader() {
 
   return (
     <header
-      className={[
+      className={
         isHome
-          ? "absolute top-0 left-0 right-0 z-50"
-          : "relative z-50",
-        "w-full bg-emerald-950/90 backdrop-blur"
-      ].join(" ")}
+          ? "sticky top-0 z-50 w-full bg-emerald-950/55 backdrop-blur-md"
+          : "relative z-50 w-full bg-emerald-950"
+      }
     >
       <div className="mx-auto flex h-24 max-w-7xl items-center justify-between px-6 sm:px-8">
         <a href="/" className="shrink-0">
           <Image
-            src="/logo-header.png"
+            src="/logo-home.png"
             alt="Lax N Lounge"
-            width={150}
-            height={70}
+            width={170}
+            height={90}
             priority
             className="h-auto w-[120px] sm:w-[150px]"
           />
         </a>
 
-        <nav className="flex items-center gap-6 text-lg font-light uppercase tracking-[0.08em] text-white sm:gap-10 sm:text-xl">
-          <a href="/members" className="hover:text-white/75">
-            Member
+        <nav className="flex items-center gap-6 text-xl font-light uppercase tracking-[0.08em] text-white sm:gap-10">
+          <a href={memberHref} className="hover:text-white/75">
+            MEMBER
           </a>
-          <a href={bookingHref} className="hover:text-white/75">
-            Single
+
+          <a href={singleHref} className="hover:text-white/75">
+            SINGLE
           </a>
-          <a href={loggedIn ? "/profile" : "/login"} className="hover:text-white/75">
-            Profile
+
+          <a href={profileHref} className="hover:text-white/75">
+            PROFILE
           </a>
         </nav>
       </div>
