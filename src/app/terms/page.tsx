@@ -5,7 +5,6 @@ import SiteHeader from "@/components/SiteHeader";
 export default function TermsPage() {
   return (
     <div>
-      <SiteHeader />
 
       <main className="flex-1">
         <div className="max-w-3xl mx-auto px-6 py-10 pb-24">

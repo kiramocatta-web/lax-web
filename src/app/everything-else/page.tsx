@@ -168,24 +168,24 @@ export default function EverythingElsePage() {
       </section>
 
       {/* FOOTER */}
-      <footer className="border-t border-white/10 bg-black/40 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl flex-wrap justify-center gap-x-6 gap-y-3 px-6 py-5 text-center text-sm text-white/70">
-          <a className="transition hover:text-white" href="/contact">
+      <footer className="sticky bottom-0 z-10 border-t border-white/10 bg-black/20 backdrop-blur">
+        <div className="max-w-3xl mx-auto px-6 py-4 flex flex-wrap justify-center text-center gap-x-6 gap-y-2 text-sm text-white/70">
+          <a className="hover:text-white" href="/contact">
             Contact Us
           </a>
-          <a className="transition hover:text-white" href="/privacy">
+          <a className="hover:text-white" href="/privacy">
             Privacy Policy
           </a>
-          <a className="transition hover:text-white" href="/disclaimer">
+          <a className="hover:text-white" href="/disclaimer">
             Disclaimer
           </a>
-          <a className="transition hover:text-white" href="/terms">
-            Terms & Conditions
+          <a className="hover:text-white" href="/terms">
+            Terms &amp; Conditions
           </a>
-          <a className="transition hover:text-white" href="/cancellation">
+          <a className="hover:text-white" href="/cancellation">
             Cancellation Policy
           </a>
-          <a className="transition hover:text-white" href="/health-waiver">
+          <a className="hover:text-white" href="/health-waiver">
             Health Waiver
           </a>
         </div>
