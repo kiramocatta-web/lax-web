@@ -9,9 +9,7 @@ if (!stripeSecret) {
   throw new Error("Missing STRIPE_SECRET_KEY");
 }
 
-const stripe = new Stripe(stripeSecret, {
-  apiVersion: "2025-01-27.acacia" as any,
-});
+const stripe = new Stripe(stripeSecret, );
 
 export async function POST(req: Request) {
   try {

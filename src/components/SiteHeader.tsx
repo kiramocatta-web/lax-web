@@ -11,7 +11,10 @@ type ProfileRow = {
 
 export default function SiteHeader() {
   const pathname = usePathname();
-  const isHome = pathname === "/";
+
+  if (pathname === "/") {
+    return null;
+  }
 
   const supabase = useMemo(
     () =>
@@ -22,7 +25,6 @@ export default function SiteHeader() {
     []
   );
 
-  const [loggedIn, setLoggedIn] = useState(false);
   const [singleHref, setSingleHref] = useState("/book/single");
   const [memberHref, setMemberHref] = useState("/membership");
   const [profileHref, setProfileHref] = useState("/login");
@@ -38,16 +40,14 @@ export default function SiteHeader() {
       if (!mounted) return;
 
       if (!session?.user) {
-        setLoggedIn(false);
         setSingleHref("/book/single");
         setMemberHref("/membership");
         setProfileHref("/login");
         return;
       }
 
-      setLoggedIn(true);
-      setProfileHref("/profile");
       setSingleHref("/book/single");
+      setProfileHref("/profile");
 
       const { data: profile } = await supabase
         .from("profiles")
@@ -58,7 +58,6 @@ export default function SiteHeader() {
       if (!mounted) return;
 
       const isMember = !!profile?.membership_plan;
-
       setMemberHref(isMember ? "/book/members" : "/membership");
     }
 
@@ -70,13 +69,7 @@ export default function SiteHeader() {
   }, [supabase]);
 
   return (
-    <header
-      className={
-        isHome
-          ? "sticky top-0 z-50 w-full bg-emerald-950/55 backdrop-blur-md"
-          : "relative z-50 w-full bg-emerald-950"
-      }
-    >
+    <header className="relative z-50 w-full bg-emerald-950">
       <div className="mx-auto flex h-24 max-w-7xl items-center justify-between px-6 sm:px-8">
         <a href="/" className="shrink-0">
           <Image

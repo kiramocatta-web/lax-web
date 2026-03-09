@@ -4,9 +4,8 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2025-01-27.acacia" as any,
-});
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!,
+);
 
 function addDaysISO(days: number) {
   const d = new Date();

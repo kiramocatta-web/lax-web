@@ -9,9 +9,7 @@ if (!stripeSecret) {
   throw new Error("Missing STRIPE_SECRET_KEY");
 }
 
-const stripe = new Stripe(stripeSecret, {
-  apiVersion: "2025-01-27.acacia" as any,
-});
+const stripe = new Stripe(stripeSecret, );
 
 const PRICE_BY_DURATION_CENTS: Record<number, number> = {
   60: 1500,
