@@ -488,7 +488,7 @@ function SingleEntryBookingPageContent() {
                 setSelectedDate(e.target.value);
                 setSelectedStartMinute(null);
               }}
-              className="w-full max-w-full box-border bg-white text-black p-3 rounded-xl"
+              className="w-full max-w-full  box-border bg-white text-black p-3 rounded-xl appearance-none"
             />
 
             <div className="grid grid-cols-2 gap-3">
