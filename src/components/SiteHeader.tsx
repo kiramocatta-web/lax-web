@@ -23,7 +23,6 @@ export default function SiteHeader() {
 
   const [memberHref, setMemberHref] = useState("/membership");
   const [profileHref, setProfileHref] = useState("/login");
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
@@ -41,7 +40,6 @@ export default function SiteHeader() {
         if (!userId) {
           setMemberHref("/membership");
           setProfileHref("/login");
-          setLoading(false);
           return;
         }
 
@@ -57,7 +55,6 @@ export default function SiteHeader() {
           console.error("[SiteHeader] profile fetch error:", error);
           setMemberHref("/membership");
           setProfileHref("/profile");
-          setLoading(false);
           return;
         }
 
@@ -81,10 +78,6 @@ export default function SiteHeader() {
           setMemberHref("/membership");
           setProfileHref("/login");
         }
-      } finally {
-        if (mounted) {
-          setLoading(false);
-        }
       }
     }
 
@@ -103,34 +96,30 @@ export default function SiteHeader() {
   }, [supabase]);
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 border-b border-white/10 bg-black/40 backdrop-blur-md">
-      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-black/30 backdrop-blur-sm">
+      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6">
         <Link href="/" className="flex items-center">
           <Image
-            src="/lax-logo.png"
+            src="/logo-home.png"
             alt="Lax N Lounge"
-            width={140}
-            height={40}
-            className="h-auto w-[120px] sm:w-[140px]"
+            width={160}
+            height={50}
+            className="h-auto w-[120px] sm:w-[145px]"
             priority
           />
         </Link>
 
-        <nav className="flex items-center gap-4 sm:gap-6 text-sm sm:text-base text-white">
-          <Link href="/" className="transition hover:text-white/70">
-            Home
-          </Link>
-
+        <nav className="flex items-center gap-4 text-sm text-white sm:gap-6 sm:text-base">
           <Link href={memberHref} className="transition hover:text-white/70">
-            Member
+            MEMBER
           </Link>
 
           <Link href="/book/single" className="transition hover:text-white/70">
-            Single
+            SINGLE
           </Link>
 
-          <Link href={loading ? "/login" : profileHref} className="transition hover:text-white/70">
-            Profile
+          <Link href={profileHref} className="transition hover:text-white/70">
+            PROFILE
           </Link>
         </nav>
       </div>
