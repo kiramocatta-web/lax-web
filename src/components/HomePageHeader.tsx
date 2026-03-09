@@ -62,7 +62,7 @@ export default function HomePageHeader() {
   }, [supabase]);
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 w-full bg-black backdrop-blur-md">
+    <header className="fixed top-0 left-0 right-0 z-50 w-full bg-black/80 backdrop-blur-md">
       <div className="mx-auto flex h-24 max-w-7xl items-center justify-between px-6 sm:px-8">
         <a href="/" className="shrink-0">
           <Image
