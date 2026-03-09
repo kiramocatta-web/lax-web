@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import GenerateAffiliateInviteCard from "@/components/GenerateAffiliateInviteCard";
+import Link from "next/link";
 
 type MemberRow = {
   id: string;
@@ -797,6 +798,17 @@ We’d love to welcome you back in for a reset soon 🤍
     <p className="text-sm text-white/60">Unique visitors total</p>
     <p className="mt-2 text-3xl font-semibold">{uniqueVisitorsTotal}</p>
   </div>
+</div>
+
+<div className="mb-6 flex flex-wrap gap-3">
+
+  <Link
+    href="/bookings-calendar"
+    className="rounded-2xl border border-white/20 bg-emerald-600 px-5 py-3 text-sm font-medium text-white transition hover:bg-emerald-500"
+  >
+    Open Bookings Calendar
+  </Link>
+
 </div>
 
           <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6">
