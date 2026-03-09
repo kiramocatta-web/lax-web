@@ -11,7 +11,7 @@ export default function MembershipTransferPage() {
       setLoading(true);
       setError("");
 
-      const res = await fetch("/api/membership/checkout", {
+      const res = await fetch("/api/stripe/membership/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
