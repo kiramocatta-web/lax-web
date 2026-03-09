@@ -82,7 +82,7 @@ export default function SiteHeader() {
           />
         </a>
 
-        <nav className="min-w-0 flex-1 overflow-x-auto">
+        <nav className="min-w-0 flex-1 overflow-x-auto pr-4 sm:pr-6">
           <div className="flex min-w-max items-center justify-end gap-4 whitespace-nowrap text-sm font-light uppercase tracking-[0.08em] text-white sm:gap-6 sm:text-base md:gap-10 md:text-xl">
             <a href={memberHref} className="shrink-0 hover:text-white/75">
               MEMBER

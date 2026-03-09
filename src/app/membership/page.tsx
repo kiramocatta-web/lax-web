@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createBrowserClient } from "@supabase/ssr";
 
 type Plan = "weekly" | "pass7" | null;
@@ -16,6 +16,10 @@ export default function SignupPage() {
   );
 
   const [selectedPlan, setSelectedPlan] = useState<Plan>(null);
+
+  const accountSectionRef = useRef<HTMLDivElement | null>(null);
+  const waiverSectionRef = useRef<HTMLDivElement | null>(null);
+  const letsGoButtonRef = useRef<HTMLButtonElement | null>(null);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -72,6 +76,26 @@ export default function SignupPage() {
 
   function validatePhone(value: string) {
     return /^04\d{8}$/.test(value);
+  }
+
+  function scrollToRef(ref: React.RefObject<HTMLElement | null>) {
+    ref.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  }
+
+  function handlePlanSelect(plan: Plan) {
+    setSelectedPlan(plan);
+    setError("");
+
+    setTimeout(() => {
+      if (accountCreated) {
+        scrollToRef(waiverSectionRef);
+      } else {
+        scrollToRef(accountSectionRef);
+      }
+    }, 150);
   }
 
   async function handleSignup(e: React.FormEvent<HTMLFormElement>) {
@@ -141,6 +165,10 @@ export default function SignupPage() {
 
       setAccountCreated(true);
       setError("");
+
+      setTimeout(() => {
+        scrollToRef(waiverSectionRef);
+      }, 150);
     } catch (e: any) {
       setError(e?.message || "Failed to create account");
     } finally {
@@ -201,8 +229,10 @@ export default function SignupPage() {
     window.location.href = "/login";
   }
 
-  const showAccountSection = !!selectedPlan && !checkingSession && !accountCreated;
-  const showWaiverSection = !!selectedPlan && !checkingSession && accountCreated;
+  const showAccountSection =
+    !!selectedPlan && !checkingSession && !accountCreated;
+  const showWaiverSection =
+    !!selectedPlan && !checkingSession && accountCreated;
 
   return (
     <>
@@ -217,13 +247,10 @@ export default function SignupPage() {
             </p>
           </div>
 
-          <div className="mt-16 grid gap-4 sm:grid-cols-2">
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <button
               type="button"
-              onClick={() => {
-                setSelectedPlan("weekly");
-                setError("");
-              }}
+              onClick={() => handlePlanSelect("weekly")}
               className={`rounded-3xl border p-6 text-left transition-all duration-300 ${
                 selectedPlan === "weekly"
                   ? "border-pink-300 bg-pink-500/20 ring-2 ring-pink-300 shadow-2xl scale-[1.01]"
@@ -244,10 +271,7 @@ export default function SignupPage() {
 
             <button
               type="button"
-              onClick={() => {
-                setSelectedPlan("pass7");
-                setError("");
-              }}
+              onClick={() => handlePlanSelect("pass7")}
               className={`rounded-3xl border p-6 text-left transition-all duration-300 ${
                 selectedPlan === "pass7"
                   ? "border-sky-300 bg-sky-500/20 ring-2 ring-sky-300 shadow-2xl scale-[1.01]"
@@ -279,6 +303,7 @@ export default function SignupPage() {
           ) : null}
 
           <div
+            ref={accountSectionRef}
             className={`mt-8 overflow-hidden transition-all duration-500 ${
               showAccountSection
                 ? "max-h-[1000px] opacity-100 translate-y-0"
@@ -345,6 +370,7 @@ export default function SignupPage() {
           </div>
 
           <div
+            ref={waiverSectionRef}
             className={`mt-8 overflow-hidden transition-all duration-500 ${
               showWaiverSection
                 ? "max-h-[800px] opacity-100 translate-y-0"
@@ -366,7 +392,19 @@ export default function SignupPage() {
                   <input
                     type="checkbox"
                     checked={waiverAccepted}
-                    onChange={(e) => setWaiverAccepted(e.target.checked)}
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      setWaiverAccepted(checked);
+
+                      if (checked) {
+                        setTimeout(() => {
+                          letsGoButtonRef.current?.scrollIntoView({
+                            behavior: "smooth",
+                            block: "center",
+                          });
+                        }, 150);
+                      }
+                    }}
                     className="h-5 w-5 rounded border-white/30 bg-transparent accent-white"
                   />
                 </label>
@@ -384,6 +422,7 @@ export default function SignupPage() {
               </div>
 
               <button
+                ref={letsGoButtonRef}
                 type="button"
                 onClick={handleCheckout}
                 disabled={!waiverAccepted || checkoutLoading}
