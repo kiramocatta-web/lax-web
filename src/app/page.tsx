@@ -1,12 +1,13 @@
 import Image from "next/image";
-import SiteHeader from "@/components/SiteHeader";
+import HomePageHeader from "@/components/HomePageHeader";
 import AuthFooterButton from "@/components/AuthFooterButton";
+
 
 export default function HomePage() {
   return (
     <main className="relative min-h-screen overflow-x-hidden bg-black text-white">
       <div className="relative z-10">
-        <SiteHeader />
+        <HomePageHeader />
 
         {/* HERO */}
         <section className="relative min-h-screen w-full overflow-hidden bg-black">
