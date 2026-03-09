@@ -36,7 +36,7 @@ export async function POST() {
       );
     }
 
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://lax-web.vercel.app";
 
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: customerId,

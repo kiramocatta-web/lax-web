@@ -49,7 +49,7 @@ export default async function DashboardPage() {
         </div>
 
         <div className="mt-6">
-          <a href="/book" className="inline-block bg-white text-black px-4 py-3 rounded-xl font-semibold">
+          <a href="/book/single" className="inline-block bg-white text-black px-4 py-3 rounded-xl font-semibold">
             Book another session
           </a>
         </div>

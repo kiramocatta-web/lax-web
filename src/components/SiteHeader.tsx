@@ -1,14 +1,17 @@
 "use client";
 
+import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { createBrowserClient } from "@supabase/ssr";
-import { usePathname } from "next/navigation";
-import Image from "next/image";
+
+type ProfileRow = {
+  role: string | null;
+  membership_status: string | null;
+  membership_plan: string | null;
+};
 
 export default function SiteHeader() {
-  const pathname = usePathname();
-  const isHome = pathname === "/";
-
   const supabase = useMemo(
     () =>
       createBrowserClient(
@@ -18,93 +21,118 @@ export default function SiteHeader() {
     []
   );
 
-  const [loggedIn, setLoggedIn] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
+  const [memberHref, setMemberHref] = useState("/membership");
+  const [profileHref, setProfileHref] = useState("/login");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
 
-    async function loadHeaderState() {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+    async function loadHeaderLinks() {
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
 
-      if (!mounted) return;
-      setLoggedIn(!!session?.user);
+        if (!mounted) return;
+
+        const userId = session?.user?.id ?? null;
+
+        if (!userId) {
+          setMemberHref("/membership");
+          setProfileHref("/login");
+          setLoading(false);
+          return;
+        }
+
+        const { data: profile, error } = await supabase
+          .from("profiles")
+          .select("role,membership_status,membership_plan")
+          .eq("id", userId)
+          .maybeSingle<ProfileRow>();
+
+        if (!mounted) return;
+
+        if (error) {
+          console.error("[SiteHeader] profile fetch error:", error);
+          setMemberHref("/membership");
+          setProfileHref("/profile");
+          setLoading(false);
+          return;
+        }
+
+        const role = String(profile?.role ?? "").toLowerCase().trim();
+        const status = String(profile?.membership_status ?? "").toLowerCase().trim();
+        const plan = String(profile?.membership_plan ?? "").toLowerCase().trim();
+
+        const isAffiliate = role === "affiliate";
+        const isMember =
+          status === "active" ||
+          status === "trialing" ||
+          status === "cancellation_requested" ||
+          plan === "pass7" ||
+          plan === "weekly";
+
+        setMemberHref(isAffiliate || isMember ? "/book/members" : "/membership");
+        setProfileHref("/profile");
+      } catch (err) {
+        console.error("[SiteHeader] loadHeaderLinks error:", err);
+        if (mounted) {
+          setMemberHref("/membership");
+          setProfileHref("/login");
+        }
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
     }
 
-    function handleScroll() {
-      setScrolled(window.scrollY > 20);
-    }
-
-    loadHeaderState();
-    handleScroll();
-    window.addEventListener("scroll", handleScroll);
+    loadHeaderLinks();
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(() => {
-      loadHeaderState();
+      loadHeaderLinks();
     });
 
     return () => {
       mounted = false;
       subscription.unsubscribe();
-      window.removeEventListener("scroll", handleScroll);
     };
   }, [supabase]);
 
   return (
-    <header
-      className={[
-        isHome ? "fixed top-0 left-0 right-0 z-50" : "sticky top-0 z-50",
-        "transition-all duration-300",
-        isHome
-          ? scrolled
-            ? "bg-black/25 backdrop-blur-md border-b border-white/10"
-            : "bg-black/10 border-b border-transparent"
-          : "bg-emerald-950 border-b border-white/10",
-      ].join(" ")}
-    >
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-2 sm:px-8">
-        <a href="/" className="flex items-center">
+    <header className="fixed top-0 left-0 right-0 z-50 border-b border-white/10 bg-black/40 backdrop-blur-md">
+      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        <Link href="/" className="flex items-center">
           <Image
-            src="/logo-home.png"
+            src="/lax-logo.png"
             alt="Lax N Lounge"
-            width={220}
-            height={100}
+            width={140}
+            height={40}
+            className="h-auto w-[120px] sm:w-[140px]"
             priority
-            className="h-10 w-auto sm:h-12 md:h-14"
           />
-        </a>
+        </Link>
 
-        <nav className="hidden md:flex items-center gap-10 text-sm uppercase tracking-[0.12em] text-white/90">
-          <a href="/book" className="transition hover:text-white">
-            Book
-          </a>
-          <a href="/profile" className="transition hover:text-white">
+        <nav className="flex items-center gap-4 sm:gap-6 text-sm sm:text-base text-white">
+          <Link href="/" className="transition hover:text-white/70">
+            Home
+          </Link>
+
+          <Link href={memberHref} className="transition hover:text-white/70">
+            Member
+          </Link>
+
+          <Link href="/book/single" className="transition hover:text-white/70">
+            Single
+          </Link>
+
+          <Link href={loading ? "/login" : profileHref} className="transition hover:text-white/70">
             Profile
-          </a>
+          </Link>
         </nav>
-
-        {!loggedIn ? (
-          <a
-            href="/login"
-            className="hidden md:flex items-center text-sm uppercase tracking-[0.12em] text-white/90"
-          >
-            Log in
-          </a>
-        ) : (
-          <button
-            onClick={async () => {
-              await supabase.auth.signOut();
-              window.location.href = "/";
-            }}
-            className="hidden md:flex items-center text-sm uppercase tracking-[0.12em] text-white/90"
-          >
-            Log out
-          </button>
-        )}
       </div>
     </header>
   );

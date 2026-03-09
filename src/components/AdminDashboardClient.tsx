@@ -1,7 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import TopNav from "@/components/TopNav";
+import { useEffect, useMemo, useState } from "react";
 import GenerateAffiliateInviteCard from "@/components/GenerateAffiliateInviteCard";
 
 type MemberRow = {
@@ -763,7 +762,6 @@ We’d love to welcome you back in for a reset soon 🤍
 
   return (
     <div className="min-h-screen bg-emerald-950 text-white flex flex-col">
-      <TopNav />
 
       <main className="flex-1">
         <div className="max-w-6xl mx-auto px-8 py-10 pb-24">

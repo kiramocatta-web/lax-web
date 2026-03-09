@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import TopNav from "@/components/TopNav";
 
 function normalizeCode(input: string) {
   return input.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
@@ -95,7 +94,6 @@ export default function AffiliateSignupPage() {
 
   return (
     <div className="min-h-screen bg-emerald-950 text-white">
-      <TopNav />
 
       <main className="flex-1">
         <div className="max-w-xl mx-auto px-6 py-10 pb-24">

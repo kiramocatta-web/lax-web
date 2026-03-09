@@ -169,7 +169,7 @@ export default function SignupPage() {
     setCheckoutLoading(true);
 
     try {
-      const res = await fetch("/api/stripe/membership-checkout", {
+      const res = await fetch("/api/stripe/membership/checkout", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

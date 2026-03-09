@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import StickyCheckoutBar from "@/components/StickyCheckoutBar";
-import TopNav from "@/components/TopNav";
 
 const OPEN_HOUR = 5;
 const CLOSE_HOUR = 22;
@@ -331,7 +330,6 @@ export default function BookMembersClient() {
 
   return (
     <div className="min-h-screen bg-emerald-950 text-white pb-28">
-      <TopNav />
 
       <div className="max-w-xl mx-auto px-6 py-10">
         <div className="flex items-center justify-between gap-3">

@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
-import TopNav from "@/components/TopNav";
 
 type MemberRow = {
   id: string;
@@ -70,7 +69,6 @@ export default async function AdminMembersPage() {
   if (error) {
     return (
       <div className="min-h-screen bg-emerald-950 text-white">
-        <TopNav rightHref="/admin" rightLabel="Admin →" />
         <div className="max-w-6xl mx-auto px-6 py-10">
           <h1 className="text-3xl font-semibold">Active Members</h1>
           <div className="mt-6 text-red-300">{error.message}</div>
@@ -83,7 +81,6 @@ export default async function AdminMembersPage() {
 
   return (
     <div className="min-h-screen bg-emerald-950 text-white">
-      <TopNav rightHref="/admin" rightLabel="Admin →" />
 
       <div className="max-w-6xl mx-auto px-6 py-10 pb-24">
         <div className="flex items-center justify-between gap-3">

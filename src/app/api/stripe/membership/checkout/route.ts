@@ -4,7 +4,14 @@ import { supabaseServer } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+const stripeSecret = process.env.STRIPE_SECRET_KEY;
+if (!stripeSecret) {
+  throw new Error("Missing STRIPE_SECRET_KEY");
+}
+
+const stripe = new Stripe(stripeSecret, {
+  apiVersion: "2025-01-27.acacia" as any,
+});
 
 export async function POST(req: Request) {
   try {
@@ -43,10 +50,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing plan" }, { status: 400 });
     }
 
-    const mode: Stripe.Checkout.SessionCreateParams.Mode =
-      plan === "weekly" ? "subscription" : "payment";
-
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
     const weeklyPriceId = process.env.STRIPE_WEEKLY_PRICE_ID;
     const pass7PriceId = process.env.STRIPE_PASS7_PRICE_ID;
 
@@ -64,25 +67,27 @@ export async function POST(req: Request) {
       );
     }
 
+    const mode: Stripe.Checkout.SessionCreateParams.Mode =
+      plan === "weekly" ? "subscription" : "payment";
+
+    const siteUrl = (
+      process.env.NEXT_PUBLIC_SITE_URL || "https://lax-web.vercel.app"
+    ).trim();
+
     const sessionParams: Stripe.Checkout.SessionCreateParams = {
       mode,
-
       allow_promotion_codes: true,
-
       phone_number_collection: {
         enabled: true,
       },
-
       line_items: [
         {
           price: plan === "weekly" ? weeklyPriceId! : pass7PriceId!,
           quantity: 1,
         },
       ],
-
       success_url: `${siteUrl}/membership/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${siteUrl}/membership`,
-
       metadata: {
         user_id: user.id,
         plan,
@@ -103,7 +108,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ url: session.url });
   } catch (err: any) {
-    console.error("membership-checkout error:", err);
+    console.error("membership/checkout error:", err);
     return NextResponse.json(
       { error: err?.message || "Server error" },
       { status: 500 }

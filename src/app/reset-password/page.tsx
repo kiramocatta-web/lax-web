@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import { createBrowserClient } from "@supabase/ssr";
-import TopNav from "@/components/TopNav";
 
 export default function ResetPasswordPage() {
   const supabase = useMemo(

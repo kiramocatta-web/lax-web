@@ -25,9 +25,7 @@ export async function middleware(req: NextRequest) {
 
   const pathname = req.nextUrl.pathname;
 
-  // ✅ ONLY protect exact /book (members booking page)
   const isProtected =
-    pathname === "/book" ||
     pathname.startsWith("/dashboard") ||
     pathname.startsWith("/admin");
 
@@ -42,5 +40,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/book", "/dashboard/:path*", "/admin/:path*"],
+  matcher: ["/dashboard/:path*", "/admin/:path*"],
 };

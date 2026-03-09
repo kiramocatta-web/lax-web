@@ -26,14 +26,18 @@ export default function HomePage() {
           <div className="absolute inset-0 z-10 bg-black/35" />
           <div className="absolute inset-0 z-10 bg-gradient-to-b from-black/25 via-transparent to-black/80" />
 
-          {/* content */}
-          <div className="relative z-20 flex min-h-screen items-center justify-center px-6 text-center">
-            <div className="max-w-5xl">
-              <h1 className="text-4xl font-light tracking-[0.02em] sm:text-5xl md:text-6xl lg:text-7xl">
-                Train Hard. Recover Harder.
-              </h1>
-            </div>
-          </div>
+{/* content */}
+<div className="relative z-20 flex min-h-screen items-center justify-center px-6 text-center">
+  <div className="flex flex-col items-center justify-center gap-2 sm:gap-3">
+    <h1 className="hero-line-1 block text-4xl font-light tracking-[0.02em] sm:text-5xl md:text-6xl lg:text-7xl">
+      Train Hard
+    </h1>
+
+    <h1 className="hero-line-2 block text-4xl font-bold italic tracking-[0.02em] sm:text-5xl md:text-6xl lg:text-7xl">
+      Recover Harder.
+    </h1>
+  </div>
+</div>
 
           {/* fade into next section */}
           <div className="pointer-events-none absolute bottom-0 left-0 right-0 z-10 h-40 bg-gradient-to-b from-transparent to-black" />

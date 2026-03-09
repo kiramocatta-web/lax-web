@@ -5,7 +5,6 @@ import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
-import TopNav from "@/components/TopNav";
 
 type BookingEvent = {
   id: string;
@@ -38,7 +37,6 @@ export default function BookingsCalendarClient() {
 
   return (
     <div className="min-h-screen bg-emerald-950 text-white">
-      <TopNav />
 
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         <div className="mb-6">

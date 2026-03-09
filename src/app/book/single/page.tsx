@@ -3,8 +3,6 @@
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import StickyCheckoutBar from "@/components/StickyCheckoutBar";
-import TopNav from "@/components/TopNav";
-import HeaderSpacer from "@/components/HeaderSpacer";
 
 const OPEN_HOUR = 5;
 const CLOSE_HOUR = 22;
@@ -463,7 +461,6 @@ function SingleEntryBookingPageContent() {
   return (
     <>
       <div className="min-h-screen bg-emerald-950 text-white pb-28">
-        <TopNav />
 
         <div className="max-w-xl mx-auto px-4 py-6">
           <h1 className="text-3xl text-white text-center font-semibold">
@@ -734,8 +731,6 @@ export default function SingleEntryBookingPage() {
     <Suspense
       fallback={
         <div className="min-h-screen bg-emerald-950 text-white">
-          <TopNav />
-          <HeaderSpacer />
           <div className="max-w-xl mx-auto px-4 py-10">
             <div className="text-white/80">Loading booking page...</div>
           </div>

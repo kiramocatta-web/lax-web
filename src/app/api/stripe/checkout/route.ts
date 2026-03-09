@@ -4,7 +4,14 @@ import { supabaseServer } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+const stripeSecret = process.env.STRIPE_SECRET_KEY;
+if (!stripeSecret) {
+  throw new Error("Missing STRIPE_SECRET_KEY");
+}
+
+const stripe = new Stripe(stripeSecret, {
+  apiVersion: "2025-01-27.acacia" as any,
+});
 
 const PRICE_BY_DURATION_CENTS: Record<number, number> = {
   60: 1500,
@@ -25,7 +32,8 @@ export async function POST(req: Request) {
     const start_minute: number | undefined = body?.start_minute;
     const duration_minutes: number | undefined = body?.duration_minutes;
     const people_count: number = Number(body?.people_count ?? 1);
-    const rescheduleBookingId = Number(body?.reschedule_booking_id ?? 0) || null;
+    const rescheduleBookingId =
+      Number(body?.reschedule_booking_id ?? 0) || null;
 
     const discount_code_raw: string = String(body?.discount_code ?? "");
     const discount_code = discount_code_raw.trim().toUpperCase();
@@ -92,7 +100,10 @@ export async function POST(req: Request) {
         existingBooking.start_time
       );
 
-      if (Number.isNaN(existingStart.getTime()) || existingStart.getTime() <= Date.now()) {
+      if (
+        Number.isNaN(existingStart.getTime()) ||
+        existingStart.getTime() <= Date.now()
+      ) {
         return NextResponse.json(
           { error: "Past bookings cannot be rescheduled." },
           { status: 400 }
@@ -115,20 +126,25 @@ export async function POST(req: Request) {
       }
 
       if (!aff?.id) {
-        return NextResponse.json({ error: "Invalid discount code." }, { status: 400 });
+        return NextResponse.json(
+          { error: "Invalid discount code." },
+          { status: 400 }
+        );
       }
 
       affiliate_user_id = aff.id;
 
       if (!process.env.STRIPE_COUPON_5OFF) {
         return NextResponse.json(
-          { error: "Missing STRIPE_COUPON_5OFF in .env.local" },
+          { error: "Missing STRIPE_COUPON_5OFF" },
           { status: 500 }
         );
       }
     }
 
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+    const siteUrl = (
+      process.env.NEXT_PUBLIC_SITE_URL || "https://lax-web.vercel.app"
+    ).trim();
 
     const discounts =
       affiliate_user_id && process.env.STRIPE_COUPON_5OFF
@@ -165,7 +181,9 @@ export async function POST(req: Request) {
         discount_code: discount_code || "",
         affiliate_user_id: affiliate_user_id || "",
         user_id: user?.id ?? "",
-        reschedule_booking_id: rescheduleBookingId ? String(rescheduleBookingId) : "",
+        reschedule_booking_id: rescheduleBookingId
+          ? String(rescheduleBookingId)
+          : "",
       },
     });
 

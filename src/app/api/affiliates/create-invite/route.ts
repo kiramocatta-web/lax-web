@@ -61,7 +61,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: invErr?.message || "Failed to create invite" }, { status: 500 });
     }
 
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://lax-web.vercel.app";
     const url = `${siteUrl}/affiliate-signup/${invite.id}`;
 
     return NextResponse.json({ id: invite.id, url });

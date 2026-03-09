@@ -59,3 +59,31 @@ body {
 .calendar-shell .fc-event-time {
   font-weight: 600;
 }
+
+/* hero text animation */
+
+.hero-line-1,
+.hero-line-2 {
+  opacity: 0;
+  display: block;
+  will-change: opacity, transform;
+}
+
+.hero-line-1 {
+  animation: heroFadeUp 1.2s ease-out 0.2s forwards;
+}
+
+.hero-line-2 {
+  animation: heroFadeUp 1.2s ease-out 2.2s forwards;
+}
+
+@keyframes heroFadeUp {
+  0% {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
