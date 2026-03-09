@@ -141,7 +141,7 @@ export async function POST(req: Request) {
     }
 
     const siteUrl = (
-      process.env.NEXT_PUBLIC_SITE_URL || "https://lax-web.vercel.app"
+      process.env.NEXT_PUBLIC_SITE_URL || "https://www.laxnlounge.com.au"
     ).trim();
 
     const discounts =

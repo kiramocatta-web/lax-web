@@ -36,7 +36,7 @@ export async function POST() {
       );
     }
 
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://lax-web.vercel.app";
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.laxnlounge.com.au";
 
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: customerId,
