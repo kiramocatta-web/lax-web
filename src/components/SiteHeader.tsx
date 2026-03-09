@@ -25,8 +25,8 @@ export default function SiteHeader() {
     []
   );
 
-  const [singleHref, setSingleHref] = useState("/book/single");
   const [memberHref, setMemberHref] = useState("/membership");
+  const [singleHref, setSingleHref] = useState("/book/single");
   const [profileHref, setProfileHref] = useState("/login");
 
   useEffect(() => {
@@ -40,8 +40,8 @@ export default function SiteHeader() {
       if (!mounted) return;
 
       if (!session?.user) {
-        setSingleHref("/book/single");
         setMemberHref("/membership");
+        setSingleHref("/book/single");
         setProfileHref("/login");
         return;
       }
