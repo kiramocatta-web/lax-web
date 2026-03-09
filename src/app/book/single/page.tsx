@@ -10,6 +10,7 @@ const INTERVAL_MINUTES = 15;
 const MAX_CAPACITY = 8;
 const WAIVER_STORAGE_KEY = "lax_health_waiver_ok";
 
+
 type AvailabilityBookingRow = {
   start_time: string;
   end_time: string | null;
@@ -100,6 +101,8 @@ function SingleEntryBookingPageContent() {
   const [selectedStartMinute, setSelectedStartMinute] = useState<number | null>(
     null
   );
+  const [autoMovedToNextDay, setAutoMovedToNextDay] = useState(false);
+
 
   const [bookings, setBookings] = useState<AvailabilityBookingRow[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -305,6 +308,40 @@ function SingleEntryBookingPageContent() {
       const used = occupancy[m] ?? 0;
       minLeft = Math.min(minLeft, MAX_CAPACITY - used);
     }
+
+    useEffect(() => {
+  const today = getBrisbaneDateString();
+
+  if (selectedDate !== today) {
+    setAutoMovedToNextDay(false);
+    return;
+  }
+
+  const hasAnyAvailableSlot = slotMinutes.some((startMinute) => {
+    return canFitBeforeClose(startMinute) && canStartAt(startMinute);
+  });
+
+  if (!hasAnyAvailableSlot) {
+    const parts = selectedDate.split("-").map(Number);
+    const tomorrow = new Date(parts[0], parts[1] - 1, parts[2]);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const tomorrowStr = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Australia/Brisbane",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(tomorrow);
+
+    if (tomorrowStr !== selectedDate) {
+      setSelectedDate(tomorrowStr);
+      setSelectedStartMinute(null);
+      setAutoMovedToNextDay(true);
+    }
+  } else {
+    setAutoMovedToNextDay(false);
+  }
+}, [selectedDate, duration, peopleCount, bookings, slotMinutes]);
 
     return Math.max(0, minLeft);
   };
@@ -608,6 +645,13 @@ function SingleEntryBookingPageContent() {
               </div>
             </div>
           </div>
+          
+          {autoMovedToNextDay && (
+  <div className="mb-4 rounded-2xl border border-white/10 bg-white/5 p-3 text-sm text-white/75">
+    No slots remained for today, so we moved you to tomorrow’s availability.
+  </div>
+)}
+
 
           <div className="space-y-3 max-h-[55vh] overflow-y-auto pr-1">
             {slotMinutes
@@ -666,6 +710,7 @@ function SingleEntryBookingPageContent() {
                 );
               })}
           </div>
+          
 
           <StickyCheckoutBar
             title={selectedStartMinute !== null ? buttonText : "Select a time"}

@@ -55,6 +55,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing plan" }, { status: 400 });
     }
 
+    if (transferOffer && plan !== "weekly") {
+      return NextResponse.json(
+        { error: "Transfer offer is only valid for weekly memberships." },
+        { status: 400 }
+      );
+    }
+
     const weeklyPriceId = process.env.STRIPE_WEEKLY_PRICE_ID;
     const pass7PriceId = process.env.STRIPE_PASS7_PRICE_ID;
 
@@ -74,13 +81,6 @@ export async function POST(req: Request) {
 
     const mode: Stripe.Checkout.SessionCreateParams.Mode =
       plan === "weekly" ? "subscription" : "payment";
-
-    if (transferOffer && plan !== "weekly") {
-      return NextResponse.json(
-        { error: "Transfer offer is only valid for weekly memberships." },
-        { status: 400 }
-      );
-    }
 
     const siteUrl = (
       process.env.NEXT_PUBLIC_SITE_URL || "https://www.laxnlounge.com.au"
@@ -103,7 +103,9 @@ export async function POST(req: Request) {
       metadata: {
         user_id: user.id,
         plan,
-        flow: transferOffer ? "membership_transfer_offer" : "membership_purchase",
+        flow: transferOffer
+          ? "membership_transfer_offer"
+          : "membership_purchase",
         transfer_offer: transferOffer ? "true" : "false",
       },
     };
@@ -114,8 +116,32 @@ export async function POST(req: Request) {
       };
     }
 
+    let validStripeCustomerId: string | null = null;
+
     if (profile.stripe_customer_id) {
-      sessionParams.customer = profile.stripe_customer_id;
+      try {
+        const existingCustomer = await stripe.customers.retrieve(
+          profile.stripe_customer_id
+        );
+
+        if (!("deleted" in existingCustomer)) {
+          validStripeCustomerId = existingCustomer.id;
+        } else {
+          await supabase
+            .from("profiles")
+            .update({ stripe_customer_id: null })
+            .eq("id", user.id);
+        }
+      } catch {
+        await supabase
+          .from("profiles")
+          .update({ stripe_customer_id: null })
+          .eq("id", user.id);
+      }
+    }
+
+    if (validStripeCustomerId) {
+      sessionParams.customer = validStripeCustomerId;
     } else if (mode === "payment") {
       sessionParams.customer_creation = "always";
       sessionParams.customer_email = user.email ?? undefined;
