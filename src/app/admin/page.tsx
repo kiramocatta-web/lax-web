@@ -266,7 +266,7 @@ export default async function AdminPage() {
       .map((row) => row.visitor_id)
       .filter((id): id is string => Boolean(id))
   ).size;
-  
+
   const { data: membersRaw, error: membersError } = await supabase
     .from("profiles")
     .select(
@@ -593,6 +593,9 @@ export default async function AdminPage() {
       stripeSubs={stripeSubs}
       comeBackRecipients={comeBackRecipients}
       comeBackTemplates={comeBackTemplates}
+      totalWebsiteClicks={totalWebsiteClicks ?? 0}
+      todayWebsiteClicks={todayWebsiteClicks ?? 0}
+      uniqueVisitorsTotal={uniqueVisitorsTotal}
     />
   );
 }

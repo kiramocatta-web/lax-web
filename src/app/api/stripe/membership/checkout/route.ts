@@ -9,7 +9,13 @@ if (!stripeSecret) {
   throw new Error("Missing STRIPE_SECRET_KEY");
 }
 
-const stripe = new Stripe(stripeSecret, );
+const stripe = new Stripe(stripeSecret);
+
+function getTransferTrialEndUnix() {
+  const now = new Date();
+  now.setDate(now.getDate() + 14);
+  return Math.floor(now.getTime() / 1000);
+}
 
 export async function POST(req: Request) {
   try {
@@ -43,6 +49,7 @@ export async function POST(req: Request) {
 
     const body = await req.json().catch(() => null);
     const plan = body?.plan as "weekly" | "pass7" | undefined;
+    const transferOffer = body?.transfer_offer === true;
 
     if (!plan) {
       return NextResponse.json({ error: "Missing plan" }, { status: 400 });
@@ -68,6 +75,13 @@ export async function POST(req: Request) {
     const mode: Stripe.Checkout.SessionCreateParams.Mode =
       plan === "weekly" ? "subscription" : "payment";
 
+    if (transferOffer && plan !== "weekly") {
+      return NextResponse.json(
+        { error: "Transfer offer is only valid for weekly memberships." },
+        { status: 400 }
+      );
+    }
+
     const siteUrl = (
       process.env.NEXT_PUBLIC_SITE_URL || "https://www.laxnlounge.com.au"
     ).trim();
@@ -89,9 +103,16 @@ export async function POST(req: Request) {
       metadata: {
         user_id: user.id,
         plan,
-        flow: "membership_purchase",
+        flow: transferOffer ? "membership_transfer_offer" : "membership_purchase",
+        transfer_offer: transferOffer ? "true" : "false",
       },
     };
+
+    if (plan === "weekly" && transferOffer) {
+      sessionParams.subscription_data = {
+        trial_end: getTransferTrialEndUnix(),
+      };
+    }
 
     if (profile.stripe_customer_id) {
       sessionParams.customer = profile.stripe_customer_id;
