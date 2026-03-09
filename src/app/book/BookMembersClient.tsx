@@ -381,7 +381,7 @@ export default function BookMembersClient() {
           </a>
         </div>
 
-        <p className="mt-2 text-white/70">
+        <p className="mt-2 text-center text-white/70">
           {originalBooking
             ? "Choose a new date, duration, then pick a new start time."
             : "Choose date, duration, then pick a start time."}

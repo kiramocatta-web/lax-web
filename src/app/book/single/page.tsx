@@ -504,10 +504,10 @@ function SingleEntryBookingPageContent() {
             {title}
           </h1>
 
-          <p className="mt-2 text-white/70">
+          <p className="mt-2 text-center text-white/70">
             {originalBooking
-              ? "Choose your new date, people and duration, then confirm your reschedule."
-              : "Choose date, people, duration, then pay to confirm."}
+              ? "Choose your date, people and duration, then confirm your reschedule."
+              : "Choose date, no. of people, duration, then pay to confirm."}
           </p>
 
           {rescheduleError ? (
@@ -630,7 +630,7 @@ function SingleEntryBookingPageContent() {
               {!loading && !rescheduleLoading && !loadError ? (
                 <span>
                   15-min start times • Capacity {MAX_CAPACITY}
-                  {isTodaySelected ? " • Past times hidden/disabled automatically" : ""}
+                  {isTodaySelected ? " • " : ""}
                 </span>
               ) : null}
             </div>
