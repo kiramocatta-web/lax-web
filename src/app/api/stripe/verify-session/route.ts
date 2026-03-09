@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { sendBookingEmail } from "@/lib/email/sendBookingEmail";
-import { sendAdminBookingNotification } from "/Users/kingkira/lax-web/src/src/lib/email/sendAdminBookingNotification";
+
 
 export const runtime = "nodejs";
 
