@@ -78,6 +78,16 @@ export default function SignupPage() {
     return /^04\d{8}$/.test(value);
   }
 
+  function normaliseAustralianMobile(value: string) {
+  const cleaned = value.replace(/\s+/g, "");
+
+  if (/^04\d{8}$/.test(cleaned)) return cleaned;
+  if (/^\+614\d{8}$/.test(cleaned)) return `0${cleaned.slice(3)}`;
+  if (/^614\d{8}$/.test(cleaned)) return `0${cleaned.slice(2)}`;
+
+  return cleaned;
+}
+
   function scrollToRef(ref: React.RefObject<HTMLElement | null>) {
     ref.current?.scrollIntoView({
       behavior: "smooth",
@@ -103,7 +113,7 @@ export default function SignupPage() {
     setError("");
 
     const cleanEmail = email.trim().toLowerCase();
-    const cleanPhone = phone.trim();
+    const cleanPhone = normaliseAustralianMobile(phone.trim());
 
     if (!selectedPlan) {
       setError("Please select a membership option first.");
@@ -119,6 +129,7 @@ export default function SignupPage() {
       setError("Phone must be a valid Australian mobile (04xxxxxxxx).");
       return;
     }
+    setPhone(cleanPhone);
 
     setLoading(true);
 
@@ -247,7 +258,7 @@ export default function SignupPage() {
             </p>
           </div>
 
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <div className="mt-3 grid gap-4 sm:grid-cols-2">
             <button
               type="button"
               onClick={() => handlePlanSelect("weekly")}
