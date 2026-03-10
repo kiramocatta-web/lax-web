@@ -9,13 +9,23 @@ if (!stripeSecret) {
   throw new Error("Missing STRIPE_SECRET_KEY");
 }
 
-const stripe = new Stripe(stripeSecret, );
+const stripe = new Stripe(stripeSecret);
 
 const PRICE_BY_DURATION_CENTS: Record<number, number> = {
   60: 1500,
   90: 2000,
   120: 2500,
 };
+
+function minutesToTimeString(startMinute: number) {
+  const hh = String(Math.floor(startMinute / 60)).padStart(2, "0");
+  const mm = String(startMinute % 60).padStart(2, "0");
+  return `${hh}:${mm}:00`;
+}
+
+function addMinutesToTimeString(startMinute: number, duration: number) {
+  return minutesToTimeString(startMinute + duration);
+}
 
 function getBookingStartDateTime(bookingDate: string, startTime: string) {
   return new Date(`${bookingDate}T${startTime}`);
@@ -52,6 +62,22 @@ export async function POST(req: Request) {
     const {
       data: { user },
     } = await supabase.auth.getUser();
+
+    let profilePhone: string | null = null;
+    let profileEmail: string | null = user?.email ?? null;
+
+    if (user?.id) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("phone")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      profilePhone = profile?.phone ?? null;
+    }
+
+    const start_time = minutesToTimeString(start_minute);
+    const end_time = addMinutesToTimeString(start_minute, duration_minutes);
 
     if (rescheduleBookingId) {
       if (!user) {
@@ -152,6 +178,7 @@ export async function POST(req: Request) {
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       customer_creation: "always",
+      customer_email: profileEmail ?? undefined,
       phone_number_collection: {
         enabled: true,
       },
@@ -174,11 +201,15 @@ export async function POST(req: Request) {
         booking_type: "single",
         booking_date,
         start_minute: String(start_minute),
+        start_time,
+        end_time,
         duration_minutes: String(duration_minutes),
         people_count: String(people_count),
         discount_code: discount_code || "",
         affiliate_user_id: affiliate_user_id || "",
         user_id: user?.id ?? "",
+        customer_email: profileEmail ?? "",
+        customer_phone: profilePhone ?? "",
         reschedule_booking_id: rescheduleBookingId
           ? String(rescheduleBookingId)
           : "",

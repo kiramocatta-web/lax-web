@@ -24,6 +24,7 @@ type BookingRow = {
   people_count: number | null;
   booking_type: string | null;
   status: string | null;
+  customer_email: string | null;
   customer_phone: string | null;
   total_amount_cents: number | null;
   user_id: string | null;
@@ -197,6 +198,10 @@ function formatMoney(cents: number | null) {
     style: "currency",
     currency: "AUD",
   }).format(safe / 100);
+}
+
+function getBookingEmail(booking: BookingRow) {
+  return booking.profiles?.email ?? booking.customer_email ?? null;
 }
 
 function getProfileEmail(
@@ -1801,7 +1806,7 @@ function BookingRowExpanded({
         <td className="px-4 py-3">{booking.booking_type ?? "—"}</td>
         <td className="px-4 py-3">{booking.people_count ?? "—"}</td>
         <td className="px-4 py-3">{booking.status ?? "—"}</td>
-        <td className="px-4 py-3">{getProfileEmail(booking.profiles) ?? "—"}</td>
+        <td className="px-4 py-3">{getBookingEmail(booking) ?? "—"}</td>
         <td className="px-4 py-3">{booking.customer_phone ?? "—"}</td>
         <td className="px-4 py-3">{formatMoney(booking.total_amount_cents)}</td>
       </tr>
@@ -1832,7 +1837,7 @@ function BookingRowExpanded({
               </div>
               <div>
                 <span className="text-white/60">Email:</span>{" "}
-                <span className="text-white">{getProfileEmail(booking.profiles) ?? "—"}</span>
+               <span className="text-white">{getBookingEmail(booking) ?? "—"}</span>
               </div>
               <div>
                 <span className="text-white/60">Phone:</span>{" "}

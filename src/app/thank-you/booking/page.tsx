@@ -6,7 +6,7 @@ export default function BookingThankYouPage() {
   useEffect(() => {
     const timer = setTimeout(() => {
       window.location.href = "/";
-    }, 7000);
+    }, 10000);
 
     return () => clearTimeout(timer);
   }, []);
@@ -16,7 +16,7 @@ export default function BookingThankYouPage() {
       {/* Background video */}
       <video
         className="absolute inset-0 h-full w-full object-cover"
-        src="/videos/booking-thankyou.mp4"
+        src="/videos/lax-thank-you.mp4"
         autoPlay
         muted
         loop

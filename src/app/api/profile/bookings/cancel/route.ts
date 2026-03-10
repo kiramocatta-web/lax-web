@@ -3,6 +3,10 @@ import { supabaseServer } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 
+function normalizeEmail(email: string | null | undefined) {
+  return String(email ?? "").trim().toLowerCase();
+}
+
 function getBookingStartDateTime(bookingDate: string, startTime: string) {
   return new Date(`${bookingDate}T${startTime}`);
 }
@@ -42,6 +46,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const userId = user.id;
+    const userEmail = normalizeEmail(user.email);
+
     const body = await req.json().catch(() => null);
     const bookingId = Number(body?.booking_id);
 
@@ -51,7 +58,7 @@ export async function POST(req: Request) {
 
     const { data: booking, error: bookingErr } = await supabase
       .from("bookings")
-      .select("id,user_id,booking_type,status,booking_date,start_time")
+      .select("id,user_id,customer_email,booking_type,status,booking_date,start_time")
       .eq("id", bookingId)
       .single();
 
@@ -59,7 +66,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Booking not found" }, { status: 404 });
     }
 
-    if (booking.user_id !== user.id) {
+    const bookingEmail = normalizeEmail((booking as any).customer_email);
+    const ownsBooking =
+      booking.user_id === userId ||
+      (!!userEmail && !!bookingEmail && bookingEmail === userEmail);
+
+    if (!ownsBooking) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -100,7 +112,7 @@ export async function POST(req: Request) {
 
     const brisbaneNow = getBrisbaneNow();
 
-if (start.getTime() <= brisbaneNow.getTime()) {
+    if (start.getTime() <= brisbaneNow.getTime()) {
       return NextResponse.json(
         { error: "Past bookings cannot be cancelled." },
         { status: 400 }
@@ -109,9 +121,11 @@ if (start.getTime() <= brisbaneNow.getTime()) {
 
     const { data: updatedRows, error: updateErr } = await supabase
       .from("bookings")
-      .update({ status: "cancelled" })
+      .update({
+        status: "cancelled",
+        user_id: booking.user_id ?? userId,
+      })
       .eq("id", bookingId)
-      .eq("user_id", user.id)
       .select("id,status");
 
     if (updateErr) {

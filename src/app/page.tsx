@@ -16,7 +16,6 @@ export default function HomePage() {
             muted
             loop
             playsInline
-            preload="auto"
             className="absolute inset-0 z-0 h-full w-full object-cover object-center scale-[1.02] sm:scale-100"
           >
             <source src="/videos/lax-front-page.mp4" type="video/mp4" />

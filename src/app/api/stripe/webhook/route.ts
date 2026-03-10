@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { Resend } from "resend";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { sendBookingEmail } from "@/lib/email/sendBookingEmail";
+import { sendAdminBookingNotification } from "@/lib/email/sendAdminBookingNotification";
 
 export const runtime = "nodejs";
 
@@ -17,6 +19,10 @@ function addDaysISO(days: number) {
 function unixToISO(value: number | null | undefined) {
   if (!value || Number.isNaN(value)) return null;
   return new Date(value * 1000).toISOString();
+}
+
+function normalizeEmail(email: string | null | undefined) {
+  return String(email ?? "").trim().toLowerCase() || null;
 }
 
 function mapSubStatus(
@@ -51,11 +57,28 @@ function getSubscriptionCurrentPeriodEndISO(sub: Stripe.Subscription | null) {
   return unixToISO((sub as any).current_period_end);
 }
 
-function formatAmount(amount: number | null | undefined, currency?: string | null) {
+function formatAmount(
+  amount: number | null | undefined,
+  currency?: string | null
+) {
   if (amount == null) return "—";
   const dollars = amount / 100;
   const code = (currency || "AUD").toUpperCase();
   return `${code} $${dollars.toFixed(2)}`;
+}
+
+function minutesToTimeString(startMinute: number) {
+  const hh = String(Math.floor(startMinute / 60)).padStart(2, "0");
+  const mm = String(startMinute % 60).padStart(2, "0");
+  return `${hh}:${mm}:00`;
+}
+
+function addMinutesToTimeString(startMinute: number, duration: number) {
+  return minutesToTimeString(startMinute + duration);
+}
+
+function getBookingStartDateTime(bookingDate: string, startTime: string) {
+  return new Date(`${bookingDate}T${startTime}`);
 }
 
 async function sendAdminBookingEmail(session: Stripe.Checkout.Session) {
@@ -81,16 +104,27 @@ async function sendAdminBookingEmail(session: Stripe.Checkout.Session) {
     "Unknown";
 
   const bookingDate = metadata.booking_date || metadata.date || "—";
-  const startTime = metadata.start_time || "—";
-  const endTime = metadata.end_time || "—";
+  const startTime =
+    metadata.start_time ||
+    (metadata.start_minute
+      ? minutesToTimeString(Number(metadata.start_minute))
+      : "—");
   const duration = metadata.duration_minutes || metadata.duration || "—";
+  const endTime =
+    metadata.end_time ||
+    (metadata.start_minute && metadata.duration_minutes
+      ? addMinutesToTimeString(
+          Number(metadata.start_minute),
+          Number(metadata.duration_minutes)
+        )
+      : "—");
   const peopleCount = metadata.people_count || "—";
   const bookingType = metadata.booking_type || metadata.plan || session.mode || "—";
 
   const amountText = formatAmount(session.amount_total, session.currency);
 
   const subject =
-    metadata.booking_date || metadata.start_time
+    metadata.booking_date || startTime !== "—"
       ? `New booking made – ${bookingDate} ${startTime}`
       : `New checkout completed – Lax N Lounge`;
 
@@ -177,9 +211,7 @@ async function syncProfileFromSubscription(
       throw new Error(error.message);
     }
 
-    if (data && data.length > 0) {
-      matched = true;
-    }
+    if (data && data.length > 0) matched = true;
   }
 
   if (!matched) {
@@ -194,9 +226,7 @@ async function syncProfileFromSubscription(
       throw new Error(error.message);
     }
 
-    if (data && data.length > 0) {
-      matched = true;
-    }
+    if (data && data.length > 0) matched = true;
   }
 
   if (!matched) {
@@ -241,6 +271,211 @@ async function updateProfileByStripeIds(
       stripeCustomerId,
       stripeSubscriptionId,
     });
+  }
+}
+
+async function handleSingleBookingCheckout(session: Stripe.Checkout.Session) {
+  const md = session.metadata ?? {};
+
+  if ((md.booking_type ?? "").trim().toLowerCase() !== "single") {
+    return;
+  }
+
+  const booking_date = md.booking_date;
+  const start_minute = Number(md.start_minute);
+  const duration_minutes = Number(md.duration_minutes);
+  const people_count = Number(md.people_count ?? "1");
+  const user_id = md.user_id?.trim() || null;
+  const rescheduleBookingId = Number(md.reschedule_booking_id ?? "0") || null;
+
+  const customerEmail = normalizeEmail(
+    session.customer_details?.email ||
+      session.customer_email ||
+      md.customer_email ||
+      null
+  );
+
+  const customerPhone =
+    session.customer_details?.phone ||
+    md.customer_phone ||
+    null;
+
+  if (
+    !booking_date ||
+    !Number.isFinite(start_minute) ||
+    !Number.isFinite(duration_minutes)
+  ) {
+    throw new Error("Missing booking metadata for single booking.");
+  }
+
+  if (!customerPhone) {
+    throw new Error("Customer phone missing from checkout.");
+  }
+
+  const start_time = md.start_time || minutesToTimeString(start_minute);
+  const end_time =
+    md.end_time || addMinutesToTimeString(start_minute, duration_minutes);
+
+  const { data: existing } = await supabaseAdmin
+    .from("bookings")
+    .select(
+      "id, booking_date, start_time, end_time, people_count, status, booking_type, customer_email"
+    )
+    .eq("stripe_checkout_session_id", session.id)
+    .maybeSingle();
+
+  if (existing) {
+    return;
+  }
+
+  let originalBookingToReschedule:
+    | {
+        id: number;
+        booking_type: string | null;
+        status: string | null;
+        booking_date: string | null;
+        start_time: string | null;
+        user_id: string | null;
+      }
+    | null = null;
+
+  if (rescheduleBookingId) {
+    const { data: originalBooking, error: originalBookingErr } =
+      await supabaseAdmin
+        .from("bookings")
+        .select("id,booking_type,status,booking_date,start_time,user_id")
+        .eq("id", rescheduleBookingId)
+        .single();
+
+    if (originalBookingErr || !originalBooking) {
+      throw new Error("Original booking not found.");
+    }
+
+    if (String(originalBooking.booking_type ?? "").toLowerCase() !== "single") {
+      throw new Error("Only single bookings can be rescheduled here.");
+    }
+
+    if (
+      ["cancelled", "rescheduled"].includes(
+        String(originalBooking.status ?? "").toLowerCase()
+      )
+    ) {
+      throw new Error("This booking can no longer be rescheduled.");
+    }
+
+    if (
+      user_id &&
+      originalBooking.user_id &&
+      originalBooking.user_id !== user_id
+    ) {
+      throw new Error("Original booking does not belong to this user.");
+    }
+
+    if (!originalBooking.booking_date || !originalBooking.start_time) {
+      throw new Error("Original booking is missing date/time.");
+    }
+
+    const originalStart = getBookingStartDateTime(
+      originalBooking.booking_date,
+      originalBooking.start_time
+    );
+
+    if (
+      Number.isNaN(originalStart.getTime()) ||
+      originalStart.getTime() <= Date.now()
+    ) {
+      throw new Error("Past bookings cannot be rescheduled.");
+    }
+
+    originalBookingToReschedule = originalBooking;
+  }
+
+  const insertPayload = {
+    booking_type: "single",
+    status: "confirmed",
+    booking_date,
+    start_time,
+    end_time,
+    duration_minutes,
+    people_count,
+    customer_email: customerEmail,
+    customer_phone: customerPhone,
+    user_id,
+    stripe_checkout_session_id: session.id,
+    stripe_payment_intent_id:
+      typeof session.payment_intent === "string"
+        ? session.payment_intent
+        : session.payment_intent?.id ?? null,
+    total_amount_cents: session.amount_total ?? null,
+    rescheduled_from_booking_id: originalBookingToReschedule?.id ?? null,
+  };
+
+  const { data: inserted, error: insertErr } = await supabaseAdmin
+    .from("bookings")
+    .insert(insertPayload)
+    .select(
+      "id, booking_date, start_time, end_time, people_count, status, booking_type, customer_email"
+    )
+    .single();
+
+  if (insertErr) {
+    const { data: raceExisting } = await supabaseAdmin
+      .from("bookings")
+      .select(
+        "id, booking_date, start_time, end_time, people_count, status, booking_type, customer_email"
+      )
+      .eq("stripe_checkout_session_id", session.id)
+      .maybeSingle();
+
+    if (!raceExisting) {
+      throw new Error(insertErr.message);
+    }
+
+    return;
+  }
+
+  if (originalBookingToReschedule) {
+    const { error: oldUpdateErr } = await supabaseAdmin
+      .from("bookings")
+      .update({
+        status: "rescheduled",
+        rescheduled_to_booking_id: inserted.id,
+      })
+      .eq("id", originalBookingToReschedule.id);
+
+    if (oldUpdateErr) {
+      throw new Error(oldUpdateErr.message);
+    }
+  }
+
+  try {
+    if (customerEmail) {
+      await sendBookingEmail({
+        to: customerEmail,
+        bookingDate: booking_date,
+        startTime: start_time,
+        endTime: end_time,
+        peopleCount: people_count,
+      });
+    }
+  } catch (e) {
+    console.warn("sendBookingEmail failed:", e);
+  }
+
+  try {
+    await sendAdminBookingNotification({
+      bookingId: inserted.id,
+      bookingDate: booking_date,
+      startTime: start_time,
+      endTime: end_time,
+      peopleCount: people_count,
+      customerEmail,
+      customerPhone,
+      totalAmountCents: session.amount_total ?? null,
+      rescheduled: Boolean(originalBookingToReschedule),
+    });
+  } catch (e) {
+    console.warn("sendAdminBookingNotification failed:", e);
   }
 }
 
@@ -357,11 +592,29 @@ export async function POST(req: Request) {
         }
       }
 
+      const isSingleBooking =
+        expanded.mode === "payment" &&
+        String(expanded.metadata?.booking_type ?? "").toLowerCase() === "single";
+
+      if (isSingleBooking) {
+        try {
+          await handleSingleBookingCheckout(expanded);
+        } catch (singleErr: any) {
+          console.error("single booking webhook finalisation failed:", singleErr);
+          return NextResponse.json(
+            { error: singleErr?.message || "Single booking finalisation failed" },
+            { status: 500 }
+          );
+        }
+      }
+
       if (affiliateUserId) {
         await applyAffiliateCredit(affiliateUserId);
       }
 
-      await sendAdminBookingEmail(expanded);
+      if (!isSingleBooking) {
+        await sendAdminBookingEmail(expanded);
+      }
 
       return NextResponse.json({ received: true });
     }
