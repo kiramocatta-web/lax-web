@@ -32,9 +32,8 @@ function buildEndTime(startTime: string, durationMinutes: number) {
 
   const hh = String(date.getHours()).padStart(2, "0");
   const mm = String(date.getMinutes()).padStart(2, "0");
-  const ss = "00";
 
-  return `${hh}:${mm}:${ss}`;
+  return `${hh}:${mm}:00`;
 }
 
 export async function GET() {
@@ -49,11 +48,15 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("id,is_admin,role")
       .eq("id", user.id)
       .single<ProfileRow>();
+
+    if (profileError) {
+      return NextResponse.json({ error: profileError.message }, { status: 500 });
+    }
 
     const isAdmin =
       profile?.is_admin === true || profile?.role?.toLowerCase() === "admin";
@@ -78,7 +81,7 @@ export async function GET() {
         customer_name,
         notes
       `)
-      .neq("status", "cancelled")
+      .or("status.is.null,status.neq.cancelled")
       .order("booking_date", { ascending: true })
       .order("start_time", { ascending: true });
 
@@ -98,21 +101,20 @@ export async function GET() {
 
         if (!endTime) return [];
 
-        const start = `${booking.booking_date}T${booking.start_time}`;
-        const end = `${booking.booking_date}T${endTime}`;
-
         return [
           {
             id: String(booking.id),
-            title: `${booking.people_count ?? 1} ${booking.people_count === 1 ? "person" : "people"} • ${booking.booking_type ?? "Booking"}`,
-            start,
-            end,
+            title: `${booking.people_count ?? 1} ${
+              booking.people_count === 1 ? "person" : "people"
+            } • ${booking.booking_type ?? "Booking"}`,
+            start: `${booking.booking_date}T${booking.start_time}`,
+            end: `${booking.booking_date}T${endTime}`,
             extendedProps: {
               bookingType: booking.booking_type,
               customerName: booking.customer_name ?? null,
-              customerEmail: booking.customer_email,
+              customerEmail: booking.customer_email ?? null,
               peopleCount: booking.people_count,
-              status: booking.status,
+              status: booking.status ?? null,
               amount:
                 typeof booking.total_amount_cents === "number"
                   ? booking.total_amount_cents / 100
