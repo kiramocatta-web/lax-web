@@ -16,7 +16,7 @@ type MemberRow = {
 };
 
 type BookingRow = {
-  id: string | number;
+  id: number;
   booking_date: string | null;
   start_time: string | null;
   end_time: string | null;
@@ -24,16 +24,36 @@ type BookingRow = {
   people_count: number | null;
   booking_type: string | null;
   status: string | null;
-  customer_email: string | null;
-  customer_phone: string | null;
   total_amount_cents: number | null;
-  user_id: string | null;
+  customer_name?: string | null;
+  customer_email: string | null;
+  customer_phone?: string | null;
+  notes?: string | null;
+  created_at?: string | null;
+  user_id?: string | null;
   profiles:
     | {
         email: string | null;
         phone: string | null;
       }
     | null;
+};
+
+type BookingBaseRow = {
+  id: number;
+  booking_date: string | null;
+  start_time: string | null;
+  end_time: string | null;
+  duration_minutes: number | null;
+  people_count: number | null;
+  booking_type: string | null;
+  status: string | null;
+  customer_name?: string | null;
+  customer_email: string | null;
+  customer_phone?: string | null;
+  total_amount_cents: number | null;
+  notes?: string | null;
+  user_id: string | null;
 };
 
 type AffiliateRow = {

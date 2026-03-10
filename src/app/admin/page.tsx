@@ -28,8 +28,8 @@ type MemberRow = {
   stripe_subscription_id: string | null;
 };
 
-type BookingBaseRow = {
-  id: string | number;
+type BookingRow = {
+  id: number;
   booking_date: string | null;
   start_time: string | null;
   end_time: string | null;
@@ -37,9 +37,35 @@ type BookingBaseRow = {
   people_count: number | null;
   booking_type: string | null;
   status: string | null;
-  customer_email: string | null;
-  customer_phone: string | null;
   total_amount_cents: number | null;
+  customer_name?: string | null;
+  customer_email: string | null;
+  customer_phone?: string | null;
+  notes?: string | null;
+  created_at?: string | null;
+  user_id?: string | null;
+  profiles:
+    | {
+        email: string | null;
+        phone: string | null;
+      }
+    | null;
+};
+
+type BookingBaseRow = {
+  id: number;
+  booking_date: string | null;
+  start_time: string | null;
+  end_time: string | null;
+  duration_minutes: number | null;
+  people_count: number | null;
+  booking_type: string | null;
+  status: string | null;
+  customer_name?: string | null;
+  customer_email: string | null;
+  customer_phone?: string | null;
+  total_amount_cents: number | null;
+  notes?: string | null;
   user_id: string | null;
 };
 
@@ -47,27 +73,6 @@ type BookingProfileRow = {
   id: string;
   email: string | null;
   phone: string | null;
-};
-
-type BookingRow = {
-  id: string | number;
-  booking_date: string | null;
-  start_time: string | null;
-  end_time: string | null;
-  duration_minutes: number | null;
-  people_count: number | null;
-  booking_type: string | null;
-  status: string | null;
-  customer_email: string | null;
-  customer_phone: string | null;
-  total_amount_cents: number | null;
-  user_id: string | null;
-  profiles:
-    | {
-        email: string | null;
-        phone: string | null;
-      }
-    | null;
 };
 
 type AffiliateBaseRow = {
@@ -309,11 +314,11 @@ export default async function AdminPage() {
   const { data: bookingsBaseRaw, error: bookingsError } = await supabase
   .from("bookings")
   .select(
-    "id,booking_date,start_time,end_time,duration_minutes,people_count,booking_type,status,customer_email,customer_phone,total_amount_cents,user_id"
+    "id,booking_date,start_time,end_time,duration_minutes,people_count,booking_type,status,customer_name,customer_email,customer_phone,total_amount_cents,notes,user_id"
   )
-    .order("booking_date", { ascending: false })
-    .order("start_time", { ascending: false })
-    .limit(100);
+  .order("booking_date", { ascending: false })
+  .order("start_time", { ascending: false })
+  .limit(100);
 
   if (bookingsError) {
     logSupabaseError("Bookings query", bookingsError);
