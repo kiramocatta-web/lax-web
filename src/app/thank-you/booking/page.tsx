@@ -15,13 +15,14 @@ export default function BookingThankYouPage() {
     <div className="relative min-h-screen overflow-hidden bg-black text-white">
       {/* Background video */}
       <video
-        className="absolute inset-0 h-full w-full object-cover"
-        src="/videos/lax-thank-you.mp4"
         autoPlay
         muted
         loop
         playsInline
-      />
+        className="absolute inset-0 h-full w-full object-cover"
+      >
+        <source src="/videos/lax-thank-you.mp4" type="video/mp4" />
+      </video>
 
       {/* Dark overlay */}
       <div className="absolute inset-0 bg-black/45" />
@@ -29,10 +30,11 @@ export default function BookingThankYouPage() {
       {/* Content */}
       <div className="relative z-10 flex min-h-screen items-center justify-center px-6 text-center">
         <div className="max-w-2xl">
-          <h1 className="text-4xl sm:text-5xl font-semibold">
-            Thank you.
+          <h1 className="text-4xl font-semibold sm:text-5xl">
+            Thank you
           </h1>
-          <p className="mt-4 text-lg sm:text-xl text-white/90">
+
+          <p className="mt-4 text-lg text-white/90 sm:text-xl">
             Your session awaits.
           </p>
         </div>
