@@ -805,7 +805,7 @@ We’d love to welcome you back in for a reset soon 🤍
   </div>
 </div>
 
-<div className="mb-6 flex flex-wrap gap-3">
+<div className="mt-6 mb-6 flex flex-wrap gap-3">
 
   <Link
     href="/bookings-calendar"

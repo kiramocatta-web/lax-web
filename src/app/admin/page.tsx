@@ -37,6 +37,7 @@ type BookingBaseRow = {
   people_count: number | null;
   booking_type: string | null;
   status: string | null;
+  customer_email: string | null;
   customer_phone: string | null;
   total_amount_cents: number | null;
   user_id: string | null;
@@ -57,6 +58,7 @@ type BookingRow = {
   people_count: number | null;
   booking_type: string | null;
   status: string | null;
+  customer_email: string | null;
   customer_phone: string | null;
   total_amount_cents: number | null;
   user_id: string | null;
@@ -305,10 +307,10 @@ export default async function AdminPage() {
 }));
 
   const { data: bookingsBaseRaw, error: bookingsError } = await supabase
-    .from("bookings")
-    .select(
-      "id,booking_date,start_time,end_time,duration_minutes,people_count,booking_type,status,customer_phone,total_amount_cents,user_id"
-    )
+  .from("bookings")
+  .select(
+    "id,booking_date,start_time,end_time,duration_minutes,people_count,booking_type,status,customer_email,customer_phone,total_amount_cents,user_id"
+  )
     .order("booking_date", { ascending: false })
     .order("start_time", { ascending: false })
     .limit(100);
@@ -548,21 +550,22 @@ export default async function AdminPage() {
     );
   });
 
-  const bookings: BookingRow[] = bookingsBaseData.map((booking) => {
-    const matchedProfile = booking.user_id
-      ? bookingProfilesMap.get(booking.user_id)
-      : undefined;
+    const bookings: BookingRow[] = bookingsBaseData.map((booking) => {
+  const matchedProfile = booking.user_id
+    ? bookingProfilesMap.get(booking.user_id)
+    : undefined;
 
-    return {
-      ...booking,
-      profiles: matchedProfile
-        ? {
-            email: matchedProfile.email,
-            phone: matchedProfile.phone,
-          }
-        : null,
-    };
-  });
+  return {
+    ...booking,
+    customer_email: booking.customer_email ?? null,
+    profiles: matchedProfile
+      ? {
+          email: matchedProfile.email,
+          phone: matchedProfile.phone,
+        }
+      : null,
+  };
+});
 
   const affiliates: AffiliateRow[] = affiliatesBaseData.map((affiliate) => {
     const matchedProfile = affiliateProfilesMap.get(affiliate.user_id);

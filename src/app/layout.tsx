@@ -2,6 +2,7 @@
 import "./globals.css";
 import { Montserrat } from "next/font/google";
 import SiteHeader from "@/components/SiteHeader";
+import TrackWebsiteClick from "@/components/TrackWebsiteClick";
 
 const montserrat = Montserrat({
   subsets: ["latin"],
