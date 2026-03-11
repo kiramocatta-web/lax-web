@@ -57,7 +57,7 @@ export async function POST(req: Request) {
 
     const { data: profile, error: profErr } = await supabase
       .from("profiles")
-      .select("role,phone,membership_status,membership_expires_at,membership_paused_until")
+      .select("role,phone,full_name,membership_status,membership_expires_at,membership_paused_until")
       .eq("id", user.id)
       .single();
 
@@ -304,6 +304,7 @@ export async function POST(req: Request) {
         user_id: user.id,
         customer_email: user.email ?? null,
         customer_phone: profile.phone,
+        customer_name: profile.full_name ?? null,
         booking_date,
         start_time,
         end_time,

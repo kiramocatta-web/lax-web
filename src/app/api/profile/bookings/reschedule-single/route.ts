@@ -80,9 +80,9 @@ export async function POST(req: Request) {
 
     const { data: originalBooking, error: originalBookingErr } = await supabase
       .from("bookings")
-      .select(
-        "id,booking_type,status,booking_date,start_time,user_id,customer_email,customer_phone"
-      )
+     .select(
+  "id,booking_type,status,booking_date,start_time,user_id,customer_email,customer_phone,customer_name"
+)
       .eq("id", rescheduleBookingId)
       .eq("user_id", user.id)
       .single();
@@ -148,13 +148,14 @@ export async function POST(req: Request) {
         people_count,
         customer_email: originalBooking.customer_email ?? user.email ?? null,
         customer_phone: originalBooking.customer_phone ?? null,
+        customer_name: originalBooking.customer_name ?? null,   
         user_id: user.id,
         total_amount_cents: 0,
         rescheduled_from_booking_id: originalBooking.id,
       })
       .select(
-        "id, booking_date, start_time, end_time, people_count, status, booking_type, customer_email"
-      )
+  "id,booking_type,status,booking_date,start_time,user_id,customer_email,customer_phone,customer_name"
+)
       .single();
 
     if (insertErr || !inserted) {

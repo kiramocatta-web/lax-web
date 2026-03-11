@@ -45,7 +45,7 @@ export async function POST(req: Request) {
 
     const { data: profile, error: profErr } = await supabase
       .from("profiles")
-      .select("role,phone,membership_status,membership_expires_at,membership_paused_until")
+      .select("role,phone,full_name,membership_status,membership_expires_at,membership_paused_until")
       .eq("id", user.id)
       .single();
 
@@ -186,6 +186,7 @@ export async function POST(req: Request) {
         booking_type,
         customer_phone: profile.phone,
         customer_email: user.email,
+        customer_name: profile.full_name ?? null,
         total_amount_cents: 0,
         status: "confirmed",
       })

@@ -90,18 +90,27 @@ async function sendAdminBookingEmail(session: Stripe.Checkout.Session) {
     return;
   }
 
-  const metadata = session.metadata ?? {};
+  const metadata = (session.metadata ?? {}) as Record<string, string>;
 
-  const customerName =
-    session.customer_details?.name ||
-    metadata.customer_name ||
-    metadata.full_name ||
-    "Unknown";
-
-  const customerEmail =
-    session.customer_details?.email ||
+  const customerEmail = normalizeEmail(
+  session.customer_details?.email ||
+    session.customer_email ||
     metadata.customer_email ||
-    "Unknown";
+    null
+);
+
+const customerName =
+  session.customer_details?.name ||
+  metadata.customer_name ||
+  metadata.full_name ||
+  null;
+
+const customerPhone =
+  session.customer_details?.phone ||
+  metadata.customer_phone ||
+  null;
+
+  
 
   const bookingDate = metadata.booking_date || metadata.date || "—";
   const startTime =
@@ -295,6 +304,12 @@ async function handleSingleBookingCheckout(session: Stripe.Checkout.Session) {
       null
   );
 
+  const customerName =
+  session.customer_details?.name ||
+  md.customer_name ||
+  md.full_name ||
+  null;
+
   const customerPhone =
     session.customer_details?.phone ||
     md.customer_phone ||
@@ -391,30 +406,31 @@ async function handleSingleBookingCheckout(session: Stripe.Checkout.Session) {
   }
 
   const insertPayload = {
-    booking_type: "single",
-    status: "confirmed",
-    booking_date,
-    start_time,
-    end_time,
-    duration_minutes,
-    people_count,
-    customer_email: customerEmail,
-    customer_phone: customerPhone,
-    user_id,
-    stripe_checkout_session_id: session.id,
-    stripe_payment_intent_id:
-      typeof session.payment_intent === "string"
-        ? session.payment_intent
-        : session.payment_intent?.id ?? null,
-    total_amount_cents: session.amount_total ?? null,
-    rescheduled_from_booking_id: originalBookingToReschedule?.id ?? null,
-  };
+  booking_type: "single",
+  status: "confirmed",
+  booking_date,
+  start_time,
+  end_time,
+  duration_minutes,
+  people_count,
+  customer_email: customerEmail,
+  customer_name: customerName,
+  customer_phone: customerPhone,
+  user_id,
+  stripe_checkout_session_id: session.id,
+  stripe_payment_intent_id:
+    typeof session.payment_intent === "string"
+      ? session.payment_intent
+      : session.payment_intent?.id ?? null,
+  total_amount_cents: session.amount_total ?? null,
+  rescheduled_from_booking_id: originalBookingToReschedule?.id ?? null,
+};
 
   const { data: inserted, error: insertErr } = await supabaseAdmin
     .from("bookings")
     .insert(insertPayload)
     .select(
-      "id, booking_date, start_time, end_time, people_count, status, booking_type, customer_email"
+      "id, booking_date, start_time, end_time, people_count, status, booking_type, customer_email, customer_name, customer_phone"
     )
     .single();
 
@@ -422,7 +438,7 @@ async function handleSingleBookingCheckout(session: Stripe.Checkout.Session) {
     const { data: raceExisting } = await supabaseAdmin
       .from("bookings")
       .select(
-        "id, booking_date, start_time, end_time, people_count, status, booking_type, customer_email"
+        "id, booking_date, start_time, end_time, people_count, status, booking_type, customer_email, customer_name, customer_phone"
       )
       .eq("stripe_checkout_session_id", session.id)
       .maybeSingle();
