@@ -185,6 +185,7 @@ export async function POST(req: Request) {
         people_count,
         booking_type,
         customer_phone: profile.phone,
+        customer_email: user.email,
         total_amount_cents: 0,
         status: "confirmed",
       })

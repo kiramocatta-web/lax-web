@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createBrowserClient } from "@supabase/ssr";
 import Image from "next/image";
+import { Instagram } from "lucide-react";
 
 type ProfileRow = {
   membership_plan: string | null;
@@ -75,6 +76,21 @@ export default function HomePageHeader() {
         </a>
 
         <nav className="min-w-0 flex-1 overflow-x-auto">
+            {/* LEFT SIDE — Instagram */}
+    <a
+  href="https://www.instagram.com/laxnlounge"
+  target="_blank"
+  rel="noopener noreferrer"
+  className="flex items-center"
+>
+  <Image
+    src="/instagram-icon.png"
+    alt="Instagram"
+    width={22}
+    height={22}
+    className="opacity-90 hover:opacity-70 transition"
+  />
+</a>
           <div className="flex min-w-max items-center justify-end gap-4 whitespace-nowrap text-sm font-light uppercase tracking-[0.08em] text-white sm:gap-6 sm:text-base md:gap-10 md:text-xl">
             <a href={memberHref} className="shrink-0 hover:text-white/75">
               MEMBER

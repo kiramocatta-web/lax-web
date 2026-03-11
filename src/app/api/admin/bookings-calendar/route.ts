@@ -104,9 +104,7 @@ export async function GET() {
         return [
           {
             id: String(booking.id),
-            title: `${booking.people_count ?? 1} ${
-              booking.people_count === 1 ? "person" : "people"
-            } • ${booking.booking_type ?? "Booking"}`,
+           title: `${booking.customer_name ?? "Guest"} • ${booking.people_count ?? 1} ${booking.booking_type}`,
             start: `${booking.booking_date}T${booking.start_time}`,
             end: `${booking.booking_date}T${endTime}`,
             extendedProps: {
