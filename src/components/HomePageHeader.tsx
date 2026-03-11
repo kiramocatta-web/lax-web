@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { createBrowserClient } from "@supabase/ssr";
 import Image from "next/image";
-import { Instagram } from "lucide-react";
 
 type ProfileRow = {
   membership_plan: string | null;
