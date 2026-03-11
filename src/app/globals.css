@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+@theme {
+  --color-emerald-950: #1c1411;
+  --color-emerald-900: #3b2f2f;
+  --color-emerald-800: #5c4033;
+}
+
 html,
 body {
   height: 100%;

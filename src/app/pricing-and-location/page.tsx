@@ -168,7 +168,7 @@ export default function PricingAndLocationPage() {
           </div>
 
 
-          <div className="overflow-hidden rounded-3xl border border-white/10 min-h-[350px]">
+          <div className="overflow-hidden rounded-3xl border border-white/10 min-h-[350px] pb-20">
             <iframe
               title="Lax N Lounge Map"
               src="https://www.google.com/maps?q=88%20Cook%20Street%20Northgate%20QLD%204013&z=15&output=embed"
