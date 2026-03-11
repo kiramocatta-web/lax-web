@@ -67,18 +67,18 @@ export async function GET() {
     const { data, error } = await supabase
       .from("bookings")
       .select(`
-        id,
-        booking_date,
-        start_time,
-        end_time,
-        duration_minutes,
-        people_count,
-        booking_type,
-        status,
-        total_amount_cents,
-        customer_email,
-        customer_name,
-      `)
+  id,
+  booking_date,
+  start_time,
+  end_time,
+  duration_minutes,
+  people_count,
+  booking_type,
+  status,
+  total_amount_cents,
+  customer_email,
+  customer_name
+`)
       .or("status.is.null,status.neq.cancelled")
       .order("booking_date", { ascending: true })
       .order("start_time", { ascending: true });
@@ -87,7 +87,7 @@ export async function GET() {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    const bookings = (data ?? []) as unknown as BookingRow[];
+    const bookings: BookingRow[] = Array.isArray(data) ? (data as BookingRow[]) : [];
 
 const events = bookings.flatMap((booking) => {
   if (!booking.booking_date || !booking.start_time) return [];
