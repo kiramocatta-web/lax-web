@@ -87,38 +87,39 @@ export async function GET() {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    const events =
-      (data as BookingRow[] | null)?.flatMap((booking) => {
-        if (!booking.booking_date || !booking.start_time) return [];
+    const bookings = (data ?? []) as unknown as BookingRow[];
 
-        const endTime =
-          booking.end_time ||
-          (booking.duration_minutes
-            ? buildEndTime(booking.start_time, booking.duration_minutes)
-            : null);
+const events = bookings.flatMap((booking) => {
+  if (!booking.booking_date || !booking.start_time) return [];
 
-        if (!endTime) return [];
+  const endTime =
+    booking.end_time ||
+    (booking.duration_minutes
+      ? buildEndTime(booking.start_time, booking.duration_minutes)
+      : null);
 
-        return [
-          {
-            id: String(booking.id),
-           title: `${booking.customer_name ?? "Guest"} • ${booking.people_count ?? 1} ${booking.booking_type}`,
-            start: `${booking.booking_date}T${booking.start_time}`,
-            end: `${booking.booking_date}T${endTime}`,
-            extendedProps: {
-              bookingType: booking.booking_type,
-              customerName: booking.customer_name ?? null,
-              customerEmail: booking.customer_email ?? null,
-              peopleCount: booking.people_count,
-              status: booking.status ?? null,
-              amount:
-                typeof booking.total_amount_cents === "number"
-                  ? booking.total_amount_cents / 100
-                  : null,
-            },
-          },
-        ];
-      }) ?? [];
+  if (!endTime) return [];
+
+  return [
+    {
+      id: String(booking.id),
+      title: `${booking.customer_name ?? "Guest"} • ${booking.people_count ?? 1} ${booking.booking_type}`,
+      start: `${booking.booking_date}T${booking.start_time}`,
+      end: `${booking.booking_date}T${endTime}`,
+      extendedProps: {
+        bookingType: booking.booking_type,
+        customerName: booking.customer_name ?? null,
+        customerEmail: booking.customer_email ?? null,
+        peopleCount: booking.people_count,
+        status: booking.status ?? null,
+        amount:
+          typeof booking.total_amount_cents === "number"
+            ? booking.total_amount_cents / 100
+            : null,
+      },
+    },
+  ];
+});
 
     return NextResponse.json(events);
   } catch (error) {
