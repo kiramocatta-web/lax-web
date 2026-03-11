@@ -28,6 +28,13 @@ export default function PricingAndLocationPage() {
           Single Bookings
         </h2>
 
+        <a
+    href="/book/single"
+    className="mt-3 inline-block text-sm text-white/70 hover:text-white underline underline-offset-4"
+  >
+    Say less →
+  </a>
+
         <div className="mx-auto mt-10 grid max-w-4xl gap-6 sm:grid-cols-2 lg:grid-cols-3">
 
           {/* 60 MIN */}
@@ -40,12 +47,7 @@ export default function PricingAndLocationPage() {
               $15
             </p>
 
-            <a
-              href="/book/single"
-              className="mt-6 inline-block text-sm uppercase tracking-[0.15em] text-white underline underline-offset-4"
-            >
-              Say less →
-            </a>
+            
           </div>
 
 
@@ -59,12 +61,7 @@ export default function PricingAndLocationPage() {
               $20
             </p>
 
-            <a
-              href="/book/single"
-              className="mt-6 inline-block text-sm uppercase tracking-[0.15em] text-white underline underline-offset-4"
-            >
-              Say less →
-            </a>
+            
           </div>
 
 
@@ -78,12 +75,7 @@ export default function PricingAndLocationPage() {
               $25
             </p>
 
-            <a
-              href="/book/single"
-              className="mt-6 inline-block text-sm uppercase tracking-[0.15em] text-white underline underline-offset-4"
-            >
-              Say less →
-            </a>
+        
           </div>
 
         </div>
@@ -95,6 +87,13 @@ export default function PricingAndLocationPage() {
         <h2 className="text-3xl font-light">
           Memberships
         </h2>
+
+        <a
+    href="/membership"
+    className="mt-3 inline-block text-sm text-white/70 hover:text-white underline underline-offset-4"
+  >
+    I'm ready to commit →
+  </a>
 
         <div className="mx-auto mt-10 grid max-w-3xl gap-6 sm:grid-cols-2">
 
@@ -112,12 +111,7 @@ export default function PricingAndLocationPage() {
               Unlimited recovery for 7 days.
             </p>
 
-            <a
-              href="/membership"
-              className="mt-6 inline-block text-sm uppercase tracking-[0.15em] text-white underline underline-offset-4"
-            >
-              Sign me up!
-            </a>
+            
           </div>
 
 
@@ -135,12 +129,7 @@ export default function PricingAndLocationPage() {
               Unlimited recovery access every week.
             </p>
 
-            <a
-              href="/membership"
-              className="mt-6 inline-block text-sm uppercase tracking-[0.15em] text-white underline underline-offset-4"
-            >
-              Sign me up!
-            </a>
+
           </div>
 
         </div>

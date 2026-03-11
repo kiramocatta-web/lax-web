@@ -7,7 +7,15 @@ const config: Config = {
     "./src/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        emerald: {
+  900: "#2a1f1b", // deep chocolate
+  800: "#4a342c", // warm brown
+  700: "#6d4c41",
+}
+      },
+    },
   },
   plugins: [],
 };
