@@ -21,7 +21,6 @@ type BookingRow = {
   total_amount_cents: number | null;
   customer_email: string | null;
   customer_name?: string | null;
-  notes?: string | null;
 };
 
 function buildEndTime(startTime: string, durationMinutes: number) {
@@ -79,7 +78,6 @@ export async function GET() {
         total_amount_cents,
         customer_email,
         customer_name,
-        notes
       `)
       .or("status.is.null,status.neq.cancelled")
       .order("booking_date", { ascending: true })
@@ -117,7 +115,6 @@ export async function GET() {
                 typeof booking.total_amount_cents === "number"
                   ? booking.total_amount_cents / 100
                   : null,
-              notes: booking.notes ?? null,
             },
           },
         ];
