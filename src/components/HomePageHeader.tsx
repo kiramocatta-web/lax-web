@@ -76,35 +76,38 @@ export default function HomePageHeader() {
         </a>
 
         <nav className="min-w-0 flex-1 overflow-x-auto">
-            {/* LEFT SIDE — Instagram */}
+  <div className="flex min-w-max items-center justify-end gap-4 whitespace-nowrap text-sm font-light uppercase tracking-[0.08em] text-white sm:gap-6 sm:text-base md:gap-10 md:text-xl">
+
+    {/* Instagram */}
     <a
-  href="https://www.instagram.com/laxnlounge"
-  target="_blank"
-  rel="noopener noreferrer"
-  className="flex items-center"
->
-  <Image
-    src="/instagram-icon.png"
-    alt="Instagram"
-    width={22}
-    height={22}
-    className="opacity-90 hover:opacity-70 transition"
-  />
-</a>
-          <div className="flex min-w-max items-center justify-end gap-4 whitespace-nowrap text-sm font-light uppercase tracking-[0.08em] text-white sm:gap-6 sm:text-base md:gap-10 md:text-xl">
-            <a href={memberHref} className="shrink-0 hover:text-white/75">
-              MEMBER
-            </a>
+      href="https://www.instagram.com/laxnlounge"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex items-center shrink-0"
+    >
+      <Image
+        src="/instagram-icon.png"
+        alt="Instagram"
+        width={20}
+        height={20}
+        className="opacity-90 hover:opacity-70 transition"
+      />
+    </a>
 
-            <a href={singleHref} className="shrink-0 hover:text-white/75">
-              SINGLE
-            </a>
+    <a href={memberHref} className="shrink-0 hover:text-white/75">
+      MEMBER
+    </a>
 
-            <a href={profileHref} className="shrink-0 hover:text-white/75">
-              PROFILE
-            </a>
-          </div>
-        </nav>
+    <a href={singleHref} className="shrink-0 hover:text-white/75">
+      SINGLE
+    </a>
+
+    <a href={profileHref} className="shrink-0 hover:text-white/75">
+      PROFILE
+    </a>
+
+  </div>
+</nav>
       </div>
     </header>
   );
