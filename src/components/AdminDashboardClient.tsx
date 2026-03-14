@@ -48,11 +48,9 @@ type BookingBaseRow = {
   people_count: number | null;
   booking_type: string | null;
   status: string | null;
-  customer_name?: string | null;
   customer_email: string | null;
   customer_phone?: string | null;
   total_amount_cents: number | null;
-  notes?: string | null;
   user_id: string | null;
 };
 
@@ -848,7 +846,6 @@ We’d love to welcome you back in for a reset soon 🤍
               className="mt-4 w-full max-w-md bg-white text-black p-3 rounded-xl"
             >
               <option value="members">Active Members</option>
-              <option value="bookings">Bookings</option>
               <option value="stripe">Stripe Subscription Overview</option>
               <option value="affiliates">Affiliate Performance & Payout Tracking</option>
               <option value="blocks">Block Out Dates</option>
@@ -990,80 +987,7 @@ We’d love to welcome you back in for a reset soon 🤍
                   </table>
                 </div>
               </>
-            ) : view === "bookings" ? (
-              <>
-                <div className="flex items-center justify-between gap-3 flex-wrap">
-                  <h2 className="text-xl font-semibold">Bookings</h2>
-                  <div className="text-sm text-white/70">
-                    Showing:{" "}
-                    <span className="text-white font-semibold">{filteredBookings.length}</span>
-                  </div>
-                </div>
-
-                <div className="mt-4 flex flex-wrap gap-3 items-center">
-                  <select
-                    value={bookingFilter}
-                    onChange={(e) => setBookingFilter(e.target.value as BookingFilter)}
-                    className="bg-white text-black p-3 rounded-xl"
-                  >
-                    <option value="today">Today</option>
-                    <option value="tomorrow">Tomorrow</option>
-                    <option value="week">This Week</option>
-                    <option value="all">All Recent</option>
-                    <option value="custom">Custom Date</option>
-                  </select>
-
-                  {bookingFilter === "custom" ? (
-                    <input
-                      type="date"
-                      value={customDate}
-                      onChange={(e) => setCustomDate(e.target.value)}
-                      className="bg-white text-black p-3 rounded-xl"
-                    />
-                  ) : null}
-                </div>
-
-                <div className="mt-6 overflow-x-auto rounded-2xl border border-white/10 bg-black/10">
-                  <table className="w-full text-sm">
-                    <thead className="bg-white/10 text-white/80">
-                      <tr>
-                        <th className="text-left px-4 py-3 font-semibold">Date</th>
-                        <th className="text-left px-4 py-3 font-semibold">Time</th>
-                        <th className="text-left px-4 py-3 font-semibold">Type</th>
-                        <th className="text-left px-4 py-3 font-semibold">People</th>
-                        <th className="text-left px-4 py-3 font-semibold">Status</th>
-                        <th className="text-left px-4 py-3 font-semibold">Email</th>
-                        <th className="text-left px-4 py-3 font-semibold">Phone</th>
-                        <th className="text-left px-4 py-3 font-semibold">Amount</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredBookings.length === 0 ? (
-                        <tr>
-                          <td colSpan={8} className="px-4 py-6 text-white/60">
-                            No bookings found for this filter.
-                          </td>
-                        </tr>
-                      ) : (
-                        filteredBookings.map((booking) => {
-                          const isExpanded = expandedBookingId === booking.id;
-
-                          return (
-                            <BookingRowExpanded
-                              key={booking.id}
-                              booking={booking}
-                              isExpanded={isExpanded}
-                              onToggle={() =>
-                                setExpandedBookingId(isExpanded ? null : booking.id)
-                              }
-                            />
-                          );
-                        })
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </>
+            
             ) : view === "stripe" ? (
               <>
                 <div className="flex items-center justify-between gap-3 flex-wrap">
