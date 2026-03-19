@@ -9,8 +9,6 @@ const CLOSE_HOUR = 22;
 const INTERVAL_MINUTES = 15;
 const MAX_CAPACITY = 8;
 
-const [autoMovedToNextDay, setAutoMovedToNextDay] = useState(false);
-
 
 type AvailabilityBookingRow = {
   start_time: string;
@@ -269,19 +267,22 @@ export default function BookMembersClient() {
 };
 
   const spotsLeftForDuration = (startMinute: number) => {
-    const blocks = duration / INTERVAL_MINUTES;
-    let minLeft = MAX_CAPACITY;
+  const blocks = duration / INTERVAL_MINUTES;
+  let minLeft = MAX_CAPACITY;
 
-    for (let i = 0; i < blocks; i++) {
-      const m = startMinute + i * INTERVAL_MINUTES;
+  for (let i = 0; i < blocks; i++) {
+    const m = startMinute + i * INTERVAL_MINUTES;
 
-      if (!(m in occupancy)) return 0;
+    if (!(m in occupancy)) return 0;
 
-      const used = occupancy[m] ?? 0;
-      minLeft = Math.min(minLeft, MAX_CAPACITY - used);
-    }
+    const used = occupancy[m] ?? 0;
+    minLeft = Math.min(minLeft, MAX_CAPACITY - used);
+  }
 
-    useEffect(() => {
+  return Math.max(0, minLeft);
+};
+
+useEffect(() => {
   const today = getBrisbaneDateString();
 
   if (selectedDate !== today) {
@@ -313,10 +314,7 @@ export default function BookMembersClient() {
   } else {
     setAutoMovedToNextDay(false);
   }
-}, [selectedDate, duration, peopleCount, bookings, slotMinutes]);
-
-    return Math.max(0, minLeft);
-  };
+}, [selectedDate, duration, bookings, slotMinutes]);
 
   const selectedEndMinute =
     selectedStartMinute !== null ? selectedStartMinute + duration : null;

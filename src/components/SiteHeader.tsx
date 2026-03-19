@@ -12,10 +12,6 @@ type ProfileRow = {
 export default function SiteHeader() {
   const pathname = usePathname();
 
-  if (pathname === "/") {
-    return null;
-  }
-
   const supabase = useMemo(
     () =>
       createBrowserClient(
@@ -67,6 +63,10 @@ export default function SiteHeader() {
       mounted = false;
     };
   }, [supabase]);
+
+  if (pathname === "/") {
+    return null;
+  }
 
   return (
     <header className="relative z-50 w-full bg-emerald-950">
