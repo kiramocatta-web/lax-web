@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import GenerateAffiliateInviteCard from "@/components/GenerateAffiliateInviteCard";
 import Link from "next/link";
 
@@ -15,45 +15,6 @@ type MemberRow = {
   stripe_current_period_end: string | null;
   stripe_customer_id?: string | null;
   stripe_subscription_id?: string | null;
-};
-
-type BookingRow = {
-  id: number;
-  booking_date: string | null;
-  start_time: string | null;
-  end_time: string | null;
-  duration_minutes: number | null;
-  people_count: number | null;
-  booking_type: string | null;
-  status: string | null;
-  total_amount_cents: number | null;
-  customer_name?: string | null;
-  customer_email: string | null;
-  customer_phone?: string | null;
-  notes?: string | null;
-  created_at?: string | null;
-  user_id?: string | null;
-  profiles:
-    | {
-        email: string | null;
-        phone: string | null;
-      }
-    | null;
-};
-
-type BookingBaseRow = {
-  id: number;
-  booking_date: string | null;
-  start_time: string | null;
-  end_time: string | null;
-  duration_minutes: number | null;
-  people_count: number | null;
-  booking_type: string | null;
-  status: string | null;
-  customer_email: string | null;
-  customer_phone?: string | null;
-  total_amount_cents: number | null;
-  user_id: string | null;
 };
 
 type AffiliateRow = {
@@ -119,9 +80,7 @@ type EmailTemplateRow = {
 type AdminDashboardClientProps = {
   adminEmail: string;
   adminPhone: string;
-  activeMembers: MemberRow[];
   allMembers: MemberRow[];
-  bookings: BookingRow[];
   affiliates: AffiliateRow[];
   bookingBlocks: BookingBlockRow[];
   stripeSubs: StripeSubRow[];
@@ -134,13 +93,11 @@ type AdminDashboardClientProps = {
 
 type AdminView =
   | "members"
-  | "bookings"
   | "stripe"
   | "affiliates"
   | "blocks"
   | "comeback";
 
-type BookingFilter = "today" | "tomorrow" | "week" | "all" | "custom";
 
 type AffiliateDateRange =
   | "lifetime"
@@ -160,15 +117,12 @@ type AffiliateSort =
 
 type ComeBackBucket = "14_29" | "30_59" | "60_89" | "90_plus";
 type ComeBackEditorMode = "prefill" | "html";
-
 type MemberStatusValue = "active" | "cancellation_requested" | "cancelled";
 
 function fmtDate(iso: string | null) {
   if (!iso) return "—";
-
   const hasTime = iso.includes("T");
   const d = hasTime ? new Date(iso) : new Date(`${iso}T00:00:00`);
-
   if (Number.isNaN(d.getTime())) return "—";
 
   return d.toLocaleDateString("en-AU", {
@@ -180,7 +134,6 @@ function fmtDate(iso: string | null) {
 
 function fmtDateTime(iso: string | null) {
   if (!iso) return "—";
-
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "—";
 
@@ -199,30 +152,12 @@ function planLabel(plan: string | null) {
   return plan ?? "—";
 }
 
-function formatTime(time: string | null) {
-  if (!time) return "—";
-
-  const [hh, mm] = time.split(":");
-  const hours = Number(hh);
-  const minutes = Number(mm);
-
-  if (Number.isNaN(hours) || Number.isNaN(minutes)) return time;
-
-  const ampm = hours >= 12 ? "PM" : "AM";
-  const h12 = ((hours + 11) % 12) + 1;
-  return `${h12}:${String(minutes).padStart(2, "0")} ${ampm}`;
-}
-
 function formatMoney(cents: number | null) {
   const safe = Number(cents ?? 0);
   return new Intl.NumberFormat("en-AU", {
     style: "currency",
     currency: "AUD",
   }).format(safe / 100);
-}
-
-function getBookingEmail(booking: BookingRow) {
-  return booking.profiles?.email ?? booking.customer_email ?? null;
 }
 
 function getProfileEmail(
@@ -247,13 +182,6 @@ function getProfileName(
     | null
 ) {
   return profile?.name ?? null;
-}
-
-function toLocalDateString(date: Date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
 }
 
 function csvEscape(value: string | number | null | undefined) {
@@ -281,9 +209,7 @@ function memberStatusLabel(value: string | null | undefined) {
 export default function AdminDashboardClient({
   adminEmail,
   adminPhone,
-  activeMembers,
   allMembers,
-  bookings,
   affiliates,
   bookingBlocks,
   stripeSubs,
@@ -292,15 +218,8 @@ export default function AdminDashboardClient({
   totalWebsiteClicks,
   todayWebsiteClicks,
   uniqueVisitorsTotal,
-
 }: AdminDashboardClientProps) {
   const [view, setView] = useState<AdminView>("members");
-
-  const [bookingFilter, setBookingFilter] = useState<BookingFilter>("today");
-  const [customDate, setCustomDate] = useState<string>("");
-  const [expandedBookingId, setExpandedBookingId] = useState<string | number | null>(
-    null
-  );
 
   const [affiliateSearch, setAffiliateSearch] = useState("");
   const [affiliateSort, setAffiliateSort] =
@@ -333,34 +252,35 @@ We’d love to welcome you back in for a reset soon 🤍
 
   const [membersState, setMembersState] = useState<MemberRow[]>(allMembers);
   const [memberDraftStatus, setMemberDraftStatus] = useState<Record<string, MemberStatusValue>>(
-    () =>
-      Object.fromEntries(
-        activeMembers.map((member) => [member.id, normalizeMemberStatus(member.membership_status)])
-      )
-  );
+  () =>
+    Object.fromEntries(
+      allMembers.map((member) => [
+        member.id,
+        normalizeMemberStatus(member.membership_status),
+      ])
+    )
+);
   const [savingMemberId, setSavingMemberId] = useState<string | null>(null);
   const [cancellingMemberId, setCancellingMemberId] = useState<string | null>(null);
+  const [memberActionLoading, setMemberActionLoading] = useState<string | null>(null);
+  const [memberActionChoice, setMemberActionChoice] = useState<Record<string, string>>({});
 
   const totalMembers = useMemo(() => membersState.length, [membersState]);
 
   const affiliateStats = useMemo(() => {
     const totalAffiliates = affiliates.length;
-
     const totalCodeUses = affiliates.reduce(
       (sum, a) => sum + Number(a.used_count ?? 0),
       0
     );
-
     const totalCreditsOwedCents = affiliates.reduce(
       (sum, a) => sum + Number(a.credit_cents ?? 0),
       0
     );
-
     const totalVisits = affiliates.reduce(
       (sum, a) => sum + Number(a.visits_count ?? 0),
       0
     );
-
     const averageUsesPerAffiliate =
       totalAffiliates > 0 ? totalCodeUses / totalAffiliates : 0;
 
@@ -385,31 +305,6 @@ We’d love to welcome you back in for a reset soon 🤍
     };
   }, [affiliates]);
 
-  const filteredBookings = useMemo(() => {
-    const now = new Date();
-    const today = toLocalDateString(now);
-
-    const tomorrowDate = new Date(now);
-    tomorrowDate.setDate(now.getDate() + 1);
-    const tomorrow = toLocalDateString(tomorrowDate);
-
-    const weekEndDate = new Date(now);
-    weekEndDate.setDate(now.getDate() + 6);
-    const weekEnd = toLocalDateString(weekEndDate);
-
-    return bookings.filter((booking) => {
-      const bookingDate = booking.booking_date;
-      if (!bookingDate) return false;
-
-      if (bookingFilter === "today") return bookingDate === today;
-      if (bookingFilter === "tomorrow") return bookingDate === tomorrow;
-      if (bookingFilter === "week") return bookingDate >= today && bookingDate <= weekEnd;
-      if (bookingFilter === "custom") return customDate ? bookingDate === customDate : false;
-
-      return true;
-    });
-  }, [bookings, bookingFilter, customDate]);
-
   const affiliateRows = useMemo(() => {
     const search = affiliateSearch.trim().toLowerCase();
 
@@ -419,7 +314,6 @@ We’d love to welcome you back in for a reset soon 🤍
       const name = String(getProfileName(affiliate.profiles) ?? "").toLowerCase();
 
       if (!search) return true;
-
       return code.includes(search) || email.includes(search) || name.includes(search);
     });
 
@@ -427,22 +321,18 @@ We’d love to welcome you back in for a reset soon 🤍
       if (affiliateSort === "highest_unpaid") {
         return Number(b.credit_cents ?? 0) - Number(a.credit_cents ?? 0);
       }
-
       if (affiliateSort === "most_uses") {
         return Number(b.used_count ?? 0) - Number(a.used_count ?? 0);
       }
-
       if (affiliateSort === "most_visits") {
         return Number(b.visits_count ?? 0) - Number(a.visits_count ?? 0);
       }
-
       if (affiliateSort === "highest_accumulated_payouts") {
         return (
           Number(b.accumulated_payout_cents ?? 0) -
           Number(a.accumulated_payout_cents ?? 0)
         );
       }
-
       if (affiliateSort === "recently_active") {
         const aTime = a.last_code_use_at ? new Date(a.last_code_use_at).getTime() : 0;
         const bTime = b.last_code_use_at ? new Date(b.last_code_use_at).getTime() : 0;
@@ -450,15 +340,9 @@ We’d love to welcome you back in for a reset soon 🤍
       }
 
       const aName =
-        getProfileName(a.profiles) ??
-        getProfileEmail(a.profiles) ??
-        a.code ??
-        "";
+        getProfileName(a.profiles) ?? getProfileEmail(a.profiles) ?? a.code ?? "";
       const bName =
-        getProfileName(b.profiles) ??
-        getProfileEmail(b.profiles) ??
-        b.code ??
-        "";
+        getProfileName(b.profiles) ?? getProfileEmail(b.profiles) ?? b.code ?? "";
 
       return aName.localeCompare(bName);
     });
@@ -467,7 +351,6 @@ We’d love to welcome you back in for a reset soon 🤍
   const filteredComeBackRecipients = useMemo(() => {
     return comeBackRecipients.filter((recipient) => {
       const days = recipient.days_since_last_booking;
-
       if (comeBackBucket === "14_29") return days >= 14 && days <= 29;
       if (comeBackBucket === "30_59") return days >= 30 && days <= 59;
       if (comeBackBucket === "60_89") return days >= 60 && days <= 89;
@@ -523,9 +406,7 @@ We’d love to welcome you back in for a reset soon 🤍
         end: affiliateCustomEnd,
       });
 
-      const res = await fetch(
-        `/api/admin/affiliates/export-usage?${params.toString()}`
-      );
+      const res = await fetch(`/api/admin/affiliates/export-usage?${params.toString()}`);
       if (!res.ok) throw new Error("Failed to export usage report");
 
       const blob = await res.blob();
@@ -571,97 +452,89 @@ We’d love to welcome you back in for a reset soon 🤍
     }));
   };
 
-  const [memberActionLoading, setMemberActionLoading] = useState<string | null>(null);
-
   const createMembershipLink = async ({
-  userId,
-  plan,
-  transferOffer = false,
-  sendEmail = false,
-}: {
-  userId: string;
-  plan: "weekly" | "pass7";
-  transferOffer?: boolean;
-  sendEmail?: boolean;
-}) => {
-  const key = `${userId}:${plan}:${transferOffer ? "transfer" : "standard"}:${
-    sendEmail ? "email" : "copy"
-  }`;
+    userId,
+    plan,
+    transferOffer = false,
+    sendEmail = false,
+  }: {
+    userId: string;
+    plan: "weekly" | "pass7";
+    transferOffer?: boolean;
+    sendEmail?: boolean;
+  }) => {
+    const key = `${userId}:${plan}:${transferOffer ? "transfer" : "standard"}:${
+      sendEmail ? "email" : "copy"
+    }`;
 
-  setMemberActionLoading(key);
+    setMemberActionLoading(key);
 
-  try {
-    const res = await fetch("/api/admin/memberships/create-link", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        userId,
-        plan,
-        transfer_offer: transferOffer,
-        send_email: sendEmail,
-      }),
-    });
+    try {
+      const res = await fetch("/api/admin/memberships/create-link", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId,
+          plan,
+          transfer_offer: transferOffer,
+          send_email: sendEmail,
+        }),
+      });
 
-    const json = await res.json().catch(() => null);
+      const json = await res.json().catch(() => null);
 
-    if (!res.ok) {
-      throw new Error(json?.error || "Failed to create checkout link");
+      if (!res.ok) {
+        throw new Error(json?.error || "Failed to create checkout link");
+      }
+
+      const url = String(json?.url ?? "");
+      if (!url) throw new Error("No checkout URL returned.");
+
+      if (sendEmail) {
+        alert("Checkout link emailed ✅");
+        return;
+      }
+
+      await navigator.clipboard.writeText(url);
+      alert("Checkout link copied ✅");
+    } catch (e: any) {
+      alert(e?.message || "Failed to create checkout link");
+    } finally {
+      setMemberActionLoading(null);
     }
+  };
 
-    const url = String(json?.url ?? "");
+  const openBillingPortal = async (userId: string) => {
+    const key = `${userId}:billing`;
+    setMemberActionLoading(key);
 
-    if (!url) {
-      throw new Error("No checkout URL returned.");
+    try {
+      const res = await fetch("/api/admin/memberships/billing-portal", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userId }),
+      });
+
+      const json = await res.json().catch(() => null);
+
+      if (!res.ok) {
+        throw new Error(json?.error || "Failed to open billing portal");
+      }
+
+      const url = String(json?.url ?? "");
+      if (!url) throw new Error("No billing portal URL returned.");
+
+      window.open(url, "_blank", "noopener,noreferrer");
+    } catch (e: any) {
+      alert(e?.message || "Failed to open billing portal");
+    } finally {
+      setMemberActionLoading(null);
     }
-
-    if (sendEmail) {
-      alert("Checkout link emailed ✅");
-      return;
-    }
-
-    await navigator.clipboard.writeText(url);
-    alert("Checkout link copied ✅");
-  } catch (e: any) {
-    alert(e?.message || "Failed to create checkout link");
-  } finally {
-    setMemberActionLoading(null);
-  }
-};
-
-const openBillingPortal = async (userId: string) => {
-  const key = `${userId}:billing`;
-  setMemberActionLoading(key);
-
-  try {
-    const res = await fetch("/api/admin/memberships/billing-portal", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ userId }),
-    });
-
-    const json = await res.json().catch(() => null);
-
-    if (!res.ok) {
-      throw new Error(json?.error || "Failed to open billing portal");
-    }
-
-    const url = String(json?.url ?? "");
-
-    if (!url) {
-      throw new Error("No billing portal URL returned.");
-    }
-
-    window.open(url, "_blank", "noopener,noreferrer");
-  } catch (e: any) {
-    alert(e?.message || "Failed to open billing portal");
-  } finally {
-    setMemberActionLoading(null);
-  }
-};
+  };
 
   const saveMemberStatus = async (memberId: string) => {
     const nextStatus = memberDraftStatus[memberId] ?? "active";
@@ -757,6 +630,80 @@ const openBillingPortal = async (userId: string) => {
     }
   };
 
+  const runMemberAction = async (member: MemberRow) => {
+    const action = memberActionChoice[member.id] ?? "";
+
+    if (!action) {
+      alert("Please choose an action first.");
+      return;
+    }
+
+    if (action === "copy_weekly") {
+      await createMembershipLink({
+        userId: member.id,
+        plan: "weekly",
+        sendEmail: false,
+      });
+      return;
+    }
+
+    if (action === "email_weekly") {
+      await createMembershipLink({
+        userId: member.id,
+        plan: "weekly",
+        sendEmail: true,
+      });
+      return;
+    }
+
+    if (action === "copy_pass7") {
+      await createMembershipLink({
+        userId: member.id,
+        plan: "pass7",
+        sendEmail: false,
+      });
+      return;
+    }
+
+    if (action === "email_pass7") {
+      await createMembershipLink({
+        userId: member.id,
+        plan: "pass7",
+        sendEmail: true,
+      });
+      return;
+    }
+
+    if (action === "copy_transfer") {
+      await createMembershipLink({
+        userId: member.id,
+        plan: "weekly",
+        transferOffer: true,
+        sendEmail: false,
+      });
+      return;
+    }
+
+    if (action === "email_transfer") {
+      await createMembershipLink({
+        userId: member.id,
+        plan: "weekly",
+        transferOffer: true,
+        sendEmail: true,
+      });
+      return;
+    }
+
+    if (action === "billing") {
+      await openBillingPortal(member.id);
+      return;
+    }
+
+    if (action === "cancel") {
+      await cancelMembership(member.id);
+    }
+  };
+
   const toggleComeBackRecipient = (id: string) => {
     setSelectedComeBackIds((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
@@ -803,6 +750,7 @@ const openBillingPortal = async (userId: string) => {
 
   const sendComeBackTest = async () => {
     setComeBackWorking("test");
+
     try {
       const res = await fetch("/api/admin/comeback/test", {
         method: "POST",
@@ -833,6 +781,7 @@ const openBillingPortal = async (userId: string) => {
     }
 
     setComeBackWorking("send");
+
     try {
       const res = await fetch("/api/admin/comeback/send", {
         method: "POST",
@@ -864,6 +813,7 @@ const openBillingPortal = async (userId: string) => {
     if (!name) return;
 
     setComeBackWorking("save");
+
     try {
       const res = await fetch("/api/admin/comeback/save-template", {
         method: "POST",
@@ -889,7 +839,6 @@ const openBillingPortal = async (userId: string) => {
 
   return (
     <div className="min-h-screen bg-emerald-950 text-white flex flex-col">
-
       <main className="flex-1">
         <div className="max-w-6xl mx-auto px-8 py-10 pb-24">
           <div className="flex items-center justify-between gap-3">
@@ -903,32 +852,30 @@ const openBillingPortal = async (userId: string) => {
           </div>
 
           <div className="mt-6 grid md:grid-cols-3 gap-4">
-  <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
-    <p className="text-sm text-white/60">Website clicks altogether</p>
-    <p className="mt-2 text-3xl font-semibold">{totalWebsiteClicks}</p>
-  </div>
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
+              <p className="text-sm text-white/60">Website clicks altogether</p>
+              <p className="mt-2 text-3xl font-semibold">{totalWebsiteClicks}</p>
+            </div>
 
-  <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
-    <p className="text-sm text-white/60">Website clicks today</p>
-    <p className="mt-2 text-3xl font-semibold">{todayWebsiteClicks}</p>
-  </div>
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
+              <p className="text-sm text-white/60">Website clicks today</p>
+              <p className="mt-2 text-3xl font-semibold">{todayWebsiteClicks}</p>
+            </div>
 
-  <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
-    <p className="text-sm text-white/60">Unique visitors total</p>
-    <p className="mt-2 text-3xl font-semibold">{uniqueVisitorsTotal}</p>
-  </div>
-</div>
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
+              <p className="text-sm text-white/60">Unique visitors total</p>
+              <p className="mt-2 text-3xl font-semibold">{uniqueVisitorsTotal}</p>
+            </div>
+          </div>
 
-<div className="mt-6 mb-6 flex flex-wrap gap-3">
-
-  <Link
-    href="/bookings-calendar"
-    className="rounded-2xl border border-white/20 bg-emerald-600 px-5 py-3 text-sm font-medium text-white transition hover:bg-emerald-500"
-  >
-    Open Bookings Calendar
-  </Link>
-
-</div>
+          <div className="mt-6 mb-6 flex flex-wrap gap-3">
+            <Link
+              href="/bookings-calendar"
+              className="rounded-2xl border border-white/20 bg-emerald-600 px-5 py-3 text-sm font-medium text-white transition hover:bg-emerald-500"
+            >
+              Open Bookings Calendar
+            </Link>
+          </div>
 
           <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6">
             <div className="text-lg font-semibold">Dashboard View</div>
@@ -941,7 +888,7 @@ const openBillingPortal = async (userId: string) => {
               onChange={(e) => setView(e.target.value as AdminView)}
               className="mt-4 w-full max-w-md bg-white text-black p-3 rounded-xl"
             >
-              <option value="members">Active Members</option>
+              <option value="members">All Members</option>
               <option value="stripe">Stripe Subscription Overview</option>
               <option value="affiliates">Affiliate Performance & Payout Tracking</option>
               <option value="blocks">Block Out Dates</option>
@@ -951,239 +898,157 @@ const openBillingPortal = async (userId: string) => {
 
           <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6">
             {view === "members" ? (
-              <>
-                <div className="flex items-center justify-between gap-3 flex-wrap">
-                  <div>
-                    <h2 className="text-xl font-semibold">All Members</h2>
-                    <p className="mt-1 text-sm text-white/70">
-                      Update status, mark cancellation requests, and complete admin-only cancellations.
-                    </p>
-                  </div>
-
-                  <div className="text-sm text-white/70">
-                    Total:{" "}
-                    <span className="text-white font-semibold">{totalMembers}</span>
-                  </div>
-                </div>
-
-                <div className="mt-6 overflow-x-auto rounded-2xl border border-white/10 bg-black/10">
-                  <table className="w-full text-sm min-w-[1200px]">
-                    <thead className="bg-white/10 text-white/80">
-                      <tr>
-                        <th className="text-left px-4 py-3 font-semibold">Email</th>
-                        <th className="text-left px-4 py-3 font-semibold">Phone</th>
-                        <th className="text-left px-4 py-3 font-semibold">Plan</th>
-                        <th className="text-left px-4 py-3 font-semibold">Status</th>
-                        <th className="text-left px-4 py-3 font-semibold">
-                          Expiry / Next Payment
-                        </th>
-                        <th className="text-left px-4 py-3 font-semibold">Role</th>
-                        <th className="text-left px-4 py-3 font-semibold">Change status</th>
-                        <th className="text-left px-4 py-3 font-semibold">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {membersState.length === 0 ? (
-                        <tr>
-                          <td colSpan={8} className="px-4 py-6 text-white/60">
-                            No members found.
-                          </td>
-                        </tr>
-                      ) : (
-                        membersState.map((member) => {
-                          const dateToShow =
-                            member.membership_plan === "weekly"
-                              ? member.stripe_current_period_end
-                              : member.membership_expires_at;
-
-                          const currentStatus = normalizeMemberStatus(
-                            member.membership_status
-                          );
-                          const draftStatus =
-                            memberDraftStatus[member.id] ?? currentStatus;
-
-                          const isSaving = savingMemberId === member.id;
-                          const isCancelling = cancellingMemberId === member.id;
-
-                          const showCancelButton =
-  currentStatus === "cancellation_requested";
-
-                          return (
-                            <tr
-                              key={member.id}
-                              className="border-t border-white/10 text-white/85 align-top"
-                            >
-                              <td className="px-4 py-3">{member.email ?? "—"}</td>
-                              <td className="px-4 py-3">{member.phone ?? "—"}</td>
-                              <td className="px-4 py-3">
-                                {planLabel(member.membership_plan)}
-                              </td>
-                              <td className="px-4 py-3">
-                                {memberStatusLabel(member.membership_status)}
-                              </td>
-                              <td className="px-4 py-3">{fmtDate(dateToShow)}</td>
-                              <td className="px-4 py-3">{member.role ?? "—"}</td>
-                              <td className="px-4 py-3">
-                                <div className="flex flex-col gap-2 min-w-[220px]">
-                                  <select
-                                    value={draftStatus}
-                                    onChange={(e) =>
-                                      updateMemberDraftStatus(member.id, e.target.value)
-                                    }
-                                    className="bg-white text-black p-3 rounded-xl"
-                                    disabled={isSaving || isCancelling}
-                                  >
-                                    <option value="active">Active</option>
-                                    <option value="cancellation_requested">
-                                      Cancellation requested
-                                    </option>
-                                    <option value="cancelled">Cancelled
-                                    </option>
-                                  </select>
-
-                                  <button
-                                    type="button"
-                                    disabled={isSaving || isCancelling}
-                                    onClick={() => saveMemberStatus(member.id)}
-                                    className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 font-semibold disabled:opacity-50"
-                                  >
-                                    {isSaving ? "Saving…" : "Save status"}
-                                  </button>
-                                </div>
-                              </td>
-                              <td className="px-4 py-3">
-  <div className="flex flex-col gap-2 min-w-[240px]">
-    <button
-      type="button"
-      onClick={() =>
-        createMembershipLink({
-          userId: member.id,
-          plan: "weekly",
-          sendEmail: false,
-        })
-      }
-      disabled={memberActionLoading !== null}
-      className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 font-semibold disabled:opacity-50"
-    >
-      Copy weekly link
-    </button>
-
-    <button
-      type="button"
-      onClick={() =>
-        createMembershipLink({
-          userId: member.id,
-          plan: "weekly",
-          sendEmail: true,
-        })
-      }
-      disabled={memberActionLoading !== null}
-      className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 font-semibold disabled:opacity-50"
-    >
-      Email weekly link
-    </button>
-
-    <button
-      type="button"
-      onClick={() =>
-        createMembershipLink({
-          userId: member.id,
-          plan: "pass7",
-          sendEmail: false,
-        })
-      }
-      disabled={memberActionLoading !== null}
-      className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 font-semibold disabled:opacity-50"
-    >
-      Copy 7-day pass link
-    </button>
-
-    <button
-      type="button"
-      onClick={() =>
-        createMembershipLink({
-          userId: member.id,
-          plan: "pass7",
-          sendEmail: true,
-        })
-      }
-      disabled={memberActionLoading !== null}
-      className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 font-semibold disabled:opacity-50"
-    >
-      Email 7-day pass link
-    </button>
-
-    <button
-      type="button"
-      onClick={() =>
-        createMembershipLink({
-          userId: member.id,
-          plan: "weekly",
-          transferOffer: true,
-          sendEmail: false,
-        })
-      }
-      disabled={memberActionLoading !== null}
-      className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 font-semibold disabled:opacity-50"
-    >
-      Copy transfer offer link
-    </button>
-
-    <button
-      type="button"
-      onClick={() =>
-        createMembershipLink({
-          userId: member.id,
-          plan: "weekly",
-          transferOffer: true,
-          sendEmail: true,
-        })
-      }
-      disabled={memberActionLoading !== null}
-      className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 font-semibold disabled:opacity-50"
-    >
-      Email transfer offer
-    </button>
-
-    <button
-      type="button"
-      onClick={() => openBillingPortal(member.id)}
-      disabled={memberActionLoading !== null || !member.stripe_customer_id}
-      className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 font-semibold disabled:opacity-50"
-    >
-      Manage billing
-    </button>
-
-    {showCancelButton ? (
-      <button
-        type="button"
-        disabled={isSaving || isCancelling}
-        onClick={() => cancelMembership(member.id)}
-        className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white font-semibold disabled:opacity-50"
-      >
-        {isCancelling ? "Cancelling…" : "Cancel membership"}
-      </button>
-    ) : (
-      <div className="px-4 py-2 rounded-xl bg-white/5 text-white/50 text-sm">
-        Set to “Cancellation requested” to cancel
+  <>
+    <div className="flex items-center justify-between gap-3 flex-wrap">
+      <div>
+        <h2 className="text-xl font-semibold">All Members</h2>
+        <p className="mt-1 text-sm text-white/70">
+          View all accounts, update membership status, and manage checkout links and billing.
+        </p>
       </div>
-    )}
 
-    <div className="text-xs text-white/50 leading-relaxed">
-      Final action charges the last 2 weeks, cancels recurring billing, and keeps access for 14 days.
+      <div className="text-sm text-white/70">
+        Total: <span className="text-white font-semibold">{totalMembers}</span>
+      </div>
     </div>
-  </div>
-</td>
-                            </tr>
-                          );
-                        })
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </>
-            
-            ) : view === "stripe" ? (
+
+    <div className="mt-6 overflow-x-auto rounded-2xl border border-white/10 bg-black/10">
+      <table className="w-full text-sm min-w-[1200px]">
+        <thead className="bg-white/10 text-white/80">
+          <tr>
+            <th className="text-left px-4 py-3 font-semibold">Email</th>
+            <th className="text-left px-4 py-3 font-semibold">Phone</th>
+            <th className="text-left px-4 py-3 font-semibold">Plan</th>
+            <th className="text-left px-4 py-3 font-semibold">Status</th>
+            <th className="text-left px-4 py-3 font-semibold">
+              Expiry / Next Payment
+            </th>
+            <th className="text-left px-4 py-3 font-semibold">Role</th>
+            <th className="text-left px-4 py-3 font-semibold">Change status</th>
+            <th className="text-left px-4 py-3 font-semibold">Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {membersState.length === 0 ? (
+            <tr>
+              <td colSpan={8} className="px-4 py-6 text-white/60">
+                No members found.
+              </td>
+            </tr>
+          ) : (
+            membersState.map((member) => {
+              const dateToShow =
+                member.membership_plan === "weekly"
+                  ? member.stripe_current_period_end
+                  : member.membership_expires_at;
+
+              const currentStatus = normalizeMemberStatus(member.membership_status);
+              const draftStatus = memberDraftStatus[member.id] ?? currentStatus;
+
+              const isSaving = savingMemberId === member.id;
+              const isCancelling = cancellingMemberId === member.id;
+
+              return (
+                <tr
+                  key={member.id}
+                  className="border-t border-white/10 text-white/85 align-top"
+                >
+                  <td className="px-4 py-3">{member.email ?? "—"}</td>
+                  <td className="px-4 py-3">{member.phone ?? "—"}</td>
+                  <td className="px-4 py-3">{planLabel(member.membership_plan)}</td>
+                  <td className="px-4 py-3">
+                    {memberStatusLabel(member.membership_status)}
+                  </td>
+                  <td className="px-4 py-3">{fmtDate(dateToShow)}</td>
+                  <td className="px-4 py-3">{member.role ?? "—"}</td>
+
+                  <td className="px-4 py-3">
+                    <div className="flex flex-col gap-2 min-w-[220px]">
+                      <select
+                        value={draftStatus}
+                        onChange={(e) =>
+                          updateMemberDraftStatus(member.id, e.target.value)
+                        }
+                        className="bg-white text-black p-3 rounded-xl"
+                        disabled={isSaving || isCancelling}
+                      >
+                        <option value="active">Active</option>
+                        <option value="cancellation_requested">
+                          Cancellation requested
+                        </option>
+                        <option value="cancelled">Cancelled</option>
+                      </select>
+
+                      <button
+                        type="button"
+                        disabled={isSaving || isCancelling}
+                        onClick={() => saveMemberStatus(member.id)}
+                        className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 font-semibold disabled:opacity-50"
+                      >
+                        {isSaving ? "Saving…" : "Save status"}
+                      </button>
+                    </div>
+                  </td>
+
+                  <td className="px-4 py-3">
+                    <div className="flex flex-col gap-2 min-w-[220px]">
+                      <select
+                        value={memberActionChoice[member.id] ?? ""}
+                        onChange={(e) =>
+                          setMemberActionChoice((prev) => ({
+                            ...prev,
+                            [member.id]: e.target.value,
+                          }))
+                        }
+                        disabled={memberActionLoading !== null || isSaving || isCancelling}
+                        className="bg-white text-black p-3 rounded-xl"
+                      >
+                        <option value="">Choose action</option>
+                        <option value="copy_weekly">Copy weekly link</option>
+                        <option value="email_weekly">Email weekly link</option>
+                        <option value="copy_pass7">Copy 7-day pass link</option>
+                        <option value="email_pass7">Email 7-day pass link</option>
+                        <option value="copy_transfer">Copy transfer offer link</option>
+                        <option value="email_transfer">Email transfer offer</option>
+                        <option value="billing" disabled={!member.stripe_customer_id}>
+                          Manage billing
+                        </option>
+                        <option
+                          value="cancel"
+                          disabled={
+                            normalizeMemberStatus(member.membership_status) !==
+                            "cancellation_requested"
+                          }
+                        >
+                          Cancel membership
+                        </option>
+                      </select>
+
+                      <button
+                        type="button"
+                        onClick={() => runMemberAction(member)}
+                        disabled={memberActionLoading !== null || isSaving || isCancelling}
+                        className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 font-semibold disabled:opacity-50"
+                      >
+                        Run action
+                      </button>
+
+                      <div className="text-xs text-white/50 leading-relaxed">
+                        Cancel membership only works after status is set to
+                        “Cancellation requested”.
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })
+          )}
+        </tbody>
+      </table>
+    </div>
+  </>
+) : view === "stripe" ? (
               <>
                 <div className="flex items-center justify-between gap-3 flex-wrap">
                   <h2 className="text-xl font-semibold">Stripe Subscription Overview</h2>
@@ -1829,220 +1694,6 @@ function BlockOutManager({
           </tbody>
         </table>
       </div>
-    </>
-  );
-}
-
-function BookingRowExpanded({
-  booking,
-  isExpanded,
-  onToggle,
-}: {
-  booking: BookingRow;
-  isExpanded: boolean;
-  onToggle: () => void;
-}) {
-  const [working, setWorking] = useState<null | "cancel" | "contact" | "reschedule">(null);
-  const [message, setMessage] = useState("");
-  const [rescheduleDate, setRescheduleDate] = useState(booking.booking_date ?? "");
-  const [rescheduleStartTime, setRescheduleStartTime] = useState(
-    booking.start_time ? booking.start_time.slice(0, 5) : ""
-  );
-
-  const sendCancel = async () => {
-    if (!confirm("Cancel this booking and email the client?")) return;
-
-    setWorking("cancel");
-    try {
-      const res = await fetch("/api/admin/bookings/cancel", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ booking_id: booking.id }),
-      });
-
-      const json = await res.json().catch(() => null);
-      if (!res.ok) throw new Error(json?.error || "Failed to cancel booking");
-
-      alert("Booking cancelled and client emailed ✅");
-      window.location.reload();
-    } catch (e: any) {
-      alert(e?.message || "Something went wrong");
-    } finally {
-      setWorking(null);
-    }
-  };
-
-  const sendContact = async () => {
-    if (!message.trim()) {
-      alert("Please enter a message first.");
-      return;
-    }
-
-    setWorking("contact");
-    try {
-      const res = await fetch("/api/admin/bookings/contact", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          booking_id: booking.id,
-          message: message.trim(),
-        }),
-      });
-
-      const json = await res.json().catch(() => null);
-      if (!res.ok) throw new Error(json?.error || "Failed to send message");
-
-      alert("Message sent to client ✅");
-      setMessage("");
-    } catch (e: any) {
-      alert(e?.message || "Something went wrong");
-    } finally {
-      setWorking(null);
-    }
-  };
-
-  const sendReschedule = async () => {
-    if (!rescheduleDate || !rescheduleStartTime) {
-      alert("Please choose a new date and time.");
-      return;
-    }
-
-    setWorking("reschedule");
-    try {
-      const res = await fetch("/api/admin/bookings/reschedule", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          booking_id: booking.id,
-          booking_date: rescheduleDate,
-          start_time: rescheduleStartTime,
-        }),
-      });
-
-      const json = await res.json().catch(() => null);
-      if (!res.ok) throw new Error(json?.error || "Failed to reschedule booking");
-
-      alert("Booking rescheduled and client emailed ✅");
-      window.location.reload();
-    } catch (e: any) {
-      alert(e?.message || "Something went wrong");
-    } finally {
-      setWorking(null);
-    }
-  };
-
-  return (
-    <>
-      <tr
-        className="border-t border-white/10 text-white/85 cursor-pointer hover:bg-white/5 transition"
-        onClick={onToggle}
-      >
-        <td className="px-4 py-3">{fmtDate(booking.booking_date)}</td>
-        <td className="px-4 py-3">
-          {formatTime(booking.start_time)}
-          {booking.end_time ? ` – ${formatTime(booking.end_time)}` : ""}
-        </td>
-        <td className="px-4 py-3">{booking.booking_type ?? "—"}</td>
-        <td className="px-4 py-3">{booking.people_count ?? "—"}</td>
-        <td className="px-4 py-3">{booking.status ?? "—"}</td>
-        <td className="px-4 py-3">{getBookingEmail(booking) ?? "—"}</td>
-        <td className="px-4 py-3">{booking.customer_phone ?? "—"}</td>
-        <td className="px-4 py-3">{formatMoney(booking.total_amount_cents)}</td>
-      </tr>
-
-      {isExpanded ? (
-        <tr className="border-t border-white/10 bg-white/5">
-          <td colSpan={8} className="px-4 py-4">
-            <div className="grid gap-2 text-sm text-white/80">
-              <div>
-                <span className="text-white/60">Booking ID:</span>{" "}
-                <span className="text-white">{String(booking.id)}</span>
-              </div>
-              <div>
-                <span className="text-white/60">User ID:</span>{" "}
-                <span className="text-white">{booking.user_id ?? "—"}</span>
-              </div>
-              <div>
-                <span className="text-white/60">Duration:</span>{" "}
-                <span className="text-white">{booking.duration_minutes ?? "—"} mins</span>
-              </div>
-              <div>
-                <span className="text-white/60">Booking type:</span>{" "}
-                <span className="text-white">{booking.booking_type ?? "—"}</span>
-              </div>
-              <div>
-                <span className="text-white/60">Status:</span>{" "}
-                <span className="text-white">{booking.status ?? "—"}</span>
-              </div>
-              <div>
-                <span className="text-white/60">Email:</span>{" "}
-               <span className="text-white">{getBookingEmail(booking) ?? "—"}</span>
-              </div>
-              <div>
-                <span className="text-white/60">Phone:</span>{" "}
-                <span className="text-white">{booking.customer_phone ?? "—"}</span>
-              </div>
-              <div>
-                <span className="text-white/60">Amount:</span>{" "}
-                <span className="text-white">{formatMoney(booking.total_amount_cents)}</span>
-              </div>
-            </div>
-
-            <div className="mt-5 grid gap-3">
-              <div className="flex flex-wrap gap-2">
-                <button
-                  onClick={sendCancel}
-                  disabled={working !== null}
-                  className="px-4 py-2 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-200 font-semibold disabled:opacity-50"
-                >
-                  {working === "cancel" ? "Cancelling…" : "Cancel booking"}
-                </button>
-
-                <button
-                  onClick={sendReschedule}
-                  disabled={working !== null}
-                  className="px-4 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-100 font-semibold disabled:opacity-50"
-                >
-                  {working === "reschedule" ? "Rescheduling…" : "Reschedule booking"}
-                </button>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-3">
-                <input
-                  type="date"
-                  value={rescheduleDate}
-                  onChange={(e) => setRescheduleDate(e.target.value)}
-                  className="bg-white text-black p-3 rounded-xl"
-                />
-                <input
-                  type="time"
-                  value={rescheduleStartTime}
-                  onChange={(e) => setRescheduleStartTime(e.target.value)}
-                  className="bg-white text-black p-3 rounded-xl"
-                />
-              </div>
-
-              <textarea
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder="Message to client…"
-                rows={4}
-                className="w-full bg-white text-black p-3 rounded-xl"
-              />
-
-              <div>
-                <button
-                  onClick={sendContact}
-                  disabled={working !== null}
-                  className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold disabled:opacity-50"
-                >
-                  {working === "contact" ? "Sending…" : "Contact client"}
-                </button>
-              </div>
-            </div>
-          </td>
-        </tr>
-      ) : null}
     </>
   );
 }

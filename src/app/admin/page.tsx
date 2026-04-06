@@ -594,9 +594,7 @@ export default async function AdminPage() {
     <AdminDashboardClient
       adminEmail={profile.email ?? user.email ?? "—"}
       adminPhone={profile.phone ?? "—"}
-      activeMembers={activeMembers}
       allMembers={membersData}
-      bookings={bookings}
       affiliates={affiliates}
       bookingBlocks={bookingBlocks}
       stripeSubs={stripeSubs}
