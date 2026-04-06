@@ -4,11 +4,16 @@ import { supabaseServer } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 
-type AllowedStatus = "active" | "cancellation_requested" | "cancelled";
+type AllowedStatus =
+  | "none"
+  | "active"
+  | "cancellation_requested"
+  | "cancelled";
 
 function normalizeStatus(value: string): AllowedStatus | null {
   const v = String(value ?? "").trim().toLowerCase();
 
+  if (v === "none" || v === "no membership") return "none";
   if (v === "active") return "active";
   if (v === "cancellation_requested") return "cancellation_requested";
   if (v === "cancelled" || v === "canceled") return "cancelled";
@@ -61,9 +66,7 @@ export async function POST(req: Request) {
 
     const { data: memberProfile, error: memberErr } = await supabaseAdmin
       .from("profiles")
-      .select(
-        "id,membership_status,membership_expires_at,stripe_current_period_end"
-      )
+      .select("id")
       .eq("id", profileId)
       .single();
 
@@ -74,12 +77,19 @@ export async function POST(req: Request) {
       );
     }
 
-    const updatePayload: Record<string, any> = {
-      membership_status: membershipStatus,
-    };
+    const updatePayload: Record<string, any> = {};
 
-    if (membershipStatus === "active") {
+    if (membershipStatus === "none") {
+      updatePayload.membership_status = null;
+      updatePayload.membership_plan = null;
       updatePayload.membership_expires_at = null;
+      updatePayload.stripe_current_period_end = null;
+    } else {
+      updatePayload.membership_status = membershipStatus;
+
+      if (membershipStatus === "active") {
+        updatePayload.membership_expires_at = null;
+      }
     }
 
     const { error: updateErr } = await supabaseAdmin
@@ -88,15 +98,12 @@ export async function POST(req: Request) {
       .eq("id", profileId);
 
     if (updateErr) {
-      return NextResponse.json(
-        { error: updateErr.message },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: updateErr.message }, { status: 500 });
     }
 
     return NextResponse.json({
       ok: true,
-      membership_status: membershipStatus,
+      membership_status: membershipStatus === "none" ? null : membershipStatus,
     });
   } catch (err: any) {
     console.error("admin membership update-status error:", err);

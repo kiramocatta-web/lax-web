@@ -117,7 +117,7 @@ type AffiliateSort =
 
 type ComeBackBucket = "14_29" | "30_59" | "60_89" | "90_plus";
 type ComeBackEditorMode = "prefill" | "html";
-type MemberStatusValue = "active" | "cancellation_requested" | "cancelled";
+
 
 function fmtDate(iso: string | null) {
   if (!iso) return "—";
@@ -192,8 +192,16 @@ function csvEscape(value: string | number | null | undefined) {
   return text;
 }
 
+type MemberStatusValue =
+  | "none"
+  | "active"
+  | "cancellation_requested"
+  | "cancelled";
+
 function normalizeMemberStatus(value: string | null | undefined): MemberStatusValue {
   const v = String(value ?? "").toLowerCase();
+
+  if (!v) return "none";
   if (v === "cancellation_requested") return "cancellation_requested";
   if (v === "cancelled" || v === "canceled") return "cancelled";
   return "active";
@@ -201,6 +209,7 @@ function normalizeMemberStatus(value: string | null | undefined): MemberStatusVa
 
 function memberStatusLabel(value: string | null | undefined) {
   const v = normalizeMemberStatus(value);
+  if (v === "none") return "No membership";
   if (v === "cancellation_requested") return "Cancellation requested";
   if (v === "cancelled") return "Cancelled";
   return "Active";
@@ -537,7 +546,7 @@ We’d love to welcome you back in for a reset soon 🤍
   };
 
   const saveMemberStatus = async (memberId: string) => {
-    const nextStatus = memberDraftStatus[memberId] ?? "active";
+    const nextStatus = memberDraftStatus[memberId] ?? "none";
     setSavingMemberId(memberId);
 
     try {
@@ -966,19 +975,16 @@ We’d love to welcome you back in for a reset soon 🤍
                   <td className="px-4 py-3">
                     <div className="flex flex-col gap-2 min-w-[220px]">
                       <select
-                        value={draftStatus}
-                        onChange={(e) =>
-                          updateMemberDraftStatus(member.id, e.target.value)
-                        }
-                        className="bg-white text-black p-3 rounded-xl"
-                        disabled={isSaving || isCancelling}
-                      >
-                        <option value="active">Active</option>
-                        <option value="cancellation_requested">
-                          Cancellation requested
-                        </option>
-                        <option value="cancelled">Cancelled</option>
-                      </select>
+  value={draftStatus}
+  onChange={(e) => updateMemberDraftStatus(member.id, e.target.value)}
+  className="bg-white text-black p-3 rounded-xl"
+  disabled={isSaving || isCancelling}
+>
+  <option value="none">No membership</option>
+  <option value="active">Active</option>
+  <option value="cancellation_requested">Cancellation requested</option>
+  <option value="cancelled">Cancelled</option>
+</select>
 
                       <button
                         type="button"

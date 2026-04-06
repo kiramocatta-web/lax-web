@@ -275,24 +275,23 @@ export default async function AdminPage() {
   ).size;
 
   const { data: membersRaw, error: membersError } = await supabase
-    .from("profiles")
-    .select(
-      [
-        "id",
-        "email",
-        "phone",
-        "role",
-        "membership_plan",
-        "membership_status",
-        "membership_expires_at",
-        "stripe_current_period_end",
-        "stripe_customer_id",
-        "stripe_subscription_id",
-      ].join(",")
-    )
-    .neq("role", "affiliate")
-    .not("membership_plan", "is", null)
-    .order("email", { ascending: true });
+  .from("profiles")
+  .select(
+    [
+      "id",
+      "email",
+      "phone",
+      "role",
+      "membership_plan",
+      "membership_status",
+      "membership_expires_at",
+      "stripe_current_period_end",
+      "stripe_customer_id",
+      "stripe_subscription_id",
+    ].join(",")
+  )
+  .neq("role", "affiliate")
+  .order("email", { ascending: true });
 
   if (membersError) {
     logSupabaseError("Members query", membersError);
