@@ -13,6 +13,8 @@ type MemberRow = {
   membership_status: string | null;
   membership_expires_at: string | null;
   stripe_current_period_end: string | null;
+  stripe_customer_id?: string | null;
+  stripe_subscription_id?: string | null;
 };
 
 type BookingRow = {
@@ -118,6 +120,7 @@ type AdminDashboardClientProps = {
   adminEmail: string;
   adminPhone: string;
   activeMembers: MemberRow[];
+  allMembers: MemberRow[];
   bookings: BookingRow[];
   affiliates: AffiliateRow[];
   bookingBlocks: BookingBlockRow[];
@@ -279,6 +282,7 @@ export default function AdminDashboardClient({
   adminEmail,
   adminPhone,
   activeMembers,
+  allMembers,
   bookings,
   affiliates,
   bookingBlocks,
@@ -327,7 +331,7 @@ We’d love to welcome you back in for a reset soon 🤍
   const [selectedComeBackIds, setSelectedComeBackIds] = useState<string[]>([]);
   const [comeBackWorking, setComeBackWorking] = useState<null | "test" | "send" | "save">(null);
 
-  const [membersState, setMembersState] = useState<MemberRow[]>(activeMembers);
+  const [membersState, setMembersState] = useState<MemberRow[]>(allMembers);
   const [memberDraftStatus, setMemberDraftStatus] = useState<Record<string, MemberStatusValue>>(
     () =>
       Object.fromEntries(
@@ -337,7 +341,7 @@ We’d love to welcome you back in for a reset soon 🤍
   const [savingMemberId, setSavingMemberId] = useState<string | null>(null);
   const [cancellingMemberId, setCancellingMemberId] = useState<string | null>(null);
 
-  const totalActiveMembers = useMemo(() => membersState.length, [membersState]);
+  const totalMembers = useMemo(() => membersState.length, [membersState]);
 
   const affiliateStats = useMemo(() => {
     const totalAffiliates = affiliates.length;
@@ -566,6 +570,98 @@ We’d love to welcome you back in for a reset soon 🤍
       [memberId]: normalizeMemberStatus(value),
     }));
   };
+
+  const [memberActionLoading, setMemberActionLoading] = useState<string | null>(null);
+
+  const createMembershipLink = async ({
+  userId,
+  plan,
+  transferOffer = false,
+  sendEmail = false,
+}: {
+  userId: string;
+  plan: "weekly" | "pass7";
+  transferOffer?: boolean;
+  sendEmail?: boolean;
+}) => {
+  const key = `${userId}:${plan}:${transferOffer ? "transfer" : "standard"}:${
+    sendEmail ? "email" : "copy"
+  }`;
+
+  setMemberActionLoading(key);
+
+  try {
+    const res = await fetch("/api/admin/memberships/create-link", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        userId,
+        plan,
+        transfer_offer: transferOffer,
+        send_email: sendEmail,
+      }),
+    });
+
+    const json = await res.json().catch(() => null);
+
+    if (!res.ok) {
+      throw new Error(json?.error || "Failed to create checkout link");
+    }
+
+    const url = String(json?.url ?? "");
+
+    if (!url) {
+      throw new Error("No checkout URL returned.");
+    }
+
+    if (sendEmail) {
+      alert("Checkout link emailed ✅");
+      return;
+    }
+
+    await navigator.clipboard.writeText(url);
+    alert("Checkout link copied ✅");
+  } catch (e: any) {
+    alert(e?.message || "Failed to create checkout link");
+  } finally {
+    setMemberActionLoading(null);
+  }
+};
+
+const openBillingPortal = async (userId: string) => {
+  const key = `${userId}:billing`;
+  setMemberActionLoading(key);
+
+  try {
+    const res = await fetch("/api/admin/memberships/billing-portal", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ userId }),
+    });
+
+    const json = await res.json().catch(() => null);
+
+    if (!res.ok) {
+      throw new Error(json?.error || "Failed to open billing portal");
+    }
+
+    const url = String(json?.url ?? "");
+
+    if (!url) {
+      throw new Error("No billing portal URL returned.");
+    }
+
+    window.open(url, "_blank", "noopener,noreferrer");
+  } catch (e: any) {
+    alert(e?.message || "Failed to open billing portal");
+  } finally {
+    setMemberActionLoading(null);
+  }
+};
 
   const saveMemberStatus = async (memberId: string) => {
     const nextStatus = memberDraftStatus[memberId] ?? "active";
@@ -858,7 +954,7 @@ We’d love to welcome you back in for a reset soon 🤍
               <>
                 <div className="flex items-center justify-between gap-3 flex-wrap">
                   <div>
-                    <h2 className="text-xl font-semibold">Active Members</h2>
+                    <h2 className="text-xl font-semibold">All Members</h2>
                     <p className="mt-1 text-sm text-white/70">
                       Update status, mark cancellation requests, and complete admin-only cancellations.
                     </p>
@@ -866,7 +962,7 @@ We’d love to welcome you back in for a reset soon 🤍
 
                   <div className="text-sm text-white/70">
                     Total:{" "}
-                    <span className="text-white font-semibold">{totalActiveMembers}</span>
+                    <span className="text-white font-semibold">{totalMembers}</span>
                   </div>
                 </div>
 
@@ -890,7 +986,7 @@ We’d love to welcome you back in for a reset soon 🤍
                       {membersState.length === 0 ? (
                         <tr>
                           <td colSpan={8} className="px-4 py-6 text-white/60">
-                            No active members found.
+                            No members found.
                           </td>
                         </tr>
                       ) : (
@@ -956,29 +1052,128 @@ We’d love to welcome you back in for a reset soon 🤍
                                 </div>
                               </td>
                               <td className="px-4 py-3">
-                                <div className="flex flex-col gap-2 min-w-[220px]">
-                                  {showCancelButton ? (
-                                    <button
-                                      type="button"
-                                      disabled={isSaving || isCancelling}
-                                      onClick={() => cancelMembership(member.id)}
-                                      className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white font-semibold disabled:opacity-50"
-                                    >
-                                      {isCancelling
-                                        ? "Cancelling…"
-                                        : "Cancel membership"}
-                                    </button>
-                                  ) : (
-                                    <div className="px-4 py-2 rounded-xl bg-white/5 text-white/50">
-                                      Set to “Cancellation requested” to cancel
-                                    </div>
-                                  )}
+  <div className="flex flex-col gap-2 min-w-[240px]">
+    <button
+      type="button"
+      onClick={() =>
+        createMembershipLink({
+          userId: member.id,
+          plan: "weekly",
+          sendEmail: false,
+        })
+      }
+      disabled={memberActionLoading !== null}
+      className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 font-semibold disabled:opacity-50"
+    >
+      Copy weekly link
+    </button>
 
-                                  <div className="text-xs text-white/50 leading-relaxed">
-                                    Final action charges the last 2 weeks, cancels recurring billing, and keeps access for 14 days.
-                                  </div>
-                                </div>
-                              </td>
+    <button
+      type="button"
+      onClick={() =>
+        createMembershipLink({
+          userId: member.id,
+          plan: "weekly",
+          sendEmail: true,
+        })
+      }
+      disabled={memberActionLoading !== null}
+      className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 font-semibold disabled:opacity-50"
+    >
+      Email weekly link
+    </button>
+
+    <button
+      type="button"
+      onClick={() =>
+        createMembershipLink({
+          userId: member.id,
+          plan: "pass7",
+          sendEmail: false,
+        })
+      }
+      disabled={memberActionLoading !== null}
+      className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 font-semibold disabled:opacity-50"
+    >
+      Copy 7-day pass link
+    </button>
+
+    <button
+      type="button"
+      onClick={() =>
+        createMembershipLink({
+          userId: member.id,
+          plan: "pass7",
+          sendEmail: true,
+        })
+      }
+      disabled={memberActionLoading !== null}
+      className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 font-semibold disabled:opacity-50"
+    >
+      Email 7-day pass link
+    </button>
+
+    <button
+      type="button"
+      onClick={() =>
+        createMembershipLink({
+          userId: member.id,
+          plan: "weekly",
+          transferOffer: true,
+          sendEmail: false,
+        })
+      }
+      disabled={memberActionLoading !== null}
+      className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 font-semibold disabled:opacity-50"
+    >
+      Copy transfer offer link
+    </button>
+
+    <button
+      type="button"
+      onClick={() =>
+        createMembershipLink({
+          userId: member.id,
+          plan: "weekly",
+          transferOffer: true,
+          sendEmail: true,
+        })
+      }
+      disabled={memberActionLoading !== null}
+      className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 font-semibold disabled:opacity-50"
+    >
+      Email transfer offer
+    </button>
+
+    <button
+      type="button"
+      onClick={() => openBillingPortal(member.id)}
+      disabled={memberActionLoading !== null || !member.stripe_customer_id}
+      className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 font-semibold disabled:opacity-50"
+    >
+      Manage billing
+    </button>
+
+    {showCancelButton ? (
+      <button
+        type="button"
+        disabled={isSaving || isCancelling}
+        onClick={() => cancelMembership(member.id)}
+        className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white font-semibold disabled:opacity-50"
+      >
+        {isCancelling ? "Cancelling…" : "Cancel membership"}
+      </button>
+    ) : (
+      <div className="px-4 py-2 rounded-xl bg-white/5 text-white/50 text-sm">
+        Set to “Cancellation requested” to cancel
+      </div>
+    )}
+
+    <div className="text-xs text-white/50 leading-relaxed">
+      Final action charges the last 2 weeks, cancels recurring billing, and keeps access for 14 days.
+    </div>
+  </div>
+</td>
                             </tr>
                           );
                         })

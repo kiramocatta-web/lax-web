@@ -29,8 +29,8 @@ export default function AffiliateAgreementPage() {
                   <strong>4 times per month</strong>.
                 </li>
                 <li>
-                  You must post a minimum of <strong>1 story per fortnight </strong> 
-                  featuring or mentioning LAX.
+                  You must post <strong>a story when using </strong> 
+                  LAX.
                 </li>
                 <li>
                   You must post a minimum of <strong>1 feed post per month</strong>.

@@ -52,20 +52,15 @@ export default async function AdminMembersPage() {
   const todayISO = new Date().toISOString();
 
   const { data: members, error } = await supabase
-    .from("profiles")
-    .select(
-      "id,email,phone,role,membership_plan,membership_status,membership_expires_at,stripe_current_period_end"
-    )
-    .neq("role", "affiliate")
-    .or(
-      [
-        "membership_status.eq.active",
-        "membership_status.eq.trialing",
-        `membership_expires_at.gt.${todayISO}`,
-      ].join(",")
-    )
-    .order("email", { ascending: true });
+  .from("profiles")
+  .select(
+    "id,email,phone,role,membership_plan,membership_status,membership_expires_at,stripe_current_period_end,stripe_customer_id,stripe_subscription_id"
+  )
+  .neq("role", "affiliate")
+  .not("membership_plan", "is", null)
+  .order("email", { ascending: true });
 
+  
   if (error) {
     return (
       <div className="min-h-screen bg-emerald-950 text-white">

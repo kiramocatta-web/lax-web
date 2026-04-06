@@ -13,7 +13,7 @@ function getFromEmail() {
     process.env.EMAIL_FROM ||
     process.env.RESEND_FROM ||
     process.env.RESEND_FROM_EMAIL ||
-    "LAX N LOUNGE <bookings@laxnlounge.com.au>"
+    "LAX N LOUNGE <admin@laxnlounge.com.au>"
   );
 }
 
@@ -25,12 +25,10 @@ export async function sendBookingEmail(args: {
   durationMinutes?: number;
   peopleCount: number;
 }) {
-  if (!process.env.RESEND_API_KEY) return;
-
   const resend = getResend();
   const from = getFromEmail();
 
-  await resend.emails.send({
+  const { data, error } = await resend.emails.send({
     from,
     to: args.to,
     subject: "Lax N Lounge — Booking Confirmed ✅",
@@ -45,6 +43,13 @@ export async function sendBookingEmail(args: {
       </div>
     `,
   });
+
+  if (error) {
+    console.error("sendBookingEmail Resend error:", error);
+    throw new Error(error.message || "Failed to send booking confirmation");
+  }
+
+  console.log("sendBookingEmail success:", data);
 }
 
 export async function sendComeBackEmail(args: {
@@ -66,7 +71,7 @@ export async function sendComeBackEmail(args: {
       args.daysSinceLastBooking != null ? String(args.daysSinceLastBooking) : "—"
     );
 
-  await resend.emails.send({
+  const { data, error } = await resend.emails.send({
     from,
     to: args.to,
     subject: args.subject,
@@ -76,4 +81,11 @@ export async function sendComeBackEmail(args: {
       </div>
     `,
   });
+
+  if (error) {
+    console.error("sendComeBackEmail Resend error:", error);
+    throw new Error(error.message || "Failed to send comeback email");
+  }
+
+  console.log("sendComeBackEmail success:", data);
 }

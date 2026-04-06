@@ -130,12 +130,22 @@ export async function POST(req: Request) {
     const agreementVersion = "2026-03-08";
 
     const { error: profileUpsertError } = await supabaseAdmin
-      .from("profiles")
-      .upsert({
-        id: userId,
-        role: "affiliate",
-        phone: phone || null,
-      });
+  .from("profiles")
+  .upsert(
+    {
+      id: userId,
+      email,
+      role: "affiliate",
+      phone: phone || null,
+      membership_plan: "affiliate",
+      membership_status: "active",
+      affiliate_code: desiredCode,
+      affiliate_code_used_count: 0,
+      affiliate_credit_cents: 0,
+      affiliate_visit_count: 0,
+    },
+    { onConflict: "id" }
+  );
 
     if (profileUpsertError) {
       return NextResponse.json(

@@ -167,9 +167,9 @@ const customerPhone =
 
 async function applyAffiliateCredit(affiliateUserId: string) {
   const { data: aff, error: affErr } = await supabaseAdmin
-    .from("profiles")
-    .select("affiliate_code_used_count,affiliate_credit_cents")
-    .eq("id", affiliateUserId)
+    .from("affiliates")
+    .select("used_count,credit_cents")
+    .eq("user_id", affiliateUserId)
     .single();
 
   if (affErr) {
@@ -177,19 +177,37 @@ async function applyAffiliateCredit(affiliateUserId: string) {
     return;
   }
 
-  const used = Number((aff as any)?.affiliate_code_used_count ?? 0);
-  const credit = Number((aff as any)?.affiliate_credit_cents ?? 0);
+  const used = Number(aff?.used_count ?? 0);
+  const credit = Number(aff?.credit_cents ?? 0);
 
-  const { error: updateErr } = await supabaseAdmin
-    .from("profiles")
+  const { error: updateAffiliateErr } = await supabaseAdmin
+    .from("affiliates")
     .update({
-      affiliate_code_used_count: used + 1,
-      affiliate_credit_cents: credit + 500,
+      used_count: used + 1,
+      credit_cents: credit + 500,
     })
-    .eq("id", affiliateUserId);
+    .eq("user_id", affiliateUserId);
 
-  if (updateErr) {
-    console.error("affiliate credit update failed:", updateErr);
+  if (updateAffiliateErr) {
+    console.error("affiliate credit update failed:", updateAffiliateErr);
+  }
+
+  const { data: profile, error: profileErr } = await supabaseAdmin
+    .from("profiles")
+    .select("affiliate_code_used_count,affiliate_credit_cents")
+    .eq("id", affiliateUserId)
+    .single();
+
+  if (!profileErr && profile) {
+    await supabaseAdmin
+      .from("profiles")
+      .update({
+        affiliate_code_used_count:
+          Number(profile.affiliate_code_used_count ?? 0) + 1,
+        affiliate_credit_cents:
+          Number(profile.affiliate_credit_cents ?? 0) + 500,
+      })
+      .eq("id", affiliateUserId);
   }
 }
 

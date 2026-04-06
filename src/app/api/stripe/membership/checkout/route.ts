@@ -32,7 +32,9 @@ export async function POST(req: Request) {
 
     const { data: profile, error: profileErr } = await supabase
       .from("profiles")
-      .select("phone,stripe_customer_id")
+      .select(
+  "phone,stripe_customer_id,membership_plan,membership_status,stripe_subscription_id,membership_expires_at"
+)
       .eq("id", user.id)
       .single();
 
@@ -49,6 +51,22 @@ export async function POST(req: Request) {
 
     const body = await req.json().catch(() => null);
     const plan = body?.plan as "weekly" | "pass7" | undefined;
+
+    if (plan === "weekly") {
+  const status = String(profile?.membership_status ?? "").toLowerCase();
+  const existingPlan = String(profile?.membership_plan ?? "").toLowerCase();
+
+  const alreadyHasWeekly =
+    existingPlan === "weekly" &&
+    ["active", "trialing", "cancellation_requested"].includes(status);
+
+  if (alreadyHasWeekly) {
+    return NextResponse.json(
+      { error: "You already have an active weekly membership." },
+      { status: 409 }
+    );
+  }
+}
     const transferOffer = body?.transfer_offer === true;
 
     if (!plan) {

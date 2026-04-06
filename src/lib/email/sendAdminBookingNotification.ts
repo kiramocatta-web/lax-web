@@ -1,4 +1,3 @@
-// src/lib/email/sendAdminBookingNotification.ts
 import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -34,6 +33,10 @@ export async function sendAdminBookingNotification({
   const to = process.env.BOOKING_NOTIFICATION_EMAIL;
   const from = process.env.RESEND_FROM_EMAIL;
 
+  if (!process.env.RESEND_API_KEY) {
+    throw new Error("Missing RESEND_API_KEY");
+  }
+
   if (!to) throw new Error("Missing BOOKING_NOTIFICATION_EMAIL");
   if (!from) throw new Error("Missing RESEND_FROM_EMAIL");
 
@@ -41,7 +44,7 @@ export async function sendAdminBookingNotification({
     ? `Rescheduled booking – ${bookingDate} ${startTime}`
     : `New booking – ${bookingDate} ${startTime}`;
 
-  await resend.emails.send({
+  const { data, error } = await resend.emails.send({
     from,
     to,
     subject,
@@ -58,4 +61,11 @@ export async function sendAdminBookingNotification({
       </div>
     `,
   });
+
+  if (error) {
+    console.error("sendAdminBookingNotification Resend error:", error);
+    throw new Error(error.message || "Failed to send admin booking notification");
+  }
+
+  console.log("sendAdminBookingNotification success:", data);
 }
