@@ -66,7 +66,7 @@ export async function POST(req: Request) {
 
     const { data: memberProfile, error: memberErr } = await supabaseAdmin
       .from("profiles")
-      .select("id")
+      .select("id,membership_plan")
       .eq("id", profileId)
       .single();
 
@@ -77,14 +77,28 @@ export async function POST(req: Request) {
       );
     }
 
+    const existingPlan = String(memberProfile.membership_plan ?? "")
+      .trim()
+      .toLowerCase();
+
     const updatePayload: Record<string, any> = {};
 
     if (membershipStatus === "none") {
-      updatePayload.membership_status = null;
+      updatePayload.role = "guest";
+      updatePayload.membership_status = "inactive";
       updatePayload.membership_plan = null;
       updatePayload.membership_expires_at = null;
       updatePayload.stripe_current_period_end = null;
+      updatePayload.stripe_subscription_id = null;
     } else {
+      if (existingPlan !== "weekly" && existingPlan !== "pass7") {
+        return NextResponse.json(
+          { error: "Cannot set membership status without a valid membership plan." },
+          { status: 400 }
+        );
+      }
+
+      updatePayload.role = "member";
       updatePayload.membership_status = membershipStatus;
 
       if (membershipStatus === "active") {
@@ -103,7 +117,8 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       ok: true,
-      membership_status: membershipStatus === "none" ? null : membershipStatus,
+      role: updatePayload.role,
+      membership_status: updatePayload.membership_status,
     });
   } catch (err: any) {
     console.error("admin membership update-status error:", err);

@@ -86,12 +86,6 @@ export async function POST(req: Request) {
       );
     }
 
-    if (!targetProfile.phone) {
-      return NextResponse.json(
-        { error: "Member has no phone number on profile." },
-        { status: 400 }
-      );
-    }
 
     if (plan === "weekly") {
       const status = String(targetProfile.membership_status ?? "").toLowerCase();
