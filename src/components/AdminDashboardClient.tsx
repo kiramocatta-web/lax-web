@@ -147,9 +147,11 @@ function fmtDateTime(iso: string | null) {
 }
 
 function planLabel(plan: string | null) {
+  if (!plan) return "Guest / Single";
   if (plan === "weekly") return "$20 p/w Unlimited";
   if (plan === "pass7") return "7-Day Pass";
-  return plan ?? "—";
+  if (plan === "affiliate") return "Affiliate";
+  return plan;
 }
 
 function formatMoney(cents: number | null) {
@@ -198,13 +200,17 @@ type MemberStatusValue =
   | "cancellation_requested"
   | "cancelled";
 
-function normalizeMemberStatus(value: string | null | undefined): MemberStatusValue {
+function normalizeMemberStatus(
+  value: string | null | undefined
+): MemberStatusValue {
   const v = String(value ?? "").toLowerCase();
 
-  if (!v) return "none";
+  if (!v || v === "inactive" || v === "none") return "none";
   if (v === "cancellation_requested") return "cancellation_requested";
   if (v === "cancelled" || v === "canceled") return "cancelled";
-  return "active";
+  if (v === "active" || v === "trialing") return "active";
+
+  return "none";
 }
 
 function memberStatusLabel(value: string | null | undefined) {
@@ -948,9 +954,9 @@ We’d love to welcome you back in for a reset soon 🤍
           ) : (
             membersState.map((member) => {
               const dateToShow =
-                member.membership_plan === "weekly"
-                  ? member.stripe_current_period_end
-                  : member.membership_expires_at;
+  member.membership_plan === "weekly"
+    ? member.stripe_current_period_end ?? member.membership_expires_at
+    : member.membership_expires_at;
 
               const currentStatus = normalizeMemberStatus(member.membership_status);
               const draftStatus = memberDraftStatus[member.id] ?? currentStatus;
