@@ -565,32 +565,47 @@ export default function ProfilePage() {
   };
 
   const saveBankDetails = async () => {
-    setSavingBankDetails(true);
+  setSavingBankDetails(true);
 
-    try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const user = sessionData.session?.user;
+  try {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const user = sessionData.session?.user;
 
-      if (!user) throw new Error("Not logged in");
+    if (!user) throw new Error("Not logged in");
 
-      const { error } = await supabase
-        .from("affiliates")
-        .update({
-          bank_bsb: bsb.trim() || null,
-          bank_account: accountNumber.trim() || null,
-        })
-        .eq("user_id", user.id);
+    const cleanBsb = bsb.trim() || null;
+    const cleanAccount = accountNumber.trim() || null;
 
-      if (error) throw error;
+    const { data, error } = await supabase
+      .from("affiliates")
+      .update({
+        bank_bsb: cleanBsb,
+        bank_account: cleanAccount,
+      })
+      .eq("user_id", user.id)
+      .select("user_id, bank_bsb, bank_account")
+      .single();
 
-      await load();
-      alert("Payout details updated");
-    } catch (e: any) {
-      alert(e?.message || "Failed to update payout details");
-    } finally {
-      setSavingBankDetails(false);
+    if (error) throw error;
+
+    if (!data) {
+      throw new Error("No affiliate row was updated.");
     }
-  };
+
+    setBsb(data.bank_bsb ?? "");
+    setAccountNumber(data.bank_account ?? "");
+
+    alert("Payout details updated");
+    console.log("Saved affiliate bank details:", data);
+
+    await load();
+  } catch (e: any) {
+    alert(e?.message || "Failed to update payout details");
+    console.error("saveBankDetails error:", e);
+  } finally {
+    setSavingBankDetails(false);
+  }
+};
 
   const pauseOneWeek = async () => {
     setBusy("pause");
