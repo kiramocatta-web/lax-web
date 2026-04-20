@@ -583,25 +583,28 @@ export default function ProfilePage() {
         bank_account: cleanAccount,
       })
       .eq("user_id", user.id)
-      .select("user_id, bank_bsb, bank_account")
-      .single();
+      .select("user_id, code, bank_bsb, bank_account");
+
+    console.log("saveBankDetails user.id:", user.id);
+    console.log("saveBankDetails result:", data);
 
     if (error) throw error;
 
-    if (!data) {
-      throw new Error("No affiliate row was updated.");
+    if (!data || data.length === 0) {
+      throw new Error("No affiliate row found for this account.");
     }
 
-    setBsb(data.bank_bsb ?? "");
-    setAccountNumber(data.bank_account ?? "");
+    if (data.length > 1) {
+      throw new Error("Multiple affiliate rows found for this account.");
+    }
 
+    setBsb(data[0].bank_bsb ?? "");
+    setAccountNumber(data[0].bank_account ?? "");
     alert("Payout details updated");
-    console.log("Saved affiliate bank details:", data);
-
     await load();
   } catch (e: any) {
-    alert(e?.message || "Failed to update payout details");
     console.error("saveBankDetails error:", e);
+    alert(e?.message || "Failed to update payout details");
   } finally {
     setSavingBankDetails(false);
   }
