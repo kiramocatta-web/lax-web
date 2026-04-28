@@ -33,7 +33,7 @@ export default function EverythingElsePage() {
       <section className="mx-auto w-full max-w-6xl px-5 py-16 sm:px-6 sm:py-24">
         {/* HERO */}
         <h1 className="mt-4 text-4xl font-light leading-tight sm:text-5xl">
-          More about the space, the tools, and the vision behind Lax.
+          The tools, the vision & the owner's story.
         </h1>
 
         <p className="mt-4 text-base leading-7 text-white/70 sm:text-lg">
