@@ -153,6 +153,9 @@ export default function ContactPage() {
                   <a className="hover:text-white" href="/health-waiver">
                     Health Waiver
                   </a>
+                  <a className="hover:text-white" href="/everything-else">
+                    Vision & Story
+                  </a>
                 </div>
               </footer>
     </div>

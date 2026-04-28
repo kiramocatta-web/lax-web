@@ -90,8 +90,6 @@ export default function EverythingElsePage() {
         <section className="mt-20">
           <h2 className="text-3xl font-light">The Vision of Lax</h2>
 
-        <div className="mt-20 rounded-[2rem] border border-white/10 bg-white/5 p-6 sm:p-8">
-
           <div className="mt-5 max-w-4xl space-y-5 text-sm leading-7 text-white/75 sm:text-base">
             <p className="text-xl leading-8 text-white sm:text-2xl">
               LAX exists to redefine what it means to support an athlete.
@@ -133,7 +131,6 @@ export default function EverythingElsePage() {
               where people are pushed to be more, do more, and become more.
             </p>
           </div>
-        </div>
         </section>
 
         {/* OWNER */}
