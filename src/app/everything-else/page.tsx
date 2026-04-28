@@ -221,6 +221,9 @@ export default function EverythingElsePage() {
           <a className="hover:text-white" href="/health-waiver">
             Health Waiver
           </a>
+          <a className="hover:text-white" href="/everything-else">
+            Vision &amp; Story
+          </a>  
         </div>
       </footer>
     </main>
