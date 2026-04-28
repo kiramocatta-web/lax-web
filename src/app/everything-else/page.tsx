@@ -86,8 +86,11 @@ export default function EverythingElsePage() {
         </section>
 
         {/* VISION */}
-        <section className="mt-20 rounded-[2rem] border border-white/10 bg-white/5 p-6 sm:p-8">
+
+        <section className="mt-20">
           <h2 className="text-3xl font-light">The Vision of Lax</h2>
+
+        <div className="mt-20 rounded-[2rem] border border-white/10 bg-white/5 p-6 sm:p-8">
 
           <div className="mt-5 max-w-4xl space-y-5 text-sm leading-7 text-white/75 sm:text-base">
             <p className="text-xl leading-8 text-white sm:text-2xl">
@@ -130,11 +133,16 @@ export default function EverythingElsePage() {
               where people are pushed to be more, do more, and become more.
             </p>
           </div>
+        </div>
         </section>
 
         {/* OWNER */}
         <section className="mt-20">
           <h2 className="text-3xl font-light">Owner</h2>
+
+          <p className="mt-2 text-white/50 text-sm tracking-wide">
+  Built by an athlete, for athletes.
+</p>
 
           <div className="mt-8 grid gap-6 overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 p-5 sm:p-6 md:grid-cols-[0.9fr_1.1fr] md:p-8">
             <div className="relative aspect-[4/5] overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/5">
@@ -154,14 +162,14 @@ export default function EverythingElsePage() {
 
                 <div className="mt-5 space-y-4 text-sm leading-7 text-white/75 sm:text-base">
                   <p>
-                    I was a semi-pro athlete with everything in front of me —
-                    until a drunk driver hit me and broke my spine in three
+                    I was a semi-pro athlete with everything in ahead of me —
+                    until a drunk driver broke my spine in three
                     places.
                   </p>
 
                   <p>
-                    For a long time, I let that moment define me. I wore it as
-                    my story. My excuse. My reason for losing direction.
+                    For a long time, I let that moment define me. 
+                    I wore it as my story. My excuse. My reason for losing direction.
                   </p>
 
                   <p>I became a victim of what happened to me.</p>
