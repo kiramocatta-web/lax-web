@@ -121,6 +121,9 @@ export default function HomePage() {
             <a className="hover:text-white" href="/health-waiver">
               Health Waiver
             </a>
+            <a className="hover:text-white" href="/everything-else">
+              Vision &amp; Story
+            </a>
 
             <AuthFooterButton />
           </div>
