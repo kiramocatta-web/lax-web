@@ -139,7 +139,8 @@ function getBrisbaneNowKey() {
 
 function membershipStatusCopy(
   membershipStatus: string | null | undefined,
-  membershipExpiresAt: string | null | undefined
+  membershipExpiresAt: string | null | undefined,
+  membershipPausedUntil?: string | null
 ) {
   const status = String(membershipStatus ?? "").toLowerCase();
   const expires = membershipExpiresAt ? new Date(membershipExpiresAt) : null;
@@ -169,13 +170,13 @@ function membershipStatusCopy(
   }
 
   if (status === "paused") {
-    return {
-      label: "Paused",
-      helper: membershipExpiresAt
-        ? `Paused until ${fmtDate(membershipExpiresAt)}.`
-        : "Your membership is currently paused.",
-    };
-  }
+  return {
+    label: "Paused",
+    helper: membershipPausedUntil
+      ? `Paused until ${fmtDate(membershipPausedUntil)}.`
+      : "Your membership is currently paused.",
+  };
+}
 
   if (status === "active") {
     return {
@@ -490,10 +491,11 @@ export default function ProfilePage() {
   const pauseUsed = profile?.membership_pause_weeks_used ?? 0;
   const pauseYear = profile?.membership_pause_year ?? new Date().getFullYear();
 
-  const membershipStatusUI = membershipStatusCopy(
-    profile?.membership_status,
-    profile?.membership_expires_at
-  );
+ const membershipStatusUI = membershipStatusCopy(
+  profile?.membership_status,
+  profile?.membership_expires_at,
+  profile?.membership_paused_until
+);
 
   const membershipExpired =
     !!profile?.membership_expires_at &&
