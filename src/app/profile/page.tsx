@@ -271,18 +271,30 @@ function ActionButton({
   );
 }
 
-function SidebarItem({ label, active = false }: { label: string; active?: boolean }) {
-  return (
-    <div
-      className={`rounded-2xl px-4 py-3 text-sm font-semibold transition ${
-        active
-          ? "bg-[#f6eadb] text-[#21130f]"
-          : "text-[#d8c6b4]/75 hover:bg-[#3a2a24] hover:text-[#fff7ec]"
-      }`}
-    >
-      {label}
-    </div>
-  );
+function SidebarItem({
+  label,
+  active = false,
+  href,
+}: {
+  label: string;
+  active?: boolean;
+  href?: string;
+}) {
+  const className = `block rounded-2xl px-4 py-3 text-sm font-semibold transition ${
+    active
+      ? "bg-[#f6eadb] text-[#21130f]"
+      : "text-[#d8c6b4]/75 hover:bg-[#3a2a24] hover:text-[#fff7ec]"
+  }`;
+
+  if (href) {
+    return (
+      <a href={href} className={className}>
+        {label}
+      </a>
+    );
+  }
+
+  return <div className={className}>{label}</div>;
 }
 
 function BookingCard({
@@ -840,8 +852,11 @@ export default function ProfilePage() {
 
                 <nav className="mt-3 grid gap-2">
                   <SidebarItem label="Account" active />
-                  <SidebarItem label={isAffiliate ? "Affiliate" : isMember ? "Membership" : "Bookings"} />
-                  <SidebarItem label="Support" />
+<SidebarItem
+  label={isAffiliate ? "Affiliate" : isMember ? "Membership" : "Bookings"}
+  href={isMember ? "/membership" : undefined}
+/>
+<SidebarItem label="Support" href={enquiryHref} />
                 </nav>
 
                 <div className="mt-6 grid gap-3 border-t border-[#f6eadb]/10 pt-4">
@@ -1103,7 +1118,6 @@ export default function ProfilePage() {
                             </ActionButton>
                           )}
 
-                          <ActionButton href={enquiryHref} variant="neutral">Send us a message</ActionButton>
                         </>
                       ) : (
                         <>
