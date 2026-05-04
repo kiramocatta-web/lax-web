@@ -34,14 +34,10 @@ function getBookingStartDateTime(bookingDate: string, startTime: string) {
   return new Date(`${bookingDate}T${startTime}`);
 }
 
-async function getStripePromotionCodeId(code: string) {
-  const promoCodes = await stripe.promotionCodes.list({
-    code,
-    active: true,
-    limit: 1,
-  });
-
-  return promoCodes.data[0]?.id ?? null;
+function getPromoIdForCode(code: string) {
+  if (code === "SPA") return process.env.STRIPE_PROMO_SPA_ID;
+  if (code === "VOLLEYBALL") return process.env.STRIPE_PROMO_VOLLEYBALL_ID;
+  return null;
 }
 
 export async function POST(req: Request) {
@@ -64,8 +60,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing fields." }, { status: 400 });
     }
 
-    if (!Number.isInteger(start_minute) || start_minute < 0 || start_minute >= 1440) {
-      return NextResponse.json({ error: "Invalid start time." }, { status: 400 });
+    if (
+      !Number.isInteger(start_minute) ||
+      start_minute < 0 ||
+      start_minute >= 1440
+    ) {
+      return NextResponse.json(
+        { error: "Invalid start time." },
+        { status: 400 }
+      );
     }
 
     const unitAmount = PRICE_BY_DURATION_CENTS[duration_minutes];
@@ -74,7 +77,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid duration." }, { status: 400 });
     }
 
-    if (!Number.isInteger(people_count) || people_count < 1 || people_count > 8) {
+    if (
+      !Number.isInteger(people_count) ||
+      people_count < 1 ||
+      people_count > 8
+    ) {
       return NextResponse.json(
         { error: "Invalid people count." },
         { status: 400 }
@@ -164,12 +171,12 @@ export async function POST(req: Request) {
       const isStripePromoCode = STRIPE_PROMO_CODES.includes(discount_code);
 
       if (isStripePromoCode) {
-        const promotionCodeId = await getStripePromotionCodeId(discount_code);
+        const promotionCodeId = getPromoIdForCode(discount_code);
 
         if (!promotionCodeId) {
           return NextResponse.json(
-            { error: "Invalid or inactive discount code." },
-            { status: 400 }
+            { error: `Missing promo ID for ${discount_code}.` },
+            { status: 500 }
           );
         }
 
