@@ -254,12 +254,13 @@ export default function SignupPage() {
             <h1 className="mt-4 text-4xl sm:text-5xl font-semibold tracking-tight">
               Membership
             </h1>
+
+        <MembershipPerks />
+            
             <p className="mt-5 text-base sm:text-lg text-white/70">
               Which one could we tempt you with?
             </p>
           </div>
-
-<MembershipPerks />
 
           <div className="mt-3 grid gap-4 sm:grid-cols-2">
             <button
