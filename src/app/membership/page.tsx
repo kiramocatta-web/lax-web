@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createBrowserClient } from "@supabase/ssr";
+import MembershipPerks from "@/components/MembershipPerks";
 
 type Plan = "weekly" | "pass7" | null;
 
@@ -257,6 +258,8 @@ export default function SignupPage() {
               Which one could we tempt you with?
             </p>
           </div>
+
+<MembershipPerks />
 
           <div className="mt-3 grid gap-4 sm:grid-cols-2">
             <button
