@@ -257,7 +257,7 @@ export default function SignupPage() {
 
         <MembershipPerks />
             
-            <p className="mt-5 text-base sm:text-lg text-white/70">
+            <p className="mt-5 text-base sm:text-lg text-white/70 mt-8 md:mt-10">
               Which one could we tempt you with?
             </p>
           </div>

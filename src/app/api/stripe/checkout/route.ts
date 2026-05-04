@@ -5,6 +5,7 @@ import { supabaseServer } from "@/lib/supabase/server";
 export const runtime = "nodejs";
 
 const stripeSecret = process.env.STRIPE_SECRET_KEY;
+
 if (!stripeSecret) {
   throw new Error("Missing STRIPE_SECRET_KEY");
 }
@@ -16,6 +17,8 @@ const PRICE_BY_DURATION_CENTS: Record<number, number> = {
   90: 2000,
   120: 2500,
 };
+
+const STRIPE_PROMO_CODES = ["SPA", "VOLLEYBALL"];
 
 function minutesToTimeString(startMinute: number) {
   const hh = String(Math.floor(startMinute / 60)).padStart(2, "0");
@@ -31,6 +34,16 @@ function getBookingStartDateTime(bookingDate: string, startTime: string) {
   return new Date(`${bookingDate}T${startTime}`);
 }
 
+async function getStripePromotionCodeId(code: string) {
+  const promoCodes = await stripe.promotionCodes.list({
+    code,
+    active: true,
+    limit: 1,
+  });
+
+  return promoCodes.data[0]?.id ?? null;
+}
+
 export async function POST(req: Request) {
   try {
     const supabase = await supabaseServer();
@@ -39,24 +52,33 @@ export async function POST(req: Request) {
     const booking_date: string | undefined = body?.booking_date;
     const start_minute: number | undefined = body?.start_minute;
     const duration_minutes: number | undefined = body?.duration_minutes;
-    const people_count: number = Number(body?.people_count ?? 1);
+    const people_count = Number(body?.people_count ?? 1);
     const rescheduleBookingId =
       Number(body?.reschedule_booking_id ?? 0) || null;
 
-    const discount_code_raw: string = String(body?.discount_code ?? "");
-    const discount_code = discount_code_raw.trim().toUpperCase();
+    const discount_code = String(body?.discount_code ?? "")
+      .trim()
+      .toUpperCase();
 
     if (!booking_date || typeof start_minute !== "number" || !duration_minutes) {
-      return NextResponse.json({ error: "Missing fields" }, { status: 400 });
+      return NextResponse.json({ error: "Missing fields." }, { status: 400 });
+    }
+
+    if (!Number.isInteger(start_minute) || start_minute < 0 || start_minute >= 1440) {
+      return NextResponse.json({ error: "Invalid start time." }, { status: 400 });
     }
 
     const unitAmount = PRICE_BY_DURATION_CENTS[duration_minutes];
+
     if (!unitAmount) {
-      return NextResponse.json({ error: "Invalid duration" }, { status: 400 });
+      return NextResponse.json({ error: "Invalid duration." }, { status: 400 });
     }
 
     if (!Number.isInteger(people_count) || people_count < 1 || people_count > 8) {
-      return NextResponse.json({ error: "Invalid people count" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid people count." },
+        { status: 400 }
+      );
     }
 
     const {
@@ -64,7 +86,7 @@ export async function POST(req: Request) {
     } = await supabase.auth.getUser();
 
     let profilePhone: string | null = null;
-    let profileEmail: string | null = user?.email ?? null;
+    const profileEmail: string | null = user?.email ?? null;
 
     if (user?.id) {
       const { data: profile } = await supabase
@@ -81,12 +103,12 @@ export async function POST(req: Request) {
 
     if (rescheduleBookingId) {
       if (!user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
       }
 
       const { data: existingBooking, error: existingBookingErr } = await supabase
         .from("bookings")
-        .select("id,booking_type,status,booking_date,start_time,user_id")
+        .select("id, booking_type, status, booking_date, start_time, user_id")
         .eq("id", rescheduleBookingId)
         .eq("user_id", user.id)
         .single();
@@ -136,44 +158,59 @@ export async function POST(req: Request) {
     }
 
     let affiliate_user_id: string | null = null;
+    let discounts: Stripe.Checkout.SessionCreateParams.Discount[] | undefined;
 
     if (discount_code) {
-      const { data: aff, error: affErr } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("role", "affiliate")
-        .eq("affiliate_code", discount_code)
-        .maybeSingle();
+      const isStripePromoCode = STRIPE_PROMO_CODES.includes(discount_code);
 
-      if (affErr) {
-        return NextResponse.json({ error: affErr.message }, { status: 500 });
-      }
+      if (isStripePromoCode) {
+        const promotionCodeId = await getStripePromotionCodeId(discount_code);
 
-      if (!aff?.id) {
-        return NextResponse.json(
-          { error: "Invalid discount code." },
-          { status: 400 }
-        );
-      }
+        if (!promotionCodeId) {
+          return NextResponse.json(
+            { error: "Invalid or inactive discount code." },
+            { status: 400 }
+          );
+        }
 
-      affiliate_user_id = aff.id;
+        discounts = [{ promotion_code: promotionCodeId }];
+      } else {
+        const { data: affiliate, error: affiliateErr } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("role", "affiliate")
+          .eq("affiliate_code", discount_code)
+          .maybeSingle();
 
-      if (!process.env.STRIPE_COUPON_5OFF) {
-        return NextResponse.json(
-          { error: "Missing STRIPE_COUPON_5OFF" },
-          { status: 500 }
-        );
+        if (affiliateErr) {
+          return NextResponse.json(
+            { error: affiliateErr.message },
+            { status: 500 }
+          );
+        }
+
+        if (!affiliate?.id) {
+          return NextResponse.json(
+            { error: "Invalid discount code." },
+            { status: 400 }
+          );
+        }
+
+        if (!process.env.STRIPE_COUPON_5OFF) {
+          return NextResponse.json(
+            { error: "Missing STRIPE_COUPON_5OFF." },
+            { status: 500 }
+          );
+        }
+
+        affiliate_user_id = affiliate.id;
+        discounts = [{ coupon: process.env.STRIPE_COUPON_5OFF }];
       }
     }
 
     const siteUrl = (
       process.env.NEXT_PUBLIC_SITE_URL || "https://www.laxnlounge.com.au"
     ).trim();
-
-    const discounts =
-      affiliate_user_id && process.env.STRIPE_COUPON_5OFF
-        ? [{ coupon: process.env.STRIPE_COUPON_5OFF }]
-        : undefined;
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
@@ -219,8 +256,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ url: session.url });
   } catch (err: any) {
     console.error("Stripe checkout error:", err);
+
     return NextResponse.json(
-      { error: err?.message || "Stripe checkout failed" },
+      { error: err?.message || "Stripe checkout failed." },
       { status: 500 }
     );
   }
