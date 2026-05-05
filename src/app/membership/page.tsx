@@ -297,7 +297,7 @@ export default function SignupPage() {
                 Pass
               </div>
               <div className="mt-3 text-3xl font-semibold text-sky-300">
-                7-Day Pass
+                7-Day Pass $25
               </div>
               <div className="mt-1 text-lg text-white/85">Unlimited</div>
               <div className="mt-4 text-sm text-white/55">
