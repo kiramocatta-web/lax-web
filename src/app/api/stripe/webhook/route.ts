@@ -4,6 +4,7 @@ import { Resend } from "resend";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { sendBookingEmail } from "@/lib/email/sendBookingEmail";
 import { sendAdminBookingNotification } from "@/lib/email/sendAdminBookingNotification";
+import { sendMembershipEmail } from "@/lib/email/sendMembershipEmail";
 
 export const runtime = "nodejs";
 
@@ -557,6 +558,11 @@ export async function POST(req: Request) {
           ? expanded.customer
           : expanded.customer?.id ?? null;
 
+      const customerEmail =
+        expanded.customer_details?.email ||
+        expanded.customer_email ||
+        null;
+
       if (userId && expanded.mode === "subscription") {
         let subscription: Stripe.Subscription | null = null;
 
@@ -593,6 +599,17 @@ export async function POST(req: Request) {
           );
         }
 
+        if (customerEmail && plan === "weekly") {
+  try {
+    await sendMembershipEmail({
+      to: customerEmail,
+      plan: "weekly",
+    });
+  } catch (e) {
+    console.error("weekly membership email failed:", e);
+  }
+}
+
         if (subscription) {
           try {
             await syncProfileFromSubscription(subscription, customerId);
@@ -625,6 +642,17 @@ export async function POST(req: Request) {
           );
         }
       }
+
+      if (customerEmail) {
+  try {
+    await sendMembershipEmail({
+      to: customerEmail,
+      plan: "pass7",
+    });
+  } catch (e) {
+    console.error("pass7 email failed:", e);
+  }
+}
 
       const isSingleBooking =
         expanded.mode === "payment" &&

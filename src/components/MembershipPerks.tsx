@@ -8,7 +8,7 @@ const perks = [
   },
   {
     title: "Pause Flexibility",
-    description: "Pause your membership when needed, because life and comp prep happen.",
+    description: "Pause your membership when needed, because life and comp prep happen. *weekly membership only",
     accent: "text-blue-300",
   },
   {
