@@ -96,32 +96,13 @@ export default function EverythingElsePage() {
             </p>
 
             <p>
-              This is not just a recovery space, it’s a facility built to push,
-              develop, and elevate. A place where athletes train with purpose,
+              This is not just a recovery space, it's a community where athletes train with purpose,
               recover with intent, and build toward something greater than
               themselves.
             </p>
 
             <p>
-              We are creating an environment where performance meets
-              accessibility — where world-class recovery, structured programs,
-              and high-level support are not a luxury, but a standard.
-            </p>
-
-            <p>
-              But LAX goes beyond the physical. We exist to help athletes
-              understand who they are, why they do what they do, and where
-              they’re going.
-            </p>
-
-            <p>
-              Through community, storytelling, and sponsorship, we aim to
-              spotlight those who live with passion — the ones willing to show
-              up, do the work, and inspire others to do the same.
-            </p>
-
-            <p>
-              LAX was built as a stepping stone — a place where affordability
+              LAX has been built as a stepping stone — a place where affordability
               and accessibility meet intention — so athletes and everyday
               individuals can invest in their future selves, today.
             </p>
