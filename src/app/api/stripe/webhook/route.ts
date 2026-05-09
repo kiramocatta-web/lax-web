@@ -166,7 +166,10 @@ const customerPhone =
   }
 }
 
-async function applyAffiliateCredit(affiliateUserId: string) {
+async function applyAffiliateCredit(
+  affiliateUserId: string,
+  peopleCount: number
+) {
   const { data: aff, error: affErr } = await supabaseAdmin
     .from("affiliates")
     .select("used_count,credit_cents")
@@ -199,17 +202,20 @@ async function applyAffiliateCredit(affiliateUserId: string) {
     .eq("id", affiliateUserId)
     .single();
 
-  if (!profileErr && profile) {
-    await supabaseAdmin
-      .from("profiles")
-      .update({
-        affiliate_code_used_count:
-          Number(profile.affiliate_code_used_count ?? 0) + 1,
-        affiliate_credit_cents:
-          Number(profile.affiliate_credit_cents ?? 0) + 500,
-      })
-      .eq("id", affiliateUserId);
-  }
+if (!profileErr && profile) {
+  await supabaseAdmin
+    .from("profiles")
+    .update({
+      affiliate_code_used_count:
+        Number(profile.affiliate_code_used_count ?? 0) +
+        peopleCount,
+
+      affiliate_credit_cents:
+        Number(profile.affiliate_credit_cents ?? 0) +
+        peopleCount * 500,
+    })
+    .eq("id", affiliateUserId);
+}
 }
 
 async function syncProfileFromSubscription(
@@ -671,8 +677,15 @@ export async function POST(req: Request) {
       }
 
       if (affiliateUserId) {
-        await applyAffiliateCredit(affiliateUserId);
-      }
+  const peopleCount = Number(
+    expanded.metadata?.people_count ?? 1
+  );
+
+  await applyAffiliateCredit(
+    affiliateUserId,
+    peopleCount
+  );
+}
 
       if (!isSingleBooking) {
         await sendAdminBookingEmail(expanded);

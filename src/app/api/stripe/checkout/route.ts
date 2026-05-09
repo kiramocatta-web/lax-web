@@ -203,17 +203,15 @@ export async function POST(req: Request) {
           );
         }
 
-        if (!process.env.STRIPE_COUPON_5OFF) {
-          return NextResponse.json(
-            { error: "Missing STRIPE_COUPON_5OFF." },
-            { status: 500 }
-          );
-        }
-
         affiliate_user_id = affiliate.id;
-        discounts = [{ coupon: process.env.STRIPE_COUPON_5OFF }];
       }
     }
+
+    let finalUnitAmount = unitAmount;
+
+if (affiliate_user_id) {
+  finalUnitAmount = Math.max(unitAmount - 500, 0);
+}
 
     const siteUrl = (
       process.env.NEXT_PUBLIC_SITE_URL || "https://www.laxnlounge.com.au"
@@ -226,13 +224,20 @@ export async function POST(req: Request) {
       phone_number_collection: {
         enabled: true,
       },
+      payment_intent_data: {
+  metadata: {
+    discount_code: discount_code || "",
+    people_count: String(people_count),
+    affiliate_user_id: affiliate_user_id || "",
+  },
+},
       discounts,
       line_items: [
         {
           quantity: people_count,
           price_data: {
             currency: "aud",
-            unit_amount: unitAmount,
+            unit_amount: finalUnitAmount, 
             product_data: {
               name: `Lax N Lounge — Single Entry (${duration_minutes} mins)`,
             },
