@@ -22,12 +22,13 @@ export async function sendBookingEmail(args: {
   const resend = getResend();
 
   const html = renderTemplate(bookingConfirmedTemplate, {
-    BOOKING_DATE: args.bookingDate,
-    START_TIME: args.startTime.slice(0, 5),
-    END_TIME: args.endTime.slice(0, 5),
-    PEOPLE_COUNT: args.peopleCount,
-    BOOK_URL: "https://www.laxnlounge.com.au/book",
-  });
+  BOOKING_DATE: args.bookingDate,
+  START_TIME: args.startTime.slice(0, 5),
+  END_TIME: args.endTime.slice(0, 5),
+  DURATION_MINUTES: args.durationMinutes ?? "",
+  PEOPLE_COUNT: args.peopleCount,
+  BOOK_URL: "https://www.laxnlounge.com.au/book",
+});
 
   const { error } = await resend.emails.send({
     from: getFromEmail(),

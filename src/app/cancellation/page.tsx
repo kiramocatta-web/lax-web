@@ -51,11 +51,11 @@ export default function CancellationPage() {
 
             <p>
               Memberships can be cancelled at any time through the membership
-              management portal or by contacting Lax N Lounge.
+              management portal or by contacting Lax N Lounge, however with a 2 week cooling-off period.
             </p>
 
             <p>
-              Cancellation will prevent future billing but does not provide
+              Cancellation will prevent future billing after the two week cooling period but does not provide
               refunds for payments that have already been processed.
             </p>
 

@@ -492,12 +492,13 @@ async function handleSingleBookingCheckout(session: Stripe.Checkout.Session) {
   try {
     if (customerEmail) {
       await sendBookingEmail({
-        to: customerEmail,
-        bookingDate: booking_date,
-        startTime: start_time,
-        endTime: end_time,
-        peopleCount: people_count,
-      });
+  to: customerEmail,
+  bookingDate: booking_date,
+  startTime: start_time,
+  endTime: end_time,
+  durationMinutes: duration_minutes,
+  peopleCount: people_count,
+});
     }
   } catch (e) {
     console.warn("sendBookingEmail failed:", e);
