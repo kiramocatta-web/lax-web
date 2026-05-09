@@ -5,6 +5,8 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { sendBookingEmail } from "@/lib/email/sendBookingEmail";
 import { sendAdminBookingNotification } from "@/lib/email/sendAdminBookingNotification";
 import { sendMembershipEmail } from "@/lib/email/sendMembershipEmail";
+import { sendSimpleAdminBookingEmail } from "@/lib/email/sendSimpleAdminBookingEmail";
+
 
 export const runtime = "nodejs";
 
@@ -489,36 +491,52 @@ async function handleSingleBookingCheckout(session: Stripe.Checkout.Session) {
     }
   }
 
-  try {
-    if (customerEmail) {
-      await sendBookingEmail({
-  to: customerEmail,
-  bookingDate: booking_date,
-  startTime: start_time,
-  endTime: end_time,
-  durationMinutes: duration_minutes,
-  peopleCount: people_count,
-});
-    }
-  } catch (e) {
-    console.warn("sendBookingEmail failed:", e);
-  }
-
-  try {
-    await sendAdminBookingNotification({
-      bookingId: inserted.id,
+try {
+  if (customerEmail) {
+    await sendBookingEmail({
+      to: customerEmail,
       bookingDate: booking_date,
       startTime: start_time,
       endTime: end_time,
       peopleCount: people_count,
-      customerEmail,
-      customerPhone,
-      totalAmountCents: session.amount_total ?? null,
-      rescheduled: Boolean(originalBookingToReschedule),
     });
-  } catch (e) {
-    console.warn("sendAdminBookingNotification failed:", e);
   }
+} catch (e) {
+  console.warn("sendBookingEmail failed:", e);
+}
+
+try {
+  await sendSimpleAdminBookingEmail({
+    bookingId: inserted.id,
+    customerName,
+    customerEmail,
+    customerPhone,
+    bookingDate: booking_date,
+    startTime: start_time,
+    endTime: end_time,
+    peopleCount: people_count,
+    totalAmountCents: session.amount_total ?? null,
+    discountCode: md.discount_code || null,
+  });
+} catch (e) {
+  console.warn("sendSimpleAdminBookingEmail failed:", e);
+}
+
+try {
+  await sendAdminBookingNotification({
+    bookingId: inserted.id,
+    bookingDate: booking_date,
+    startTime: start_time,
+    endTime: end_time,
+    peopleCount: people_count,
+    customerEmail,
+    customerPhone,
+    totalAmountCents: session.amount_total ?? null,
+    rescheduled: Boolean(originalBookingToReschedule),
+  });
+} catch (e) {
+  console.warn("sendAdminBookingNotification failed:", e);
+}
 }
 
 export async function POST(req: Request) {
