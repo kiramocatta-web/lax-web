@@ -626,37 +626,37 @@ export async function POST(req: Request) {
       }
 
       if (userId && expanded.mode === "payment" && plan === "pass7") {
-        const expiresAt = addDaysISO(7);
+  const expiresAt = addDaysISO(7);
 
-        const { error } = await supabaseAdmin
-          .from("profiles")
-          .update({
-            stripe_customer_id: customerId,
-            stripe_subscription_id: null,
-            membership_plan: "pass7",
-            membership_status: "active",
-            membership_expires_at: expiresAt,
-            stripe_current_period_end: null,
-          })
-          .eq("id", userId);
+  const { error } = await supabaseAdmin
+    .from("profiles")
+    .update({
+      stripe_customer_id: customerId,
+      stripe_subscription_id: null,
+      membership_plan: "pass7",
+      membership_status: "active",
+      membership_expires_at: expiresAt,
+      stripe_current_period_end: null,
+    })
+    .eq("id", userId);
 
-        if (error) {
-          console.error("profile update for pass7 failed:", error);
-          return NextResponse.json(
-            { error: "DB update failed" },
-            { status: 500 }
-          );
-        }
-      }
+  if (error) {
+    console.error("profile update for pass7 failed:", error);
+    return NextResponse.json(
+      { error: "DB update failed" },
+      { status: 500 }
+    );
+  }
 
-      if (customerEmail) {
-  try {
-    await sendMembershipEmail({
-      to: customerEmail,
-      plan: "pass7",
-    });
-  } catch (e) {
-    console.error("pass7 email failed:", e);
+  if (customerEmail) {
+    try {
+      await sendMembershipEmail({
+        to: customerEmail,
+        plan: "pass7",
+      });
+    } catch (e) {
+      console.error("pass7 email failed:", e);
+    }
   }
 }
 
