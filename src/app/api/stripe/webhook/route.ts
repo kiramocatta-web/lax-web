@@ -209,8 +209,7 @@ if (!profileErr && profile) {
     .from("profiles")
     .update({
       affiliate_code_used_count:
-        Number(profile.affiliate_code_used_count ?? 0) +
-        peopleCount,
+        Number(profile.affiliate_code_used_count ?? 0) + 1,
 
       affiliate_credit_cents:
         Number(profile.affiliate_credit_cents ?? 0) +
