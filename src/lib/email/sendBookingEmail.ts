@@ -21,8 +21,31 @@ export async function sendBookingEmail(args: {
 }) {
   const resend = getResend();
 
+
+const d = new Date(args.bookingDate);
+const day = d.getDate();
+
+const suffix =
+  day % 10 === 1 && day !== 11
+    ? "st"
+    : day % 10 === 2 && day !== 12
+    ? "nd"
+    : day % 10 === 3 && day !== 13
+    ? "rd"
+    : "th";
+
+const weekday = d.toLocaleDateString("en-AU", {
+  weekday: "long",
+});
+
+const month = d.toLocaleDateString("en-AU", {
+  month: "long",
+});
+
+const formattedDate = `${weekday} ${day}${suffix} ${month}`;
+
   const html = renderTemplate(bookingConfirmedTemplate, {
-  BOOKING_DATE: args.bookingDate,
+  BOOKING_DATE_FORMATTED: formattedDate,
   START_TIME: args.startTime.slice(0, 5),
   END_TIME: args.endTime.slice(0, 5),
   DURATION_MINUTES: args.durationMinutes ?? "",

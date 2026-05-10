@@ -130,35 +130,11 @@ export const bookingConfirmedTemplate = `
 
         <div class="booking-time">
           <strong>
-          
-${(() => 
-{const d = new Date("{{BOOKING_DATE}}");
-  const day = d.getDate();
-
-  const suffix =
-    day % 10 === 1 && day !== 11
-      ? "st"
-      : day % 10 === 2 && day !== 12
-      ? "nd"
-      : day % 10 === 3 && day !== 13
-      ? "rd"
-      : "th";
-
-  const weekday = d.toLocaleDateString("en-AU", {
-    weekday: "long",
-  });
-
-  const month = d.toLocaleDateString("en-AU", {
-    month: "long",
-  });
-
-  return `${weekday} ${day}${suffix} ${month}`;
-})()}
-          
-          </strong>
-          <br />
-          {{START_TIME}} – {{END_TIME}}
-        </div>
+         <div class="booking-time">
+  <strong>{{BOOKING_DATE_FORMATTED}}</strong>
+  <br />
+  {{START_TIME}} – {{END_TIME}}
+</div>
 
         <div class="text">
           Thank you for supporting LAX & supporting yourself with affordable recovery.
