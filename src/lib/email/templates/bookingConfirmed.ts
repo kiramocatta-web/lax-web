@@ -1,5 +1,7 @@
 // src/lib/email/templates/bookingConfirmed.ts
 
+import { br } from "node_modules/@fullcalendar/core/internal-common"
+
 export const bookingConfirmedTemplate = `
 <!DOCTYPE html>
 <html>
@@ -127,7 +129,33 @@ export const bookingConfirmedTemplate = `
         </div>
 
         <div class="booking-time">
-          <strong>{{BOOKING_DATE}}</strong>
+          <strong>
+          
+${(() => 
+{const d = new Date("{{BOOKING_DATE}}");
+  const day = d.getDate();
+
+  const suffix =
+    day % 10 === 1 && day !== 11
+      ? "st"
+      : day % 10 === 2 && day !== 12
+      ? "nd"
+      : day % 10 === 3 && day !== 13
+      ? "rd"
+      : "th";
+
+  const weekday = d.toLocaleDateString("en-AU", {
+    weekday: "long",
+  });
+
+  const month = d.toLocaleDateString("en-AU", {
+    month: "long",
+  });
+
+  return `${weekday} ${day}${suffix} ${month}`;
+})()}
+          
+          </strong>
           <br />
           {{START_TIME}} – {{END_TIME}}
         </div>
