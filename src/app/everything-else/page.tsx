@@ -209,4 +209,72 @@ export default function EverythingElsePage() {
       </footer>
     </main>
   );
+
+          {/* FAQ */}
+        <section className="mt-20">
+          <div className="max-w-4xl">
+            <p className="text-sm uppercase tracking-[0.3em] text-white/45">
+              Commonly Asked Questions
+            </p>
+
+            <h2 className="mt-3 text-3xl font-light">
+              Everything you need to know before you arrive.
+            </h2>
+
+            <p className="mt-4 text-sm leading-7 text-white/65 sm:text-base">
+              We’ve tried to make LAX as simple, comfortable, and easy as possible.
+              Here are the answers to the questions we get asked the most.
+            </p>
+          </div>
+
+          <div className="mt-10 space-y-4">
+            {[
+              {
+                q: "Do I just show up and walk in?",
+                a: "If you’ve made a booking — yes. Walk straight through and make yourself at home. There is no reception desk. Please note all entrants are monitored to ensure valid bookings have been made before arrival.",
+              },
+              {
+                q: "What do I need to bring?",
+                a: "Towels and complimentary water are provided, and the shower is stocked with amenities. Just bring yourself — and anything that helps you relax, whether that’s your phone, headphones, a book, or your post-training mindset.",
+              },
+              {
+                q: "What do I do when I arrive?",
+                a: "Place your belongings in the cubicles, turn on the sauna, remove the spa cover if you plan to use it, grab a towel and water from around the corner, connect the music, and settle into your recovery session.",
+              },
+              {
+                q: "Where do I park?",
+                a: "Street parking is available, along with three driveway parks available for customers.",
+              },
+              {
+                q: "Can I leave feedback?",
+                a: "Absolutely. You can leave anonymous feedback or include your email if you'd like a response. Whether it’s positive, constructive, or somewhere in between — we genuinely value it and use it to continue improving LAX.",
+              },
+              {
+                q: "Can I come with friends?",
+                a: "Yes. You’re welcome to book with friends, training partners, or teammates. Just ensure everyone attending is included in the booking numbers.",
+              },
+              {
+                q: "Is the space private?",
+                a: "LAX is designed to feel calm, comfortable, and low-pressure. Depending on bookings, you may share the space with other members or guests during your session.",
+              },
+              {
+                q: "Can beginners use the recovery tools?",
+                a: "Definitely. You do not need to be an elite athlete to use LAX. Everything is beginner-friendly, and you’re encouraged to go at your own pace.",
+              },
+            ].map((item) => (
+              <div
+                key={item.q}
+                className="rounded-[2rem] border border-white/10 bg-white/5 p-6 sm:p-8"
+              >
+                <h3 className="text-lg font-medium text-white sm:text-xl">
+                  {item.q}
+                </h3>
+
+                <p className="mt-3 text-sm leading-7 text-white/70 sm:text-base">
+                  {item.a}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
 }

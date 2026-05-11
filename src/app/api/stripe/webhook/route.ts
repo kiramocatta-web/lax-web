@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { Resend } from "resend";
+import { affiliateCodeUsedEmail } from "@/lib/email/templates/affiliateCodeUsed"; 
+import { renderTemplate } from "@/lib/email/templates/renderTemplate"; 
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { sendBookingEmail } from "@/lib/email/sendBookingEmail";
 import { sendAdminBookingNotification } from "@/lib/email/sendAdminBookingNotification";
@@ -170,53 +172,99 @@ const customerPhone =
 
 async function applyAffiliateCredit(
   affiliateUserId: string,
-  peopleCount: number
+  peopleCount: number,
+  affiliateCode?: string | null
 ) {
+  const earnedCents = peopleCount * 500;
+
   const { data: aff, error: affErr } = await supabaseAdmin
     .from("affiliates")
-    .select("used_count,credit_cents")
+    .select("used_count,credit_cents,code")
     .eq("user_id", affiliateUserId)
     .single();
 
-  if (affErr) {
+  if (affErr || !aff) {
     console.error("affiliate lookup failed:", affErr);
     return;
   }
 
-  const used = Number(aff?.used_count ?? 0);
-  const credit = Number(aff?.credit_cents ?? 0);
+  const used = Number(aff.used_count ?? 0);
+  const credit = Number(aff.credit_cents ?? 0);
+
+  const newUsedCount = used + 1;
+  const newCreditCents = credit + earnedCents;
 
   const { error: updateAffiliateErr } = await supabaseAdmin
     .from("affiliates")
     .update({
-      used_count: used + 1,
-      credit_cents: credit + 500,
+      used_count: newUsedCount,
+      credit_cents: newCreditCents,
     })
     .eq("user_id", affiliateUserId);
 
   if (updateAffiliateErr) {
     console.error("affiliate credit update failed:", updateAffiliateErr);
+    return;
   }
 
   const { data: profile, error: profileErr } = await supabaseAdmin
     .from("profiles")
-    .select("affiliate_code_used_count,affiliate_credit_cents")
+    .select("email,full_name,first_name,affiliate_code_used_count,affiliate_credit_cents")
     .eq("id", affiliateUserId)
     .single();
 
-if (!profileErr && profile) {
-  await supabaseAdmin
+  if (profileErr || !profile) {
+    console.error("affiliate profile lookup failed:", profileErr);
+    return;
+  }
+
+  const newProfileUsedCount =
+    Number(profile.affiliate_code_used_count ?? 0) + 1;
+
+  const newProfileCreditCents =
+    Number(profile.affiliate_credit_cents ?? 0) + earnedCents;
+
+  const { error: updateProfileErr } = await supabaseAdmin
     .from("profiles")
     .update({
-      affiliate_code_used_count:
-        Number(profile.affiliate_code_used_count ?? 0) + 1,
-
-      affiliate_credit_cents:
-        Number(profile.affiliate_credit_cents ?? 0) +
-        peopleCount * 500,
+      affiliate_code_used_count: newProfileUsedCount,
+      affiliate_credit_cents: newProfileCreditCents,
     })
     .eq("id", affiliateUserId);
-}
+
+  if (updateProfileErr) {
+    console.error("affiliate profile credit update failed:", updateProfileErr);
+    return;
+  }
+
+  if (!profile.email) {
+    console.warn("affiliate email missing, skipping affiliate email");
+    return;
+  }
+
+  const firstName =
+    profile.first_name ||
+    profile.full_name?.split(" ")[0] ||
+    "Legend";
+
+  const html = renderTemplate(affiliateCodeUsedEmail, {
+    first_name: firstName,
+    affiliate_code: affiliateCode || aff.code || "Your code",
+    credit_amount: `$${(earnedCents / 100).toFixed(2)}`,
+    used_count: newUsedCount,
+    total_credit: `$${(newCreditCents / 100).toFixed(2)}`,
+  });
+
+  try {
+    await resend.emails.send({
+      from: process.env.RESEND_FROM_EMAIL!,
+      to: profile.email,
+      subject: "Your affiliate code was used!",
+      html,
+    });
+  } catch (emailErr) {
+    console.error("affiliate code used email failed:", emailErr);
+  }
 }
 
 async function syncProfileFromSubscription(
@@ -695,13 +743,17 @@ export async function POST(req: Request) {
       }
 
       if (affiliateUserId) {
-  const peopleCount = Number(
-    expanded.metadata?.people_count ?? 1
-  );
+  const peopleCount = Number(expanded.metadata?.people_count ?? 1);
+
+  const affiliateCode =
+    expanded.metadata?.discount_code ||
+    expanded.metadata?.affiliate_code ||
+    null;
 
   await applyAffiliateCredit(
     affiliateUserId,
-    peopleCount
+    peopleCount,
+    affiliateCode
   );
 }
 
