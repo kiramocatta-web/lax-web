@@ -8,6 +8,7 @@ import { sendBookingEmail } from "@/lib/email/sendBookingEmail";
 import { sendAdminBookingNotification } from "@/lib/email/sendAdminBookingNotification";
 import { sendMembershipEmail } from "@/lib/email/sendMembershipEmail";
 import { sendSimpleAdminBookingEmail } from "@/lib/email/sendSimpleAdminBookingEmail";
+import { sendAdminMembershipSignupEmail } from "@/lib/email/sendAdminMembershipSignupEmail";
 
 
 export const runtime = "nodejs";
@@ -680,6 +681,26 @@ export async function POST(req: Request) {
   } catch (e) {
     console.error("weekly membership email failed:", e);
   }
+}
+
+try {
+  await sendAdminMembershipSignupEmail({
+    name: expanded.customer_details?.name ?? null,
+    email:
+      expanded.customer_details?.email ??
+      expanded.customer_email ??
+      null,
+    phone: expanded.customer_details?.phone ?? null,
+    membershipPlan: plan,
+    amount:
+      typeof expanded.amount_total === "number"
+        ? `$${(expanded.amount_total / 100).toFixed(2)}`
+        : null,
+    stripeCustomerId: customerId,
+    stripeSubscriptionId: subscriptionId,
+  });
+} catch (e) {
+  console.error("admin membership signup email failed:", e);
 }
 
         if (subscription) {
