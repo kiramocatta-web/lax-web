@@ -182,8 +182,8 @@ export default function EverythingElsePage() {
       </section>
 
       {/* FAQ */}
-        <section className="mt-20">
-          <div className="max-w-4xl">
+        <section className="mt-20 px-1 sm:px-0">
+          <div className="max-w-5xl px-1 sm:px-0">
             <p className="text-sm uppercase tracking-[0.3em] text-white/45">
               Commonly Asked Questions
             </p>
@@ -198,7 +198,7 @@ export default function EverythingElsePage() {
             </p>
           </div>
 
-          <div className="mt-10 space-y-4">
+          <div className="mt-10 space-y-4 max-w-5xl">
             {[
               {
                 q: "Do I just show up and walk in?",
@@ -235,7 +235,7 @@ export default function EverythingElsePage() {
             ].map((item) => (
               <div
                 key={item.q}
-                className="rounded-[2rem] border border-white/10 bg-white/5 p-6 sm:p-8"
+                className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-6 sm:p-8"
               >
                 <h3 className="text-lg font-medium text-white sm:text-xl">
                   {item.q}
