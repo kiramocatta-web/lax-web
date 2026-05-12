@@ -1,7 +1,5 @@
 // src/lib/email/templates/bookingConfirmed.ts
 
-import { br } from "node_modules/@fullcalendar/core/internal-common"
-
 export const bookingConfirmedTemplate = `
 <!DOCTYPE html>
 <html>
@@ -27,6 +25,7 @@ export const bookingConfirmedTemplate = `
       max-width: 600px;
       margin: 0 auto;
       background-color: #ede9e2;
+      overflow: hidden;
     }
 
     .hero-image {
@@ -118,7 +117,7 @@ export const bookingConfirmedTemplate = `
 
       <img
         class="hero-image"
-        src="https://yjnzdwxqkhizfeypr6oqlfaw3txbalo0_alnw_olssa.canva-cdn.email/1f3923b73f33105971c230f8c837de4c.jpg"
+        src="https://www.laxnlounge.com.au/emails/bookingconfirmedbanner.png"
         alt="Lax N Lounge"
       />
 
@@ -129,12 +128,10 @@ export const bookingConfirmedTemplate = `
         </div>
 
         <div class="booking-time">
-          <strong>
-         <div class="booking-time">
-  <strong>{{BOOKING_DATE_FORMATTED}}</strong>
-  <br />
-  {{START_TIME}} – {{END_TIME}}
-</div>
+          <strong>{{BOOKING_DATE_FORMATTED}}</strong>
+          <br />
+          {{START_TIME}} – {{END_TIME}}
+        </div>
 
         <div class="text">
           Thank you for supporting LAX & supporting yourself with affordable recovery.
@@ -190,4 +187,3 @@ export const bookingConfirmedTemplate = `
 </body>
 </html>
 `;
-
