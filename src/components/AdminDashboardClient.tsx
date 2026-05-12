@@ -98,6 +98,7 @@ type AdminView =
   | "blocks"
   | "comeback";
 
+type MemberBucket = "all" | "members" | "guests";
 
 type AffiliateDateRange =
   | "lifetime"
@@ -236,6 +237,8 @@ export default function AdminDashboardClient({
 }: AdminDashboardClientProps) {
   const [view, setView] = useState<AdminView>("members");
 
+  const [memberBucket, setMemberBucket] = useState<MemberBucket>("all");
+
   const [affiliateSearch, setAffiliateSearch] = useState("");
   const [affiliateSort, setAffiliateSort] =
     useState<AffiliateSort>("highest_unpaid");
@@ -281,6 +284,40 @@ We’d love to welcome you back in for a reset soon 🤍
   const [memberActionChoice, setMemberActionChoice] = useState<Record<string, string>>({});
 
   const totalMembers = useMemo(() => membersState.length, [membersState]);
+
+  const memberRows = useMemo(() => {
+  return membersState.filter((member) => {
+    const plan = String(member.membership_plan ?? "").toLowerCase();
+    const status = normalizeMemberStatus(member.membership_status);
+    const role = String(member.role ?? "").toLowerCase();
+
+    const isGuest =
+      role === "guest" ||
+      (!plan && status === "none") ||
+      status === "none";
+
+    const isMember = !isGuest;
+
+    if (memberBucket === "guests") return isGuest;
+    if (memberBucket === "members") return isMember;
+    return true;
+  });
+}, [membersState, memberBucket]);
+
+const copyVisibleMemberEmails = async () => {
+  const emails = memberRows
+    .map((member) => member.email)
+    .filter(Boolean)
+    .join(", ");
+
+  if (!emails) {
+    alert("No emails to copy.");
+    return;
+  }
+
+  await navigator.clipboard.writeText(emails);
+  alert("Visible email list copied ✅");
+};
 
   const affiliateStats = useMemo(() => {
     const totalAffiliates = affiliates.length;
@@ -922,9 +959,32 @@ We’d love to welcome you back in for a reset soon 🤍
         </p>
       </div>
 
-      <div className="text-sm text-white/70">
-        Total: <span className="text-white font-semibold">{totalMembers}</span>
-      </div>
+     <div className="flex items-center gap-3 flex-wrap">
+  <select
+    value={memberBucket}
+    onChange={(e) => setMemberBucket(e.target.value as MemberBucket)}
+    className="bg-white text-black p-3 rounded-xl"
+  >
+    <option value="all">All accounts</option>
+    <option value="members">Members only</option>
+    <option value="guests">Guests only</option>
+  </select>
+
+  <button
+    type="button"
+    onClick={copyVisibleMemberEmails}
+    className="px-4 py-3 rounded-xl bg-white/10 hover:bg-white/20 font-semibold"
+  >
+    Copy visible emails
+  </button>
+
+  <div className="text-sm text-white/70">
+    Showing:{" "}
+    <span className="text-white font-semibold">{memberRows.length}</span>
+    {" "}of{" "}
+    <span className="text-white font-semibold">{totalMembers}</span>
+  </div>
+</div>
     </div>
 
     <div className="mt-6 overflow-x-auto rounded-2xl border border-white/10 bg-black/10">
@@ -945,14 +1005,14 @@ We’d love to welcome you back in for a reset soon 🤍
         </thead>
 
         <tbody>
-          {membersState.length === 0 ? (
+          {memberRows.length === 0 ? (
             <tr>
               <td colSpan={8} className="px-4 py-6 text-white/60">
                 No members found.
               </td>
             </tr>
           ) : (
-            membersState.map((member) => {
+            memberRows.map((member) => {
               const dateToShow =
   member.membership_plan === "weekly"
     ? member.stripe_current_period_end ?? member.membership_expires_at
