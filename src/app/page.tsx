@@ -137,7 +137,7 @@ export default function HomePage() {
                   onClick={() => setShowFeedback(!showFeedback)}
                   className="text-sm text-neutral-400 underline underline-offset-4 transition hover:text-white"
                 >
-                  Leave feedback?
+                  Leave anonymous feedback?
                 </button>
 
                 {showFeedback && (
@@ -146,7 +146,7 @@ export default function HomePage() {
                       <>
                         <p className="mb-4 text-sm text-neutral-300">
                           We take on board anything you say, and appreciate your
-                          time.
+                          time. 
                         </p>
 
                         <textarea
