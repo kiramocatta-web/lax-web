@@ -1,3 +1,5 @@
+"use client";
+
 import Image from "next/image";
 import HomePageHeader from "@/components/HomePageHeader";
 import AuthFooterButton from "@/components/AuthFooterButton";
