@@ -299,7 +299,9 @@ export default function HomePage() {
   <div className="mx-auto max-w-5xl">
     {/* VISION */}
     <section>
-      <h2 className="text-3xl font-light">The Vision of Lax</h2>
+      <h2 className="text-center text-3xl font-light sm:text-4xl">
+  The Vision of Lax
+</h2>
 
       <div className="mx-auto mt-5 max-w-4xl space-y-5 text-center text-sm leading-7 text-white/75 sm:text-base">
         <p className="text-xl leading-8 text-white sm:text-2xl">

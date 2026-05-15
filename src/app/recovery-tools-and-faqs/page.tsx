@@ -37,7 +37,7 @@ export default function EverythingElsePage() {
         </h1>
 
         <p className="mt-4 text-base leading-7 text-white/70 sm:text-lg">
-          Explore the recovery tools, what they can support, who we are, and the
+          Explore the recovery tools, what they can support and the
           answers to the questions people ask most.
         </p>
 
