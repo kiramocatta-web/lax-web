@@ -1,15 +1,32 @@
 "use client";
 
 import Image from "next/image";
+import { useState } from "react";
 import HomePageHeader from "@/components/HomePageHeader";
 import AuthFooterButton from "@/components/AuthFooterButton";
-import { useState } from "react";
-
-
 
 export default function HomePage() {
   const [showFeedback, setShowFeedback] = useState(false);
-const [feedback, setFeedback] = useState("");
+  const [feedback, setFeedback] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+
+  async function submitFeedback() {
+    if (!feedback.trim()) return;
+
+    const res = await fetch("/api/feedback", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ feedback }),
+    });
+
+    if (res.ok) {
+      setSubmitted(true);
+      setFeedback("");
+    }
+  }
+
   return (
     <main className="relative min-h-screen overflow-x-hidden bg-black text-white">
       <div className="relative z-10">
@@ -17,7 +34,6 @@ const [feedback, setFeedback] = useState("");
 
         {/* HERO */}
         <section className="relative h-[78svh] min-h-[560px] w-full overflow-hidden bg-black sm:h-[88svh] md:h-screen">
-          {/* Background Video */}
           <video
             autoPlay
             muted
@@ -28,11 +44,9 @@ const [feedback, setFeedback] = useState("");
             <source src="/videos/lax-front-page.mp4" type="video/mp4" />
           </video>
 
-          {/* overlays */}
           <div className="absolute inset-0 z-10 bg-black/40" />
           <div className="absolute inset-0 z-10 bg-gradient-to-b from-black/35 via-transparent to-black/80" />
 
-          {/* content */}
           <div className="relative z-20 flex h-full items-center justify-center px-5 pt-16 text-center sm:px-6 sm:pt-20">
             <div className="flex flex-col items-center justify-center gap-1 sm:gap-3">
               <h1 className="hero-line-1 block text-[2.2rem] font-light leading-none tracking-[0.01em] sm:text-5xl md:text-6xl lg:text-7xl">
@@ -45,11 +59,10 @@ const [feedback, setFeedback] = useState("");
             </div>
           </div>
 
-          {/* fade into next section */}
           <div className="pointer-events-none absolute bottom-0 left-0 right-0 z-10 h-32 bg-gradient-to-b from-transparent to-black sm:h-40" />
         </section>
 
-        {/* SECOND SECTION */}
+        {/* INTRO */}
         <section className="relative bg-black px-6 py-16 sm:py-24">
           <div className="mx-auto max-w-4xl text-center">
             <div className="mx-auto mb-8 w-full max-w-[260px] sm:mb-10 sm:max-w-sm">
@@ -67,7 +80,7 @@ const [feedback, setFeedback] = useState("");
               Affordable Recovery Starts Here.
             </h2>
 
-            <h2 className="mt-8 text-white font-light text-2xl sm:mt-10 sm:text-3xl md:text-4xl">
+            <h2 className="mt-8 text-2xl font-light text-white sm:mt-10 sm:text-3xl md:text-4xl">
               Open 5am - 10pm Daily.
             </h2>
 
@@ -76,8 +89,9 @@ const [feedback, setFeedback] = useState("");
             </p>
 
             <p className="mt-5 text-sm italic tracking-wide text-white/60 sm:text-base">
-  Simply book & walk straight through. This recovery space is unstaffed.
-</p>
+              Simply book & walk straight through. This recovery space is
+              unstaffed.
+            </p>
 
             <div className="mt-10 flex flex-col items-center gap-4 sm:mt-12 sm:gap-5">
               <a
@@ -102,334 +116,277 @@ const [feedback, setFeedback] = useState("");
               </a>
 
               <div className="mt-2 flex w-full max-w-[320px] gap-3">
-  <a
-    href="tel:+61412345678"
-    className="flex-1 rounded-full border border-white/20 bg-white/5 px-4 py-3 text-center text-sm font-medium text-white/85 transition hover:bg-white hover:text-black"
-  >
-    Call Us
-  </a>
+                <a
+                  href="tel:+61412345678"
+                  className="flex-1 rounded-full border border-white/20 bg-white/5 px-4 py-3 text-center text-sm font-medium text-white/85 transition hover:bg-white hover:text-black"
+                >
+                  Call Us
+                </a>
 
-  <a
-    href="sms:+61412345678"
-    className="flex-1 rounded-full border border-white/20 bg-white/5 px-4 py-3 text-center text-sm font-medium text-white/85 transition hover:bg-white hover:text-black"
-  >
-    Text Us
-  </a>
-</div>
+                <a
+                  href="sms:+61412345678"
+                  className="flex-1 rounded-full border border-white/20 bg-white/5 px-4 py-3 text-center text-sm font-medium text-white/85 transition hover:bg-white hover:text-black"
+                >
+                  Text Us
+                </a>
+              </div>
 
-{/* Feedback */}
-<div className="mt-6 flex flex-col items-center justify-center text-center">
-  <button
-    onClick={() => setShowFeedback(!showFeedback)}
-    className="text-sm text-neutral-400 underline underline-offset-4 hover:text-white transition"
-  >
-    Leave feedback?
-  </button>
+              {/* FEEDBACK */}
+              <div className="mt-6 flex w-full flex-col items-center justify-center text-center">
+                <button
+                  onClick={() => setShowFeedback(!showFeedback)}
+                  className="text-sm text-neutral-400 underline underline-offset-4 transition hover:text-white"
+                >
+                  Leave feedback?
+                </button>
 
-  {showFeedback && (
-    <div className="mt-5 w-full max-w-md rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur">
-      <p className="mb-4 text-sm text-neutral-300">
-        We take on board anything you say, and appreciate your time.
-      </p>
+                {showFeedback && (
+                  <div className="mt-5 w-full max-w-md rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur">
+                    {!submitted ? (
+                      <>
+                        <p className="mb-4 text-sm text-neutral-300">
+                          We take on board anything you say, and appreciate your
+                          time.
+                        </p>
 
-      <textarea
-        value={feedback}
-        onChange={(e) => setFeedback(e.target.value)}
-        placeholder="Your feedback..."
-        className="min-h-[120px] w-full rounded-2xl border border-white/10 bg-black/40 p-4 text-white placeholder:text-neutral-500 outline-none"
-      />
+                        <textarea
+                          value={feedback}
+                          onChange={(e) => setFeedback(e.target.value)}
+                          placeholder="Your feedback..."
+                          className="min-h-[120px] w-full rounded-2xl border border-white/10 bg-black/40 p-4 text-white outline-none placeholder:text-neutral-500"
+                        />
 
-      <button
-        onClick={() => {
-          window.location.href = `mailto:kiramocatta@gmail.com?subject=LAX Feedback&body=${encodeURIComponent(feedback)}`;
-        }}
-        className="mt-4 w-full rounded-2xl border border-white/10 bg-white/10 py-3 font-medium text-white transition hover:bg-white/20"
-      >
-        Submit Feedback
-      </button>
-    </div>
-  )}
-</div>
+                        <button
+                          onClick={submitFeedback}
+                          className="mt-4 w-full rounded-2xl border border-white/10 bg-white/10 py-3 font-medium text-white transition hover:bg-white/20"
+                        >
+                          Submit Feedback
+                        </button>
+                      </>
+                    ) : (
+                      <p className="py-8 text-sm text-white/80">
+                        Thank you! We genuinely appreciate your feedback.
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-
-  
         </section>
 
-{/* HEADER */}
-      <section className="px-6 pt-16 pb-16 text-center">
-        <div className="mx-auto max-w-3xl">
-
-          <h1 className="mt-4 text-4xl sm:text-5xl font-light leading-tight">
-            Choose the recovery option
-            <br />
-            that fits you best.
-          </h1>
-
-          <p className="mt-6 text-white/70 text-lg">
-            Simple pricing. No stress. Just recovery.
-          </p>
-        </div>
-      </section>
-
-
-      {/* SINGLE BOOKINGS */}
-      <section className="px-6 pb-20 text-center">
-        <h2 className="text-3xl font-light">
-          Single Bookings
-        </h2>
-
-        <a
-    href="/book/single"
-    className="mt-3 inline-block text-sm text-white/70 hover:text-white underline underline-offset-4"
-  >
-    Say less →
-  </a>
-
-        <div className="mx-auto mt-10 grid max-w-4xl gap-6 sm:grid-cols-2 lg:grid-cols-3">
-
-          {/* 60 MIN */}
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-8">
-            <p className="text-sm tracking-[0.2em] text-white/50 uppercase">
-              60 Minutes
-            </p>
-
-            <p className="mt-3 text-3xl font-medium">
-              $15
-            </p>
-
-            
-          </div>
-
-
-          {/* 90 MIN */}
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-8">
-            <p className="text-sm tracking-[0.2em] text-white/50 uppercase">
-              90 Minutes
-            </p>
-
-            <p className="mt-3 text-3xl font-medium">
-              $20
-            </p>
-
-            
-          </div>
-
-
-          {/* 120 MIN */}
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-8">
-            <p className="text-sm tracking-[0.2em] text-white/50 uppercase">
-              120 Minutes
-            </p>
-
-            <p className="mt-3 text-3xl font-medium">
-              $25
-            </p>
-
-        
-          </div>
-
-        </div>
-      </section>
-
-
-      {/* MEMBERSHIPS */}
-      <section className="px-6 pb-24 text-center">
-        <h2 className="text-3xl font-light">
-          Memberships
-        </h2>
-
-        <a
-    href="/membership"
-    className="mt-3 inline-block text-sm text-white/70 hover:text-white underline underline-offset-4"
-  >
-    I'm ready to commit →
-  </a>
-
-        <div className="mx-auto mt-10 grid max-w-3xl gap-6 sm:grid-cols-2">
-
-          {/* 7 DAY PASS */}
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-8">
-            <p className="text-sm tracking-[0.2em] text-white/50 uppercase">
-              7-Day Pass
-            </p>
-
-            <p className="mt-3 text-3xl font-medium">
-              $25
-            </p>
-
-            <p className="mt-4 text-white/70">
-              Unlimited recovery for 7 days.
-            </p>
-
-            
-          </div>
-
-
-          {/* GENERAL MEMBERSHIP */}
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-8">
-            <p className="text-sm tracking-[0.2em] text-white/50 uppercase">
-              General Membership
-            </p>
-
-            <p className="mt-3 text-3xl font-medium">
-              $20 / week
-            </p>
-
-            <p className="mt-4 text-white/70">
-              Unlimited recovery access every week.
-            </p>
-
-
-          </div>
-
-        </div>
-      </section>
-
-
-        {/* LOCATION */}
-      <section className="px-6 pb-28">
-        <div className="mx-auto max-w-5xl grid gap-10 lg:grid-cols-2 items-center">
-
-          <div className="text-center lg:text-left">
-            <p className="text-xs tracking-[0.25em] text-white/50 uppercase">
-              Location
-            </p>
-
-            <h3 className="mt-4 text-3xl font-light">
-              Lax N Lounge
-            </h3>
-
-            <p className="mt-4 text-white/70 text-lg">
-              88 Cook Street
+        {/* PRICING HEADER */}
+        <section className="px-6 pb-16 pt-16 text-center">
+          <div className="mx-auto max-w-3xl">
+            <h1 className="mt-4 text-4xl font-light leading-tight sm:text-5xl">
+              Choose the recovery option
               <br />
-              Northgate QLD 4013
-              <br />
-              Australia
+              that fits you best.
+            </h1>
+
+            <p className="mt-6 text-lg text-white/70">
+              Simple pricing. No stress. Just recovery.
             </p>
-
-            <a
-              href="https://maps.google.com/?q=88+Cook+Street+Northgate+QLD+4013"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-6 inline-block rounded-full border border-white/20 px-6 py-3 text-sm uppercase tracking-[0.12em] transition hover:bg-white hover:text-black"
-            >
-              Open in Maps   
-            </a>
           </div>
+        </section>
 
+        {/* SINGLE BOOKINGS */}
+        <section className="px-6 pb-20 text-center">
+          <h2 className="text-3xl font-light">Single Bookings</h2>
 
-          <div className="overflow-hidden rounded-3xl border border-white/10 min-h-[350px]">
-            <iframe
-              title="Lax N Lounge Map"
-              src="https://www.google.com/maps?q=88%20Cook%20Street%20Northgate%20QLD%204013&z=15&output=embed"
-              width="100%"
-              height="100%"
-              className="w-full h-[350px]"
-              loading="lazy"
-            />
+          <a
+            href="/book/single"
+            className="mt-3 inline-block text-sm text-white/70 underline underline-offset-4 hover:text-white"
+          >
+            Say less →
+          </a>
+
+          <div className="mx-auto mt-10 grid max-w-4xl gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {[
+              ["60 Minutes", "$15"],
+              ["90 Minutes", "$20"],
+              ["120 Minutes", "$25"],
+            ].map(([title, price]) => (
+              <div
+                key={title}
+                className="rounded-3xl border border-white/10 bg-white/5 p-8"
+              >
+                <p className="text-sm uppercase tracking-[0.2em] text-white/50">
+                  {title}
+                </p>
+                <p className="mt-3 text-3xl font-medium">{price}</p>
+              </div>
+            ))}
           </div>
-          </div>
-          </section>
+        </section>
 
-         {/* VISION + OWNER */}
-<section className="px-6 pb-32">
-  <div className="mx-auto max-w-5xl">
-    {/* VISION */}
-    <section>
-      <h2 className="text-center text-3xl font-light sm:text-4xl">
-  The Vision of Lax
-</h2>
+        {/* MEMBERSHIPS */}
+        <section className="px-6 pb-24 text-center">
+          <h2 className="text-3xl font-light">Memberships</h2>
 
-      <div className="mx-auto mt-5 max-w-4xl space-y-5 text-center text-sm leading-7 text-white/75 sm:text-base">
-        <p className="text-xl leading-8 text-white sm:text-2xl">
-          LAX exists to redefine what it means to support an athlete & the everyday.
-        </p>
+          <a
+            href="/membership"
+            className="mt-3 inline-block text-sm text-white/70 underline underline-offset-4 hover:text-white"
+          >
+            I'm ready to commit →
+          </a>
 
-        <p>
-          This is not just a recovery space, it's a community where athletes & ther everyday
-          train with purpose, recover with intent, and build toward something
-          greater than themselves. This is about building a culture where people
-          are pushed to be more, do more, and become more.
-        </p>
-
-      </div>
-    </section>
-
-    {/* OWNER */}
-    <section className="mt-20">
-      <h2 className="text-center text-3xl font-light">Owner</h2>
-
-      <p className="text-center mt-2 text-sm tracking-wide text-white/50">
-        Built by an athlete, for athletes.
-      </p>
-
-      <div className="mt-8 grid gap-6 overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 p-5 sm:p-6 md:grid-cols-[0.9fr_1.1fr] md:p-8">
-        <div className="relative min-h-[520px] overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/5 md:h-full">
-          <Image
-            src="/Owner_of_lax.PNG"
-            alt="Owner of Lax"
-            fill
-            className="object-cover object-center"
-          />
-        </div>
-
-        <div className="flex items-center">
-          <div>
-            <p className="text-base uppercase tracking-[0.3em] text-white/45 sm:text-lg">
-              My Story
-            </p>
-
-            <div className="mt-5 space-y-4 text-sm leading-7 text-white/75 sm:text-base">
-              <p>
-                I was a semi-pro athlete with everything in ahead of me — until
-                a drunk driver broke my spine in three places.
+          <div className="mx-auto mt-10 grid max-w-3xl gap-6 sm:grid-cols-2">
+            <div className="rounded-3xl border border-white/10 bg-white/5 p-8">
+              <p className="text-sm uppercase tracking-[0.2em] text-white/50">
+                7-Day Pass
               </p>
-
-              <p>
-                For a long time, I let that moment define me. I wore it as my
-                story. My excuse. My reason for losing direction.
+              <p className="mt-3 text-3xl font-medium">$25</p>
+              <p className="mt-4 text-white/70">
+                Unlimited recovery for 7 days.
               </p>
+            </div>
 
-              <p>I became a victim of what happened to me.</p>
-
-              <p>
-                Until one day, I decided I wasn’t going to live like that
-                anymore.
+            <div className="rounded-3xl border border-white/10 bg-white/5 p-8">
+              <p className="text-sm uppercase tracking-[0.2em] text-white/50">
+                General Membership
               </p>
-
-              <p>
-                LAX was created from that turning point — built to inspire, to
-                motivate, and to create a community that reminds people of one
-                thing:
+              <p className="mt-3 text-3xl font-medium">$20 / week</p>
+              <p className="mt-4 text-white/70">
+                Unlimited recovery access every week.
               </p>
-
-              <p className="text-lg leading-8 text-white sm:text-xl">
-                It’s never too late.
-                <br />
-                What’s happened to you doesn’t define you — only you do.
-              </p>
-
-              <p>
-                This is the new era of LAX.
-                <br />
-                And it’s only the beginning.
-              </p>
-
-              <p className="font-semibold italic leading-8 text-white sm:text-xl">
-  “With man this is impossible, but with God all things are possible.”
-  <br />
-  — Matthew 19:26 ✞ 
-</p>
-
             </div>
           </div>
-        </div>
-      </div>
-    </section>
-  </div>
-</section>
+        </section>
 
+        {/* LOCATION */}
+        <section className="px-6 pb-28">
+          <div className="mx-auto grid max-w-5xl items-center gap-10 lg:grid-cols-2">
+            <div className="text-center lg:text-left">
+              <p className="text-xs uppercase tracking-[0.25em] text-white/50">
+                Location
+              </p>
+
+              <h3 className="mt-4 text-3xl font-light">Lax N Lounge</h3>
+
+              <p className="mt-4 text-lg text-white/70">
+                88 Cook Street
+                <br />
+                Northgate QLD 4013
+                <br />
+                Australia
+              </p>
+
+              <a
+                href="https://maps.google.com/?q=88+Cook+Street+Northgate+QLD+4013"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-6 inline-block rounded-full border border-white/20 px-6 py-3 text-sm uppercase tracking-[0.12em] transition hover:bg-white hover:text-black"
+              >
+                Open in Maps
+              </a>
+            </div>
+
+            <div className="min-h-[350px] overflow-hidden rounded-3xl border border-white/10">
+              <iframe
+                title="Lax N Lounge Map"
+                src="https://www.google.com/maps?q=88%20Cook%20Street%20Northgate%20QLD%204013&z=15&output=embed"
+                width="100%"
+                height="100%"
+                className="h-[350px] w-full"
+                loading="lazy"
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* VISION + OWNER */}
+        <section className="px-6 pb-32">
+          <div className="mx-auto max-w-5xl">
+            <h2 className="text-center text-3xl font-light sm:text-4xl">
+              The Vision of Lax
+            </h2>
+
+            <div className="mx-auto mt-5 max-w-4xl space-y-5 text-center text-sm leading-7 text-white/75 sm:text-base">
+              <p className="text-xl leading-8 text-white sm:text-2xl">
+                LAX exists to redefine what it means to support an athlete & the
+                everyday.
+              </p>
+
+              <p>
+                This is not just a recovery space, it's a community where
+                athletes & the everyday train with purpose, recover with intent,
+                and build toward something greater than themselves.
+              </p>
+            </div>
+
+            <section className="mt-20">
+              <h2 className="text-center text-3xl font-light">Owner</h2>
+
+              <p className="mt-2 text-center text-sm tracking-wide text-white/50">
+                Built by an athlete, for athletes.
+              </p>
+
+              <div className="mt-8 grid gap-6 overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 p-5 sm:p-6 md:grid-cols-[0.9fr_1.1fr] md:p-8">
+                <div className="relative min-h-[520px] overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/5 md:h-full">
+                  <Image
+                    src="/Owner_of_lax.PNG"
+                    alt="Owner of Lax"
+                    fill
+                    className="object-cover object-center"
+                  />
+                </div>
+
+                <div className="flex items-center">
+                  <div>
+                    <p className="text-base uppercase tracking-[0.3em] text-white/45 sm:text-lg">
+                      My Story
+                    </p>
+
+                    <div className="mt-5 space-y-4 text-sm leading-7 text-white/75 sm:text-base">
+                      <p>
+                        I was a semi-pro athlete with everything in ahead of me
+                        — until a drunk driver broke my spine in three places.
+                      </p>
+
+                      <p>
+                        For a long time, I let that moment define me. I wore it
+                        as my story. My excuse. My reason for losing direction.
+                      </p>
+
+                      <p>I became a victim of what happened to me.</p>
+
+                      <p>
+                        Until one day, I decided I wasn’t going to live like
+                        that anymore.
+                      </p>
+
+                      <p>
+                        LAX was created from that turning point — built to
+                        inspire, to motivate, and to create a community that
+                        reminds people of one thing:
+                      </p>
+
+                      <p className="text-lg leading-8 text-white sm:text-xl">
+                        It’s never too late.
+                        <br />
+                        What’s happened to you doesn’t define you — only you do.
+                      </p>
+
+                      <p>
+                        This is the new era of LAX.
+                        <br />
+                        And it’s only the beginning.
+                      </p>
+
+                      <p className="font-semibold italic leading-8 text-white sm:text-xl">
+                        “With man this is impossible, but with God all things
+                        are possible.”
+                        <br />
+                        — Matthew 19:26 ✞
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+        </section>
 
         {/* FOOTER */}
         <footer className="relative z-10 border-t border-white/10 bg-black/80 backdrop-blur">
