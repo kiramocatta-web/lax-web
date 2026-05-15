@@ -118,9 +118,6 @@ export default function HomePage() {
 {/* HEADER */}
       <section className="px-6 pt-16 pb-16 text-center">
         <div className="mx-auto max-w-3xl">
-          <p className="text-xs tracking-[0.25em] text-white/50 uppercase">
-            Pricing & Location
-          </p>
 
           <h1 className="mt-4 text-4xl sm:text-5xl font-light leading-tight">
             Choose the recovery option
@@ -311,19 +308,10 @@ export default function HomePage() {
         <p>
           This is not just a recovery space, it's a community where athletes & ther everyday
           train with purpose, recover with intent, and build toward something
-          greater than themselves.
+          greater than themselves. This is about building a culture where people
+          are pushed to be more, do more, and become more.
         </p>
 
-        <p>
-          LAX has been built as a stepping stone, a place where affordability
-          and accessibility meet intention — so athletes and everyday individuals
-          can invest in their future selves, today.
-        </p>
-
-        <p className="text-lg leading-8 text-white sm:text-xl">
-          This is about more than recovery. This is about building a culture
-          where people are pushed to be more, do more, and become more.
-        </p>
       </div>
     </section>
 
