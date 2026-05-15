@@ -303,17 +303,17 @@ export default function HomePage() {
 
       <div className="mt-5 max-w-4xl space-y-5 text-sm leading-7 text-white/75 sm:text-base">
         <p className="text-xl leading-8 text-white sm:text-2xl">
-          LAX exists to redefine what it means to support an athlete.
+          LAX exists to redefine what it means to support an athlete & the everyday.
         </p>
 
         <p>
-          This is not just a recovery space, it's a community where athletes
+          This is not just a recovery space, it's a community where athletes & ther everyday
           train with purpose, recover with intent, and build toward something
           greater than themselves.
         </p>
 
         <p>
-          LAX has been built as a stepping stone — a place where affordability
+          LAX has been built as a stepping stone, a place where affordability
           and accessibility meet intention — so athletes and everyday individuals
           can invest in their future selves, today.
         </p>
