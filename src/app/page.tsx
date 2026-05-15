@@ -276,7 +276,7 @@ export default function HomePage() {
               rel="noopener noreferrer"
               className="mt-6 inline-block rounded-full border border-white/20 px-6 py-3 text-sm uppercase tracking-[0.12em] transition hover:bg-white hover:text-black"
             >
-              Open in Maps
+              Open in Maps   
             </a>
           </div>
 
@@ -301,7 +301,7 @@ export default function HomePage() {
     <section>
       <h2 className="text-3xl font-light">The Vision of Lax</h2>
 
-      <div className="mt-5 max-w-4xl space-y-5 text-sm leading-7 text-white/75 sm:text-base">
+      <div className="mx-auto mt-5 max-w-4xl space-y-5 text-center text-sm leading-7 text-white/75 sm:text-base">
         <p className="text-xl leading-8 text-white sm:text-2xl">
           LAX exists to redefine what it means to support an athlete & the everyday.
         </p>
@@ -345,7 +345,7 @@ export default function HomePage() {
 
         <div className="flex items-center">
           <div>
-            <p className="text-sm uppercase tracking-[0.3em] text-white/45">
+            <p className="text-base uppercase tracking-[0.3em] text-white/45 sm:text-lg">
               My Story
             </p>
 
