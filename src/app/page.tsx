@@ -341,7 +341,7 @@ export default function HomePage() {
             src="/Owner_of_lax.PNG"
             alt="Owner of Lax"
             fill
-            className="object-cover"
+            className="object-cover object-center"
           />
         </div>
 
@@ -387,9 +387,11 @@ export default function HomePage() {
                 And it’s only the beginning.
               </p>
 
-              <p> className = "leading-8 text-white sm:text-xl"
-                ✞ "With man this is impossible, but with God all things are possible" Matthew 19:26
-              </p>
+              <p className="font-semibold italic leading-8 text-white sm:text-xl">
+  ✞ “With man this is impossible, but with God all things are possible.”
+  <br />
+  — Matthew 19:26
+</p>
 
             </div>
           </div>
