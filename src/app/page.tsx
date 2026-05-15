@@ -385,6 +385,8 @@ export default function HomePage() {
                 This is the new era of LAX.
                 <br />
                 And it’s only the beginning.
+                <br />
+                ✞ "With man this is impossible, but with God all things are possible" Matthew 19:26
               </p>
             </div>
           </div>
