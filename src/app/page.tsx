@@ -385,9 +385,12 @@ export default function HomePage() {
                 This is the new era of LAX.
                 <br />
                 And it’s only the beginning.
-                <br />
+              </p>
+
+              <p> className = "leading-8 text-white sm:text-xl"
                 ✞ "With man this is impossible, but with God all things are possible" Matthew 19:26
               </p>
+
             </div>
           </div>
         </div>
