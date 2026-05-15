@@ -1,8 +1,12 @@
 import Image from "next/image";
 import HomePageHeader from "@/components/HomePageHeader";
 import AuthFooterButton from "@/components/AuthFooterButton";
+import { useState } from "react";
+
+
 
 export default function HomePage() {
+  const [showFeedback, setShowFeedback] = useState(false);
   return (
     <main className="relative min-h-screen overflow-x-hidden bg-black text-white">
       <div className="relative z-10">
@@ -108,6 +112,35 @@ export default function HomePage() {
   >
     Text Us
   </a>
+</div>
+
+{/* Feedback */}
+<div className="mt-10 flex flex-col items-center justify-center text-center">
+  <button
+    onClick={() => setShowFeedback(true)}
+    className="text-sm text-neutral-400 underline underline-offset-4 hover:text-white transition"
+  >
+    Leave feedback?
+  </button>
+
+  {showFeedback && (
+    <div className="mt-5 w-full max-w-md rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur">
+      <p className="mb-4 text-sm text-neutral-300">
+        We take on board anything you say, and appreciate your time.
+      </p>
+
+      <textarea
+        placeholder="Your feedback..."
+        className="min-h-[120px] w-full rounded-2xl border border-white/10 bg-black/40 p-4 text-white placeholder:text-neutral-500 outline-none"
+      />
+
+      <button
+        className="mt-4 w-full rounded-2xl border border-white/10 bg-white/10 py-3 font-medium text-white transition hover:bg-white/20"
+      >
+        Submit Feedback
+      </button>
+    </div>
+  )}
 </div>
             </div>
           </div>
