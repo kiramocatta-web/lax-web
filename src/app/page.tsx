@@ -336,7 +336,7 @@ export default function HomePage() {
       </p>
 
       <div className="mt-8 grid gap-6 overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 p-5 sm:p-6 md:grid-cols-[0.9fr_1.1fr] md:p-8">
-        <div className="relative aspect-[4/5] overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/5">
+        <div className="relative min-h-[520px] overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/5 md:h-full">
           <Image
             src="/Owner_of_lax.PNG"
             alt="Owner of Lax"
@@ -388,9 +388,9 @@ export default function HomePage() {
               </p>
 
               <p className="font-semibold italic leading-8 text-white sm:text-xl">
-  ✞ “With man this is impossible, but with God all things are possible.”
+  “With man this is impossible, but with God all things are possible.”
   <br />
-  — Matthew 19:26
+  — Matthew 19:26 ✞ 
 </p>
 
             </div>
