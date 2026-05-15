@@ -88,17 +88,10 @@ export default function HomePage() {
               </a>
 
               <a
-                href="/pricing-and-location"
+                href="/recovery-tools-and-faqs"
                 className="w-full max-w-[320px] rounded-full border border-white/30 bg-white/10 px-8 py-4 text-center text-sm font-medium uppercase tracking-[0.12em] transition hover:bg-white hover:text-black sm:min-w-[270px] sm:text-lg"
               >
-                Pricing & Location
-              </a>
-
-              <a
-                href="/everything-else"
-                className="w-full max-w-[320px] rounded-full border border-white/30 bg-white/10 px-8 py-4 text-center text-sm font-medium uppercase tracking-[0.12em] transition hover:bg-white hover:text-black sm:min-w-[270px] sm:text-lg"
-              >
-                Everything Else
+                Recovery Tools & FAQs
               </a>
 
               <div className="mt-2 flex w-full max-w-[320px] gap-3">
@@ -121,6 +114,140 @@ export default function HomePage() {
 
   
         </section>
+
+{/* HEADER */}
+      <section className="px-6 pt-28 pb-16 text-center">
+        <div className="mx-auto max-w-3xl">
+          <p className="text-xs tracking-[0.25em] text-white/50 uppercase">
+            Pricing & Location
+          </p>
+
+          <h1 className="mt-4 text-4xl sm:text-5xl font-light leading-tight">
+            Choose the recovery option
+            <br />
+            that fits you best.
+          </h1>
+
+          <p className="mt-6 text-white/70 text-lg">
+            Simple pricing. No stress. Just recovery.
+          </p>
+        </div>
+      </section>
+
+
+      {/* SINGLE BOOKINGS */}
+      <section className="px-6 pb-20 text-center">
+        <h2 className="text-3xl font-light">
+          Single Bookings
+        </h2>
+
+        <a
+    href="/book/single"
+    className="mt-3 inline-block text-sm text-white/70 hover:text-white underline underline-offset-4"
+  >
+    Say less →
+  </a>
+
+        <div className="mx-auto mt-10 grid max-w-4xl gap-6 sm:grid-cols-2 lg:grid-cols-3">
+
+          {/* 60 MIN */}
+          <div className="rounded-3xl border border-white/10 bg-white/5 p-8">
+            <p className="text-sm tracking-[0.2em] text-white/50 uppercase">
+              60 Minutes
+            </p>
+
+            <p className="mt-3 text-3xl font-medium">
+              $15
+            </p>
+
+            
+          </div>
+
+
+          {/* 90 MIN */}
+          <div className="rounded-3xl border border-white/10 bg-white/5 p-8">
+            <p className="text-sm tracking-[0.2em] text-white/50 uppercase">
+              90 Minutes
+            </p>
+
+            <p className="mt-3 text-3xl font-medium">
+              $20
+            </p>
+
+            
+          </div>
+
+
+          {/* 120 MIN */}
+          <div className="rounded-3xl border border-white/10 bg-white/5 p-8">
+            <p className="text-sm tracking-[0.2em] text-white/50 uppercase">
+              120 Minutes
+            </p>
+
+            <p className="mt-3 text-3xl font-medium">
+              $25
+            </p>
+
+        
+          </div>
+
+        </div>
+      </section>
+
+
+      {/* MEMBERSHIPS */}
+      <section className="px-6 pb-24 text-center">
+        <h2 className="text-3xl font-light">
+          Memberships
+        </h2>
+
+        <a
+    href="/membership"
+    className="mt-3 inline-block text-sm text-white/70 hover:text-white underline underline-offset-4"
+  >
+    I'm ready to commit →
+  </a>
+
+        <div className="mx-auto mt-10 grid max-w-3xl gap-6 sm:grid-cols-2">
+
+          {/* 7 DAY PASS */}
+          <div className="rounded-3xl border border-white/10 bg-white/5 p-8">
+            <p className="text-sm tracking-[0.2em] text-white/50 uppercase">
+              7-Day Pass
+            </p>
+
+            <p className="mt-3 text-3xl font-medium">
+              $25
+            </p>
+
+            <p className="mt-4 text-white/70">
+              Unlimited recovery for 7 days.
+            </p>
+
+            
+          </div>
+
+
+          {/* GENERAL MEMBERSHIP */}
+          <div className="rounded-3xl border border-white/10 bg-white/5 p-8">
+            <p className="text-sm tracking-[0.2em] text-white/50 uppercase">
+              General Membership
+            </p>
+
+            <p className="mt-3 text-3xl font-medium">
+              $20 / week
+            </p>
+
+            <p className="mt-4 text-white/70">
+              Unlimited recovery access every week.
+            </p>
+
+
+          </div>
+
+        </div>
+      </section>
+
 
         {/* LOCATION */}
       <section className="px-6 pb-28">
@@ -166,6 +293,101 @@ export default function HomePage() {
           </div>
           </div>
           </section>
+
+          {/* VISION */}
+
+        <section className="mt-20">
+          <h2 className="text-3xl font-light">The Vision of Lax</h2>
+
+          <div className="mt-5 max-w-4xl space-y-5 text-sm leading-7 text-white/75 sm:text-base">
+            <p className="text-xl leading-8 text-white sm:text-2xl">
+              LAX exists to redefine what it means to support an athlete.
+            </p>
+
+            <p>
+              This is not just a recovery space, it's a community where athletes train with purpose,
+              recover with intent, and build toward something greater than
+              themselves.
+            </p>
+
+            <p>
+              LAX has been built as a stepping stone — a place where affordability
+              and accessibility meet intention — so athletes and everyday
+              individuals can invest in their future selves, today.
+            </p>
+
+            <p className="text-lg leading-8 text-white sm:text-xl">
+              This is about more than recovery. This is about building a culture
+              where people are pushed to be more, do more, and become more.
+            </p>
+          </div>
+        </section>
+
+        {/* OWNER */}
+        <section className="mt-20">
+          <h2 className="text-3xl font-light">Owner</h2>
+
+          <p className="mt-2 text-white/50 text-sm tracking-wide">
+  Built by an athlete, for athletes.
+</p>
+
+          <div className="mt-8 grid gap-6 overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 p-5 sm:p-6 md:grid-cols-[0.9fr_1.1fr] md:p-8">
+            <div className="relative aspect-[4/5] overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/5">
+              <Image
+                src="/Owner_of_lax.PNG"
+                alt="Owner of Lax"
+                fill
+                className="object-cover"
+              />
+            </div>
+
+            <div className="flex items-center">
+              <div>
+                <p className="text-sm uppercase tracking-[0.3em] text-white/45">
+                  My Story
+                </p>
+
+                <div className="mt-5 space-y-4 text-sm leading-7 text-white/75 sm:text-base">
+                  <p>
+                    I was a semi-pro athlete with everything in ahead of me —
+                    until a drunk driver broke my spine in three
+                    places.
+                  </p>
+
+                  <p>
+                    For a long time, I let that moment define me. 
+                    I wore it as my story. My excuse. My reason for losing direction.
+                  </p>
+
+                  <p>I became a victim of what happened to me.</p>
+
+                  <p>
+                    Until one day, I decided I wasn’t going to live like that
+                    anymore.
+                  </p>
+
+                  <p>
+                    LAX was created from that turning point — built to inspire,
+                    to motivate, and to create a community that reminds people
+                    of one thing:
+                  </p>
+
+                  <p className="text-lg leading-8 text-white sm:text-xl">
+                    It’s never too late.
+                    <br />
+                    What’s happened to you doesn’t define you — only you do.
+                  </p>
+
+                  <p>
+                    This is the new era of LAX.
+                    <br />
+                    And it’s only the beginning.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
 
         {/* FOOTER */}
         <footer className="relative z-10 border-t border-white/10 bg-black/80 backdrop-blur">
