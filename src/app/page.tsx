@@ -33,7 +33,7 @@ export default function HomePage() {
           <div className="relative z-20 flex h-full items-center justify-center px-5 pt-16 text-center sm:px-6 sm:pt-20">
             <div className="flex flex-col items-center justify-center gap-1 sm:gap-3">
               <h1 className="hero-line-1 block text-[2.2rem] font-light leading-none tracking-[0.01em] sm:text-5xl md:text-6xl lg:text-7xl">
-                Train Hard
+                Train Hard.
               </h1>
 
               <h1 className="hero-line-2 block text-[2.5rem] font-bold italic leading-none tracking-[0.01em] sm:text-5xl md:text-6xl lg:text-7xl">
