@@ -9,6 +9,7 @@ import { useState } from "react";
 
 export default function HomePage() {
   const [showFeedback, setShowFeedback] = useState(false);
+const [feedback, setFeedback] = useState("");
   return (
     <main className="relative min-h-screen overflow-x-hidden bg-black text-white">
       <div className="relative z-10">
@@ -132,11 +133,16 @@ export default function HomePage() {
       </p>
 
       <textarea
+        value={feedback}
+        onChange={(e) => setFeedback(e.target.value)}
         placeholder="Your feedback..."
         className="min-h-[120px] w-full rounded-2xl border border-white/10 bg-black/40 p-4 text-white placeholder:text-neutral-500 outline-none"
       />
 
       <button
+        onClick={() => {
+          window.location.href = `mailto:kiramocatta@gmail.com?subject=LAX Feedback&body=${encodeURIComponent(feedback)}`;
+        }}
         className="mt-4 w-full rounded-2xl border border-white/10 bg-white/10 py-3 font-medium text-white transition hover:bg-white/20"
       >
         Submit Feedback
