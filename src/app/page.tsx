@@ -68,6 +68,10 @@ export default function HomePage() {
               Infrared Sauna • Ice Bath • Hot Plunge • Normatec Boots
             </p>
 
+            <p className="mt-5 text-sm italic tracking-wide text-white/60 sm:text-base">
+  Simply book & walk straight through. This recovery space is unstaffed.
+</p>
+
             <div className="mt-10 flex flex-col items-center gap-4 sm:mt-12 sm:gap-5">
               <a
                 href="/members"
@@ -96,6 +100,20 @@ export default function HomePage() {
               >
                 Everything Else
               </a>
+
+              <a
+  href="tel:+61488776576"
+  className="..."
+>
+  Call Us
+</a>
+
+<a
+  href="sms:+61488776576"
+  className="..."
+>
+  Text Us
+</a>
             </div>
           </div>
         </section>

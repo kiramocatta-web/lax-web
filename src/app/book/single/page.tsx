@@ -520,6 +520,10 @@ useEffect(() => {
               : "Choose date, no. of people, duration, then pay to confirm."}
           </p>
 
+          <p className="mt-2 text-center text-sm italic text-white/55">
+  Please note: this recovery space is monitored but not staffed. After booking, simply walk through and begin your recovery.
+</p>
+
           {rescheduleError ? (
             <div className="mt-4 rounded-2xl border border-red-400/20 bg-red-500/10 p-4 text-red-200">
               {rescheduleError}
