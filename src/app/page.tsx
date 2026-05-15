@@ -294,100 +294,104 @@ export default function HomePage() {
           </div>
           </section>
 
-          {/* VISION */}
+         {/* VISION + OWNER */}
+<section className="px-6 pb-32">
+  <div className="mx-auto max-w-5xl">
+    {/* VISION */}
+    <section>
+      <h2 className="text-3xl font-light">The Vision of Lax</h2>
 
-        <section className="mt-20">
-          <h2 className="text-3xl font-light">The Vision of Lax</h2>
+      <div className="mt-5 max-w-4xl space-y-5 text-sm leading-7 text-white/75 sm:text-base">
+        <p className="text-xl leading-8 text-white sm:text-2xl">
+          LAX exists to redefine what it means to support an athlete.
+        </p>
 
-          <div className="mt-5 max-w-4xl space-y-5 text-sm leading-7 text-white/75 sm:text-base">
-            <p className="text-xl leading-8 text-white sm:text-2xl">
-              LAX exists to redefine what it means to support an athlete.
+        <p>
+          This is not just a recovery space, it's a community where athletes
+          train with purpose, recover with intent, and build toward something
+          greater than themselves.
+        </p>
+
+        <p>
+          LAX has been built as a stepping stone — a place where affordability
+          and accessibility meet intention — so athletes and everyday individuals
+          can invest in their future selves, today.
+        </p>
+
+        <p className="text-lg leading-8 text-white sm:text-xl">
+          This is about more than recovery. This is about building a culture
+          where people are pushed to be more, do more, and become more.
+        </p>
+      </div>
+    </section>
+
+    {/* OWNER */}
+    <section className="mt-20">
+      <h2 className="text-3xl font-light">Owner</h2>
+
+      <p className="mt-2 text-sm tracking-wide text-white/50">
+        Built by an athlete, for athletes.
+      </p>
+
+      <div className="mt-8 grid gap-6 overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 p-5 sm:p-6 md:grid-cols-[0.9fr_1.1fr] md:p-8">
+        <div className="relative aspect-[4/5] overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/5">
+          <Image
+            src="/Owner_of_lax.PNG"
+            alt="Owner of Lax"
+            fill
+            className="object-cover"
+          />
+        </div>
+
+        <div className="flex items-center">
+          <div>
+            <p className="text-sm uppercase tracking-[0.3em] text-white/45">
+              My Story
             </p>
 
-            <p>
-              This is not just a recovery space, it's a community where athletes train with purpose,
-              recover with intent, and build toward something greater than
-              themselves.
-            </p>
+            <div className="mt-5 space-y-4 text-sm leading-7 text-white/75 sm:text-base">
+              <p>
+                I was a semi-pro athlete with everything in ahead of me — until
+                a drunk driver broke my spine in three places.
+              </p>
 
-            <p>
-              LAX has been built as a stepping stone — a place where affordability
-              and accessibility meet intention — so athletes and everyday
-              individuals can invest in their future selves, today.
-            </p>
+              <p>
+                For a long time, I let that moment define me. I wore it as my
+                story. My excuse. My reason for losing direction.
+              </p>
 
-            <p className="text-lg leading-8 text-white sm:text-xl">
-              This is about more than recovery. This is about building a culture
-              where people are pushed to be more, do more, and become more.
-            </p>
-          </div>
-        </section>
+              <p>I became a victim of what happened to me.</p>
 
-        {/* OWNER */}
-        <section className="mt-20">
-          <h2 className="text-3xl font-light">Owner</h2>
+              <p>
+                Until one day, I decided I wasn’t going to live like that
+                anymore.
+              </p>
 
-          <p className="mt-2 text-white/50 text-sm tracking-wide">
-  Built by an athlete, for athletes.
-</p>
+              <p>
+                LAX was created from that turning point — built to inspire, to
+                motivate, and to create a community that reminds people of one
+                thing:
+              </p>
 
-          <div className="mt-8 grid gap-6 overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 p-5 sm:p-6 md:grid-cols-[0.9fr_1.1fr] md:p-8">
-            <div className="relative aspect-[4/5] overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/5">
-              <Image
-                src="/Owner_of_lax.PNG"
-                alt="Owner of Lax"
-                fill
-                className="object-cover"
-              />
+              <p className="text-lg leading-8 text-white sm:text-xl">
+                It’s never too late.
+                <br />
+                What’s happened to you doesn’t define you — only you do.
+              </p>
+
+              <p>
+                This is the new era of LAX.
+                <br />
+                And it’s only the beginning.
+              </p>
             </div>
-
-            <div className="flex items-center">
-              <div>
-                <p className="text-sm uppercase tracking-[0.3em] text-white/45">
-                  My Story
-                </p>
-
-                <div className="mt-5 space-y-4 text-sm leading-7 text-white/75 sm:text-base">
-                  <p>
-                    I was a semi-pro athlete with everything in ahead of me —
-                    until a drunk driver broke my spine in three
-                    places.
-                  </p>
-
-                  <p>
-                    For a long time, I let that moment define me. 
-                    I wore it as my story. My excuse. My reason for losing direction.
-                  </p>
-
-                  <p>I became a victim of what happened to me.</p>
-
-                  <p>
-                    Until one day, I decided I wasn’t going to live like that
-                    anymore.
-                  </p>
-
-                  <p>
-                    LAX was created from that turning point — built to inspire,
-                    to motivate, and to create a community that reminds people
-                    of one thing:
-                  </p>
-
-                  <p className="text-lg leading-8 text-white sm:text-xl">
-                    It’s never too late.
-                    <br />
-                    What’s happened to you doesn’t define you — only you do.
-                  </p>
-
-                  <p>
-                    This is the new era of LAX.
-                    <br />
-                    And it’s only the beginning.
-                  </p>
-                </div>
-              </div>
-            </div>
           </div>
-        </section>
+        </div>
+      </div>
+    </section>
+  </div>
+</section>
+
 
         {/* FOOTER */}
         <footer className="relative z-10 border-t border-white/10 bg-black/80 backdrop-blur">
