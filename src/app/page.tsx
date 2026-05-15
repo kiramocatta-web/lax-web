@@ -116,7 +116,7 @@ export default function HomePage() {
         </section>
 
 {/* HEADER */}
-      <section className="px-6 pt-28 pb-16 text-center">
+      <section className="px-6 pt-16 pb-16 text-center">
         <div className="mx-auto max-w-3xl">
           <p className="text-xs tracking-[0.25em] text-white/50 uppercase">
             Pricing & Location
