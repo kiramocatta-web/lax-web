@@ -329,9 +329,9 @@ export default function HomePage() {
 
     {/* OWNER */}
     <section className="mt-20">
-      <h2 className="text-3xl font-light">Owner</h2>
+      <h2 className="text-center text-3xl font-light">Owner</h2>
 
-      <p className="mt-2 text-sm tracking-wide text-white/50">
+      <p className="text-center mt-2 text-sm tracking-wide text-white/50">
         Built by an athlete, for athletes.
       </p>
 
