@@ -115,9 +115,9 @@ export default function HomePage() {
 </div>
 
 {/* Feedback */}
-<div className="mt-10 flex flex-col items-center justify-center text-center">
+<div className="mt-6 flex flex-col items-center justify-center text-center">
   <button
-    onClick={() => setShowFeedback(true)}
+    onClick={() => setShowFeedback(!showFeedback)}
     className="text-sm text-neutral-400 underline underline-offset-4 hover:text-white transition"
   >
     Leave feedback?
