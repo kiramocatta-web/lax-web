@@ -182,7 +182,7 @@ export default function EverythingElsePage() {
       </section>
 
       {/* FAQ */}
-        <section className="mt-20 px-1 sm:px-0">
+        <section className="mt-20 px-1 pb-20 sm:px-0 sm:pb-24">
           <div className="mx-auto max-w-5xl px-1 sm:px-0">
             <p className="text-sm uppercase tracking-[0.3em] text-white/45">
               Commonly Asked Questions
@@ -198,7 +198,7 @@ export default function EverythingElsePage() {
             </p>
           </div>
 
-          <div className="mx-auto mt-10 max-w-5xl space-y-4">git 
+          <div className="mx-auto mt-10 max-w-5xl space-y-4">
             {[
               {
                 q: "Do I just show up and walk in?",

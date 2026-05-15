@@ -118,7 +118,54 @@ export default function HomePage() {
 </div>
             </div>
           </div>
+
+  
         </section>
+
+        {/* LOCATION */}
+      <section className="px-6 pb-28">
+        <div className="mx-auto max-w-5xl grid gap-10 lg:grid-cols-2 items-center">
+
+          <div className="text-center lg:text-left">
+            <p className="text-xs tracking-[0.25em] text-white/50 uppercase">
+              Location
+            </p>
+
+            <h3 className="mt-4 text-3xl font-light">
+              Lax N Lounge
+            </h3>
+
+            <p className="mt-4 text-white/70 text-lg">
+              88 Cook Street
+              <br />
+              Northgate QLD 4013
+              <br />
+              Australia
+            </p>
+
+            <a
+              href="https://maps.google.com/?q=88+Cook+Street+Northgate+QLD+4013"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-6 inline-block rounded-full border border-white/20 px-6 py-3 text-sm uppercase tracking-[0.12em] transition hover:bg-white hover:text-black"
+            >
+              Open in Maps
+            </a>
+          </div>
+
+
+          <div className="overflow-hidden rounded-3xl border border-white/10 min-h-[350px]">
+            <iframe
+              title="Lax N Lounge Map"
+              src="https://www.google.com/maps?q=88%20Cook%20Street%20Northgate%20QLD%204013&z=15&output=embed"
+              width="100%"
+              height="100%"
+              className="w-full h-[350px]"
+              loading="lazy"
+            />
+          </div>
+          </div>
+          </section>
 
         {/* FOOTER */}
         <footer className="relative z-10 border-t border-white/10 bg-black/80 backdrop-blur">
