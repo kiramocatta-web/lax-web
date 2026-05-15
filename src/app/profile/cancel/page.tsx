@@ -77,9 +77,14 @@ export default function CancelMembershipPage() {
 
         <div className="mt-6 bg-white/5 rounded-2xl p-5">
           <p className="text-white/80">
-            We’re sorry to see you go. Before we process your cancellation,
-            please let us know why.
-          </p>
+  We’re sorry to see you go. Before we process your cancellation, please let us know why.
+</p>
+
+<div className="mt-4 rounded-2xl border border-red-300/20 bg-red-500/10 p-4 text-sm leading-6 text-red-100">
+  Please note: cancellations require a 2-week cooling-off period. Your membership
+  will remain active during this time, and our team will confirm the final
+  cancellation date with you.
+</div>
 
           <textarea
             value={reason}

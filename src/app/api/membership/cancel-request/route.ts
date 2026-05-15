@@ -6,7 +6,7 @@ export const runtime = "nodejs";
 
 const resendApiKey = process.env.RESEND_API_KEY;
 const resendFromEmail = process.env.RESEND_FROM_EMAIL;
-const adminEmail = process.env.LAX_ADMIN_EMAIL || "kiramocatta@gmail.com";
+const adminEmail = process.env.LAX_ADMIN_EMAIL || "admin@laxnlounge.com.au";
 
 const resend = resendApiKey ? new Resend(resendApiKey) : null;
 
@@ -57,7 +57,7 @@ export async function POST(req: Request) {
 
     if (!resend || !resendFromEmail) {
       return NextResponse.json(
-        { error: "Email service is not configured." },
+        { error: "Email service is not configured. Check RESEND_API_KEY and RESEND_FROM_EMAIL in Vercel." },
         { status: 500 }
       );
     }
@@ -78,6 +78,9 @@ export async function POST(req: Request) {
         `User ID: ${user.id}`,
         `Membership plan: ${profile.membership_plan ?? "—"}`,
         `Membership status: ${profile.membership_status ?? "—"}`,
+        "",
+        "Cancellation process:",
+        "Please note: cancellations require a 2-week cooling-off period. The membership should remain active during this period, and the final cancellation date should be confirmed by the LAX team.",
         "",
         "Reason:",
         reason,
