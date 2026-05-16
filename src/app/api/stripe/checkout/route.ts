@@ -18,7 +18,7 @@ const PRICE_BY_DURATION_CENTS: Record<number, number> = {
   120: 2500,
 };
 
-const STRIPE_PROMO_CODES = ["SPA", "VOLLEYBALL"];
+const STRIPE_PROMO_CODES = ["SPA", "VOLLEYBALL", "AF"];
 
 function minutesToTimeString(startMinute: number) {
   const hh = String(Math.floor(startMinute / 60)).padStart(2, "0");
@@ -37,6 +37,7 @@ function getBookingStartDateTime(bookingDate: string, startTime: string) {
 function getPromoIdForCode(code: string) {
   if (code === "SPA") return process.env.STRIPE_PROMO_SPA_ID;
   if (code === "VOLLEYBALL") return process.env.STRIPE_PROMO_VOLLEYBALL_ID;
+  if (code === "AF") return process.env.STRIPE_PROMO_AF_ID;
   return null;
 }
 
