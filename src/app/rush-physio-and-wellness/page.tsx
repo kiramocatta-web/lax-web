@@ -18,7 +18,19 @@ export default function RushPhysioPage() {
         </div>
 
         {/* HERO */}
-        <div className="grid items-center gap-12 md:grid-cols-[1fr_0.9fr]">
+        <div className="grid items-center gap-12 md:grid-cols-[0.9fr_1fr]">
+          {/* HEADSHOT */}
+          <div className="mx-auto w-full max-w-sm overflow-hidden rounded-[2rem] border border-[#d8b98f]/30 bg-[#2b1d16] p-3 shadow-2xl">
+            <Image
+              src="/rushlee.png"
+              alt="Rush Physio"
+              width={700}
+              height={900}
+              className="h-auto w-full rounded-[1.5rem] object-cover"
+              priority
+            />
+          </div>
+
           <div className="text-center md:text-left">
             <p className="mb-3 text-sm uppercase tracking-[0.3em] text-[#c9a985]">
               Local Northgate Physiotherapy
@@ -33,6 +45,7 @@ export default function RushPhysioPage() {
               and movement support just minutes from LAX N LOUNGE.
             </p>
 
+            {/* LOCATION */}
             <div className="mt-6 rounded-2xl border border-[#d8b98f]/30 bg-[#3a281e] p-5">
               <p className="text-xl font-bold text-[#fff2df]">
                 Not located at LAX.
@@ -45,9 +58,21 @@ export default function RushPhysioPage() {
               <p className="mt-1 text-[#d9c8b8]">
                 1/62 Crockford Street, Northgate
               </p>
+            </div>
 
-              <p className="mt-2 text-sm text-[#cdb9a6]">
-                Only approx. 1km / 3 mins from LAX N LOUNGE.
+            {/* LAX OFFER */}
+            <div className="mt-4 rounded-2xl border border-[#d8b98f]/30 bg-[#2b1d16] p-5">
+              <p className="text-lg font-semibold text-[#fff2df]">
+                Exclusive LAX Offer
+              </p>
+
+              <p className="mt-2 text-[#e3d2c1]">
+                Mention <span className="font-bold text-white">LAX10</span>{" "}
+                during your appointment or leave it in the booking notes to
+                receive{" "}
+                <span className="font-bold text-white">
+                  $10 off your first treatment.
+                </span>
               </p>
             </div>
 
@@ -68,17 +93,6 @@ export default function RushPhysioPage() {
                 Learn More
               </Link>
             </div>
-          </div>
-
-          {/* HEADSHOT */}
-          <div className="mx-auto w-full max-w-sm overflow-hidden rounded-[2rem] border border-[#d8b98f]/30 bg-[#2b1d16] p-3 shadow-2xl">
-            <Image
-              src="/rushlee.png"
-              alt="Rush Physio"
-              width={700}
-              height={900}
-              className="h-auto w-full rounded-[1.5rem] object-cover"
-            />
           </div>
         </div>
 
@@ -129,7 +143,7 @@ export default function RushPhysioPage() {
           </div>
         </section>
 
-        {/* WHY BOOK */}
+        {/* WHY BOOK + MAP */}
         <section className="mt-16 grid gap-8 md:grid-cols-[0.9fr_1.1fr]">
           <div className="rounded-3xl bg-[#2b1d16] p-7">
             <h2 className="text-2xl font-semibold">
@@ -156,7 +170,6 @@ export default function RushPhysioPage() {
             </div>
           </div>
 
-          {/* MAP */}
           <div className="overflow-hidden rounded-3xl border border-[#d8b98f]/30 bg-[#2b1d16]">
             <iframe
               title="Rush Physio Map"
@@ -166,30 +179,6 @@ export default function RushPhysioPage() {
               referrerPolicy="no-referrer-when-downgrade"
             />
           </div>
-        </section>
-
-        {/* LAX OFFER */}
-        <section className="mt-12 rounded-3xl border border-[#d8b98f]/30 bg-[#3a281e] p-7 text-center">
-          <h2 className="text-2xl font-semibold">
-            Exclusive LAX Offer
-          </h2>
-
-          <p className="mx-auto mt-3 max-w-2xl text-[#e3d2c1]">
-            Mention <span className="font-bold text-white">LAX10</span> during
-            your appointment or leave it in the booking notes when scheduling
-            to receive{" "}
-            <span className="font-bold text-white">
-              $10 off your first treatment.
-            </span>
-          </p>
-
-          <Link
-            href="https://rush-physio.au4.cliniko.com/bookings#service"
-            target="_blank"
-            className="mt-6 inline-block rounded-full bg-[#f4eadf] px-8 py-3 font-semibold text-[#211711] transition hover:opacity-90"
-          >
-            Book now
-          </Link>
         </section>
       </section>
     </main>
