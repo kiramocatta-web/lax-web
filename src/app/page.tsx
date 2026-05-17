@@ -115,6 +115,13 @@ export default function HomePage() {
                 Recovery Tools & FAQs
               </a>
 
+              <a
+                href="/rush-physio-and-wellness"
+                className="w-full max-w-[320px] rounded-full border border-white/30 bg-white/10 px-8 py-4 text-center text-sm font-medium uppercase tracking-[0.12em] transition hover:bg-white hover:text-black sm:min-w-[270px] sm:text-lg"
+              >
+                Physio & Wellness
+              </a>
+
               <div className="mt-2 flex w-full max-w-[320px] gap-3">
                 <a
                   href="tel:+61412345678"
