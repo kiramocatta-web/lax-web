@@ -40,9 +40,15 @@ export async function sendAdminBookingNotification({
   if (!to) throw new Error("Missing BOOKING_NOTIFICATION_EMAIL");
   if (!from) throw new Error("Missing RESEND_FROM_EMAIL");
 
-  const subject = rescheduled
-    ? `Rescheduled booking – ${bookingDate} ${startTime}`
-    : `New booking – ${bookingDate} ${startTime}`;
+  const [year, month, day] = bookingDate.split("-");
+
+const formattedDate = `${day}-${month}`;
+
+const formattedTime = startTime.slice(0, 5);
+
+const subject = rescheduled
+  ? `Booking Rescheduled - ${formattedTime} ${peopleCount} ${peopleCount === 1 ? "person" : "people"} ${formattedDate}`
+  : `Booking Confirmed - ${formattedTime} ${peopleCount} ${peopleCount === 1 ? "person" : "people"} ${formattedDate}`;
 
   const { data, error } = await resend.emails.send({
     from,

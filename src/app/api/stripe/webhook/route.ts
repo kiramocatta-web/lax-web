@@ -185,16 +185,16 @@ async function applyAffiliateCredit(
     .single();
 
   if (affErr || !aff) {
-    console.error("affiliate lookup failed:", affErr);
-    return;
-  }
+  console.warn("No affiliates row found, continuing with profiles only:", affErr);
+}
 
-  const used = Number(aff.used_count ?? 0);
-  const credit = Number(aff.credit_cents ?? 0);
+ const used = Number(aff?.used_count ?? 0);
+const credit = Number(aff?.credit_cents ?? 0);
 
   const newUsedCount = used + 1;
   const newCreditCents = credit + earnedCents;
 
+  if (aff) {
   const { error: updateAffiliateErr } = await supabaseAdmin
     .from("affiliates")
     .update({
@@ -205,8 +205,8 @@ async function applyAffiliateCredit(
 
   if (updateAffiliateErr) {
     console.error("affiliate credit update failed:", updateAffiliateErr);
-    return;
   }
+}
 
   const { data: profile, error: profileErr } = await supabaseAdmin
     .from("profiles")
@@ -250,7 +250,7 @@ async function applyAffiliateCredit(
 
   const html = renderTemplate(affiliateCodeUsedEmail, {
     first_name: firstName,
-    affiliate_code: affiliateCode || aff.code || "Your code",
+    affiliate_code: affiliateCode || aff?.code || "Your code",
     credit_amount: `$${(earnedCents / 100).toFixed(2)}`,
     used_count: newUsedCount,
     total_credit: `$${(newCreditCents / 100).toFixed(2)}`,
