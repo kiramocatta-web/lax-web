@@ -124,14 +124,14 @@ export default function HomePage() {
 
               <div className="mt-2 flex w-full max-w-[320px] gap-3">
                 <a
-                  href="tel:+61412345678"
+                  href="tel:+61436474768"
                   className="flex-1 rounded-full border border-white/20 bg-white/5 px-4 py-3 text-center text-sm font-medium text-white/85 transition hover:bg-white hover:text-black"
                 >
                   Call Us
                 </a>
 
                 <a
-                  href="sms:+61412345678"
+                  href="sms:+61436474768"
                   className="flex-1 rounded-full border border-white/20 bg-white/5 px-4 py-3 text-center text-sm font-medium text-white/85 transition hover:bg-white hover:text-black"
                 >
                   Text Us
