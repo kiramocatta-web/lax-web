@@ -42,7 +42,7 @@ export default function RushPhysioPage() {
 
             <p className="mt-5 text-lg leading-8 text-[#e7d8c8]">
               Professional physiotherapy, wellness massage, injury management,
-              and movement support just minutes from LAX N LOUNGE.
+              and movement support just minutes from LAX.
             </p>
 
             {/* LOCATION */}
