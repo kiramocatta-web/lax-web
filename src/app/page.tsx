@@ -85,7 +85,7 @@ export default function HomePage() {
             </h2>
 
             <p className="mt-8 text-sm tracking-wide text-white/75 sm:mt-10 sm:text-base md:text-lg">
-              Infrared Sauna • Ice Bath • Hot Plunge • Normatec Boots
+              Infrared Sauna • Ice Bath • Hot Magensium Plunge • Normatec Boots
             </p>
 
             <p className="mt-5 text-sm italic tracking-wide text-white/60 sm:text-base">
@@ -129,6 +129,14 @@ export default function HomePage() {
               >
                 Physio & Wellness
               </a>
+
+              <a href="#location">
+  Location
+</a>
+
+<a href="#owners-vision">
+  Owner’s Vision
+</a>
 
               <div className="mt-2 flex w-full max-w-[320px] gap-3">
                 <a
@@ -192,6 +200,7 @@ export default function HomePage() {
 
 
         {/* LOCATION */}
+        <section id="location"></section>
         <section className="px-6 pb-28">
           <div className="mx-auto grid max-w-5xl items-center gap-10 lg:grid-cols-2">
             <div className="text-center lg:text-left">
@@ -233,6 +242,7 @@ export default function HomePage() {
         </section>
 
         {/* VISION + OWNER */}
+        <section id="owners-vision"></section>
         <section className="px-6 pb-32">
           <div className="mx-auto max-w-5xl">
             <h2 className="text-center text-3xl font-light sm:text-4xl">
