@@ -130,14 +130,6 @@ export default function HomePage() {
                 Physio & Wellness
               </a>
 
-              <a href="#location">
-  Location
-</a>
-
-<a href="#owners-vision">
-  Owner’s Vision
-</a>
-
               <div className="mt-2 flex w-full max-w-[320px] gap-3">
                 <a
                   href="tel:+61436474768"
