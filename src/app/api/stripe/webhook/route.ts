@@ -9,6 +9,7 @@ import { sendAdminBookingNotification } from "@/lib/email/sendAdminBookingNotifi
 import { sendMembershipEmail } from "@/lib/email/sendMembershipEmail";
 import { sendSimpleAdminBookingEmail } from "@/lib/email/sendSimpleAdminBookingEmail";
 import { sendAdminMembershipSignupEmail } from "@/lib/email/sendAdminMembershipSignupEmail";
+import { giftEmail } from "@/lib/email/templates/giftEmail";
 
 
 export const runtime = "nodejs";
@@ -29,6 +30,10 @@ function unixToISO(value: number | null | undefined) {
 
 function normalizeEmail(email: string | null | undefined) {
   return String(email ?? "").trim().toLowerCase() || null;
+}
+
+function makeClaimToken() {
+  return crypto.randomUUID().replaceAll("-", "");
 }
 
 function mapSubStatus(
@@ -636,6 +641,76 @@ export async function POST(req: Request) {
         expanded.customer_email ||
         null;
 
+        const flow = String(expanded.metadata?.flow ?? "").trim();
+
+if (flow === "package_gift") {
+  const giftPlan = String(expanded.metadata?.plan ?? "").trim();
+  const recipientEmail = normalizeEmail(expanded.metadata?.recipient_email);
+  const recipientName = String(expanded.metadata?.recipient_name ?? "").trim();
+  const giftMessage = String(expanded.metadata?.gift_message ?? "").trim();
+
+  if (!recipientEmail) {
+    return NextResponse.json(
+      { error: "Gift recipient email missing." },
+      { status: 400 }
+    );
+  }
+
+  const totalSessions =
+    giftPlan === "pack5" ? 5 : giftPlan === "pack10" ? 10 : null;
+
+  const claimToken = makeClaimToken();
+
+  const { error: giftErr } = await supabaseAdmin.from("package_gifts").insert({
+    recipient_email: recipientEmail,
+    recipient_name: recipientName || null,
+    gift_message: giftMessage || null,
+    plan: giftPlan,
+    total_sessions: totalSessions,
+    remaining_sessions: totalSessions,
+    claim_token: claimToken,
+    stripe_checkout_session_id: expanded.id,
+    status: "unclaimed",
+  });
+
+  if (giftErr) {
+    console.error("gift insert failed:", giftErr);
+    return NextResponse.json({ error: "Gift insert failed" }, { status: 500 });
+  }
+
+  const siteUrl = (
+    process.env.NEXT_PUBLIC_SITE_URL || "https://www.laxnlounge.com.au"
+  ).trim();
+
+  const claimUrl = `${siteUrl}/gift/claim?token=${claimToken}`;
+
+  const giftPlanLabel =
+    giftPlan === "pack5"
+      ? "a 5 Pack"
+      : giftPlan === "pack10"
+        ? "a 10 Pack"
+        : giftPlan === "monthly"
+          ? "Monthly Unlimited"
+          : giftPlan === "pass7"
+            ? "a 7-Day Pass"
+            : "a Recovery Package";
+
+  const html = renderTemplate(giftEmail, {
+    CLAIM_URL: claimUrl,
+    gift_plan_label: giftPlanLabel,
+    gift_message: giftMessage || "No message included — just good recovery vibes.",
+  });
+
+  await resend.emails.send({
+    from: process.env.RESEND_FROM_EMAIL!,
+    to: recipientEmail,
+    subject: "Someone gifted you recovery 🎁",
+    html,
+  });
+
+  return NextResponse.json({ received: true });
+}
+
       if (userId && expanded.mode === "subscription") {
         let subscription: Stripe.Subscription | null = null;
 
@@ -712,15 +787,24 @@ try {
         }
       }
 
-      if (userId && expanded.mode === "payment" && plan === "pass7") {
-  const expiresAt = addDaysISO(7);
+      if (
+  userId &&
+  expanded.mode === "payment" &&
+  ["pass7", "monthly", "pack5", "pack10"].includes(plan ?? "")
+) {
+  const expiresAt =
+    plan === "monthly"
+      ? addDaysISO(28)
+      : plan === "pass7"
+        ? addDaysISO(7)
+        : null;
 
   const { error } = await supabaseAdmin
     .from("profiles")
     .update({
       stripe_customer_id: customerId,
       stripe_subscription_id: null,
-      membership_plan: "pass7",
+      membership_plan: plan,
       membership_status: "active",
       membership_expires_at: expiresAt,
       stripe_current_period_end: null,
@@ -728,21 +812,43 @@ try {
     .eq("id", userId);
 
   if (error) {
-    console.error("profile update for pass7 failed:", error);
+    console.error(`profile update for ${plan} failed:`, error);
+
     return NextResponse.json(
       { error: "DB update failed" },
       { status: 500 }
     );
   }
 
+  if (plan === "pack5" || plan === "pack10") {
+    const totalSessions = plan === "pack5" ? 5 : 10;
+
+    const { error: packageErr } = await supabaseAdmin
+      .from("package_credits")
+      .insert({
+        user_id: userId,
+        plan,
+        total_sessions: totalSessions,
+        remaining_sessions: totalSessions,
+        stripe_checkout_session_id: expanded.id,
+        status: "active",
+      });
+
+    if (packageErr) {
+      console.error("package credit insert failed:", packageErr);
+    }
+  }
+
+  const emailPlan = plan as "weekly" | "pass7" | "pack5" | "pack10" | "monthly";
+
   if (customerEmail) {
     try {
       await sendMembershipEmail({
         to: customerEmail,
-        plan: "pass7",
+        plan: emailPlan, 
       });
     } catch (e) {
-      console.error("pass7 email failed:", e);
+      console.error(`${plan} email failed:`, e);
     }
   }
 }

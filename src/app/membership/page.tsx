@@ -18,6 +18,12 @@ export default function SignupPage() {
 
   const [selectedPlan, setSelectedPlan] = useState<Plan>(null);
 
+  const [recipientType, setRecipientType] = useState<"self" | "gift">("self");
+
+const [giftEmail, setGiftEmail] = useState("");
+const [giftName, setGiftName] = useState("");
+const [giftMessage, setGiftMessage] = useState("");
+
   const accountSectionRef = useRef<HTMLDivElement | null>(null);
   const waiverSectionRef = useRef<HTMLDivElement | null>(null);
   const letsGoButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -209,15 +215,22 @@ export default function SignupPage() {
     setCheckoutLoading(true);
 
     try {
-      const res = await fetch("/api/stripe/membership/checkout", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          plan: selectedPlan,
-        }),
-      });
+      const endpoint =
+  recipientType === "gift"
+    ? "/api/stripe/membership/gift-checkout"
+    : "/api/stripe/membership/checkout";
+
+const res = await fetch(endpoint, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    plan: selectedPlan,
+    recipientType,
+    giftEmail,
+    giftName,
+    giftMessage,
+  }),
+});
 
       const json = await res.json().catch(() => null);
 
@@ -260,91 +273,151 @@ export default function SignupPage() {
       </p>
     </div>
 
-    {/* PACKAGES */}
-    <section>
-      <h2 className="text-center text-2xl font-semibold">Packages</h2>
-      <p className="mt-2 text-center text-white/60">
-        Flexible options without the ongoing commitment.
-      </p>
+   {/* PACKAGES */}
+<section>
+  <h2 className="text-center text-2xl font-semibold">
+    Packages
+  </h2>
 
-      <div className="mx-auto mt-6 grid max-w-4xl gap-5 md:grid-cols-2">
-        <button
-          type="button"
-          onClick={() => handlePlanSelect("pass7")}
-          className={`min-h-[220px] rounded-3xl border p-6 text-center md:text-left transition-all duration-300 ${
-            selectedPlan === "pass7"
-              ? "border-sky-300 bg-sky-500/20 ring-2 ring-sky-300 shadow-2xl scale-[1.01]"
-              : "border-white/15 bg-white/5 hover:bg-white/10"
-          }`}
-        >
-          <div className="text-sm uppercase tracking-[0.2em] text-sky-200/80">
-            7-Day Pass
-          </div>
-          <div className="mt-4 text-5xl font-semibold text-sky-300">$25</div>
-          <div className="mt-3 text-xl text-white/85">Unlimited</div>
-          <div className="mt-6 text-sm leading-relaxed text-white/55">
-            Unlimited recovery for 7 days.
-          </div>
-        </button>
+  <p className="mt-2 text-center text-white/60">
+    Flexible options without the ongoing commitment.
+  </p>
 
-        <button
-          type="button"
-          onClick={() => handlePlanSelect("pack5")}
-          className={`min-h-[220px] rounded-3xl border p-6 text-center md:text-left transition-all duration-300 ${
-            selectedPlan === "pack5"
-              ? "border-emerald-300 bg-emerald-500/20 ring-2 ring-emerald-300 shadow-2xl scale-[1.01]"
-              : "border-white/15 bg-white/5 hover:bg-white/10"
-          }`}
-        >
-          <div className="text-sm uppercase tracking-[0.2em] text-emerald-200/80">
-            5 Pack
-          </div>
-          <div className="mt-4 text-5xl font-semibold text-emerald-300">$50</div>
-          <div className="mt-3 text-xl text-white/85">5 × 1hr sessions</div>
-          <div className="mt-6 text-sm leading-relaxed text-white/55">
-            Save $15 compared to casual bookings.
-          </div>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => handlePlanSelect("pack10")}
-          className={`min-h-[220px] rounded-3xl border p-6 text-center md:text-left transition-all duration-300 ${
-            selectedPlan === "pack10"
-              ? "border-amber-300 bg-amber-500/20 ring-2 ring-amber-300 shadow-2xl scale-[1.01]"
-              : "border-white/15 bg-white/5 hover:bg-white/10"
-          }`}
-        >
-          <div className="text-sm uppercase tracking-[0.2em] text-amber-200/80">
-            10 Pack
-          </div>
-          <div className="mt-4 text-5xl font-semibold text-amber-300">$95</div>
-          <div className="mt-3 text-xl text-white/85">10 × 1hr sessions</div>
-          <div className="mt-6 text-sm leading-relaxed text-white/55">
-            Save $55 compared to casual bookings.
-          </div>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => handlePlanSelect("monthly")}
-          className={`min-h-[220px] rounded-3xl border p-6 text-center md:text-left transition-all duration-300 ${
-            selectedPlan === "monthly"
-              ? "border-violet-300 bg-violet-500/20 ring-2 ring-violet-300 shadow-2xl scale-[1.01]"
-              : "border-white/15 bg-white/5 hover:bg-white/10"
-          }`}
-        >
-          <div className="text-sm uppercase tracking-[0.2em] text-violet-200/80">
-            Monthly Unlimited
-          </div>
-          <div className="mt-4 text-5xl font-semibold text-violet-300">$55</div>
-          <div className="mt-3 text-xl text-white/85">4 weeks access</div>
-          <div className="mt-6 text-sm leading-relaxed text-white/55">
-            One single payment. Unlimited recovery for 4 weeks.
-          </div>
-        </button>
+  <div className="mx-auto mt-6 grid max-w-4xl gap-5 md:grid-cols-2">
+    <button
+      type="button"
+      onClick={() => handlePlanSelect("pass7")}
+      className={`min-h-[220px] rounded-3xl border p-6 text-center md:text-left transition-all duration-300 ${
+        selectedPlan === "pass7"
+          ? "border-sky-300 bg-sky-500/20 ring-2 ring-sky-300 shadow-2xl scale-[1.01]"
+          : "border-white/15 bg-white/5 hover:bg-white/10"
+      }`}
+    >
+      <div className="text-sm uppercase tracking-[0.2em] text-sky-200/80">
+        7-Day Pass
       </div>
-    </section>
+
+      <div className="mt-4 text-5xl font-semibold text-sky-300">
+        $25
+      </div>
+
+      <div className="mt-3 text-xl text-white/85">
+        Unlimited
+      </div>
+
+      <div className="mt-6 text-sm leading-relaxed text-white/55">
+        Unlimited recovery for 7 days.
+      </div>
+    </button>
+
+    <button
+      type="button"
+      onClick={() => handlePlanSelect("pack5")}
+      className={`min-h-[220px] rounded-3xl border p-6 text-center md:text-left transition-all duration-300 ${
+        selectedPlan === "pack5"
+          ? "border-emerald-300 bg-emerald-500/20 ring-2 ring-emerald-300 shadow-2xl scale-[1.01]"
+          : "border-white/15 bg-white/5 hover:bg-white/10"
+      }`}
+    >
+      <div className="text-sm uppercase tracking-[0.2em] text-emerald-200/80">
+        5 Pack
+      </div>
+
+      <div className="mt-4 text-5xl font-semibold text-emerald-300">
+        $50
+      </div>
+
+      <div className="mt-3 text-xl text-white/85">
+        5 × 1hr sessions
+      </div>
+
+      <div className="mt-6 text-sm leading-relaxed text-white/55">
+        Save $15 compared to casual bookings.
+      </div>
+    </button>
+
+    <button
+      type="button"
+      onClick={() => handlePlanSelect("pack10")}
+      className={`min-h-[220px] rounded-3xl border p-6 text-center md:text-left transition-all duration-300 ${
+        selectedPlan === "pack10"
+          ? "border-amber-300 bg-amber-500/20 ring-2 ring-amber-300 shadow-2xl scale-[1.01]"
+          : "border-white/15 bg-white/5 hover:bg-white/10"
+      }`}
+    >
+      <div className="text-sm uppercase tracking-[0.2em] text-amber-200/80">
+        10 Pack
+      </div>
+
+      <div className="mt-4 text-5xl font-semibold text-amber-300">
+        $95
+      </div>
+
+      <div className="mt-3 text-xl text-white/85">
+        10 × 1hr sessions
+      </div>
+
+      <div className="mt-6 text-sm leading-relaxed text-white/55">
+        Save $55 compared to casual bookings.
+      </div>
+    </button>
+
+    <button
+      type="button"
+      onClick={() => handlePlanSelect("monthly")}
+      className={`min-h-[220px] rounded-3xl border p-6 text-center md:text-left transition-all duration-300 ${
+        selectedPlan === "monthly"
+          ? "border-violet-300 bg-violet-500/20 ring-2 ring-violet-300 shadow-2xl scale-[1.01]"
+          : "border-white/15 bg-white/5 hover:bg-white/10"
+      }`}
+    >
+      <div className="text-sm uppercase tracking-[0.2em] text-violet-200/80">
+        Monthly Unlimited
+      </div>
+
+      <div className="mt-4 text-5xl font-semibold text-violet-300">
+        $50
+      </div>
+
+      <div className="mt-3 text-xl text-white/85">
+        4 weeks access
+      </div>
+
+      <div className="mt-6 text-sm leading-relaxed text-white/55">
+        One single payment. Unlimited recovery for 4 weeks.
+      </div>
+    </button>
+  </div>
+
+  {/* WHO IS IT FOR */}
+  <div className="mt-10 flex justify-center">
+    <div className="inline-flex rounded-2xl border border-white/10 bg-white/5 p-1">
+      <button
+        type="button"
+        onClick={() => setRecipientType("self")}
+        className={`rounded-xl px-5 py-2 text-sm transition ${
+          recipientType === "self"
+            ? "bg-white text-black"
+            : "text-white/70 hover:text-white"
+        }`}
+      >
+        Myself
+      </button>
+
+      <button
+        type="button"
+        onClick={() => setRecipientType("gift")}
+        className={`rounded-xl px-5 py-2 text-sm transition ${
+          recipientType === "gift"
+            ? "bg-white text-black"
+            : "text-white/70 hover:text-white"
+        }`}
+      >
+        Someone else
+      </button>
+    </div>
+  </div>
+</section>
 
         {/* MEMBERSHIP */}
 <section className="mt-20">
@@ -386,6 +459,8 @@ export default function SignupPage() {
     </button>
   </div>
 </section>
+
+
 
         {selectedPlan && accountCreated && !checkingSession ? (
           <div className="mt-8 rounded-3xl border border-emerald-300/20 bg-emerald-500/10 p-5">

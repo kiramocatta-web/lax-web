@@ -33,9 +33,10 @@ function minutesToHHMMSS(totalMinutes: number) {
   return `${hh}:${mm}:00`;
 }
 
-function isActivePass(expiresAt: string | null) {
-  if (!expiresAt) return false;
-  return new Date(expiresAt).getTime() > Date.now();
+function isFutureDate(value: string | null) {
+  if (!value) return false;
+  const ts = new Date(value).getTime();
+  return Number.isFinite(ts) && ts > Date.now();
 }
 
 function getBookingStartDateTime(bookingDate: string, startTime: string) {
@@ -55,9 +56,27 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const body = await req.json().catch(() => null);
+
+    const booking_date: string | undefined = body?.booking_date;
+    const start_minute: number | undefined = body?.start_minute;
+    const duration_minutes: number | undefined = body?.duration_minutes;
+    const rescheduleBookingId = Number(body?.reschedule_booking_id ?? 0) || null;
+    const people_count = 1;
+
+    if (!booking_date || typeof start_minute !== "number" || !duration_minutes) {
+      return NextResponse.json({ error: "Missing fields" }, { status: 400 });
+    }
+
+    if (![60, 90, 120].includes(duration_minutes)) {
+      return NextResponse.json({ error: "Invalid duration" }, { status: 400 });
+    }
+
     const { data: profile, error: profErr } = await supabase
       .from("profiles")
-      .select("role,phone,full_name,membership_status,membership_expires_at,membership_paused_until")
+      .select(
+        "role,phone,full_name,membership_plan,membership_status,membership_expires_at,membership_paused_until"
+      )
       .eq("id", user.id)
       .single();
 
@@ -73,23 +92,25 @@ export async function POST(req: Request) {
     }
 
     const role = String(profile?.role ?? "").toLowerCase();
+    const status = String(profile?.membership_status ?? "inactive").toLowerCase();
+    const membershipPlan = String(profile?.membership_plan ?? "").toLowerCase();
+
+    let packageCreditId: string | null = null;
 
     if (role !== "affiliate") {
       const pausedUntilRaw = profile?.membership_paused_until ?? null;
 
-      if (pausedUntilRaw) {
-        const pausedUntil = new Date(pausedUntilRaw);
+      if (isFutureDate(pausedUntilRaw)) {
+        return NextResponse.json(
+          {
+            error: "Your membership is currently paused.",
+            paused_until: pausedUntilRaw,
+          },
+          { status: 403 }
+        );
+      }
 
-        if (pausedUntil.getTime() > Date.now()) {
-          return NextResponse.json(
-            {
-              error: "Your membership is currently paused.",
-              paused_until: pausedUntil.toISOString(),
-            },
-            { status: 403 }
-          );
-        }
-
+      if (pausedUntilRaw && !isFutureDate(pausedUntilRaw)) {
         await supabase
           .from("profiles")
           .update({
@@ -99,33 +120,42 @@ export async function POST(req: Request) {
           .eq("id", user.id);
       }
 
-      const status = String(profile?.membership_status ?? "inactive");
-      const ok =
-        status === "active" ||
-        isActivePass(profile?.membership_expires_at ?? null);
+      const { data: activePackageCredit, error: packageCreditErr } =
+        await supabase
+          .from("package_credits")
+          .select("id,remaining_sessions")
+          .eq("user_id", user.id)
+          .eq("status", "active")
+          .gt("remaining_sessions", 0)
+          .order("purchased_at", { ascending: true })
+          .limit(1)
+          .maybeSingle();
 
-      if (!ok) {
+      if (packageCreditErr) {
         return NextResponse.json(
-          { error: "No active membership. Please join to book." },
+          { error: packageCreditErr.message },
+          { status: 500 }
+        );
+      }
+
+      const hasActiveTimedAccess =
+        status === "active" ||
+        status === "trialing" ||
+        status === "cancellation_requested" ||
+        isFutureDate(profile?.membership_expires_at ?? null);
+
+      const hasPackageCredit = Boolean(activePackageCredit?.id);
+
+      if (!hasActiveTimedAccess && !hasPackageCredit) {
+        return NextResponse.json(
+          { error: "No active membership or package credits. Please join to book." },
           { status: 403 }
         );
       }
-    }
 
-    const body = await req.json().catch(() => null);
-    const booking_date: string | undefined = body?.booking_date;
-    const start_minute: number | undefined = body?.start_minute;
-    const duration_minutes: number | undefined = body?.duration_minutes;
-    const rescheduleBookingId = Number(body?.reschedule_booking_id ?? 0) || null;
-
-    const people_count = 1;
-
-    if (!booking_date || typeof start_minute !== "number" || !duration_minutes) {
-      return NextResponse.json({ error: "Missing fields" }, { status: 400 });
-    }
-
-    if (![60, 90, 120].includes(duration_minutes)) {
-      return NextResponse.json({ error: "Invalid duration" }, { status: 400 });
+      if (!rescheduleBookingId && hasPackageCredit) {
+        packageCreditId = activePackageCredit?.id ?? null;
+      }
     }
 
     const openMinute = OPEN_HOUR * 60;
@@ -133,7 +163,10 @@ export async function POST(req: Request) {
     const end_minute = start_minute + duration_minutes;
 
     if (start_minute < openMinute || start_minute >= closeMinute) {
-      return NextResponse.json({ error: "Outside opening hours" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Outside opening hours" },
+        { status: 400 }
+      );
     }
 
     if (end_minute > closeMinute) {
@@ -186,7 +219,11 @@ export async function POST(req: Request) {
         );
       }
 
-      if (["cancelled", "rescheduled"].includes(String(existingBooking.status ?? "").toLowerCase())) {
+      if (
+        ["cancelled", "rescheduled"].includes(
+          String(existingBooking.status ?? "").toLowerCase()
+        )
+      ) {
         return NextResponse.json(
           { error: "This booking can no longer be rescheduled." },
           { status: 400 }
@@ -205,7 +242,10 @@ export async function POST(req: Request) {
         existingBooking.start_time
       );
 
-      if (Number.isNaN(existingStart.getTime()) || existingStart.getTime() <= Date.now()) {
+      if (
+        Number.isNaN(existingStart.getTime()) ||
+        existingStart.getTime() <= Date.now()
+      ) {
         return NextResponse.json(
           { error: "Past bookings cannot be rescheduled." },
           { status: 400 }
@@ -244,6 +284,7 @@ export async function POST(req: Request) {
       const blockEnd = timeToMinutes(block.end_time);
 
       const overlaps = blockStart < end_minute && blockEnd > start_minute;
+
       if (overlaps) {
         return NextResponse.json(
           {
@@ -296,8 +337,6 @@ export async function POST(req: Request) {
       }
     }
 
-    const booking_type = "member";
-
     const { data: inserted, error: insertErr } = await supabase
       .from("bookings")
       .insert({
@@ -310,7 +349,7 @@ export async function POST(req: Request) {
         end_time,
         duration_minutes,
         people_count,
-        booking_type,
+        booking_type: "member",
         total_amount_cents: 0,
         status: "confirmed",
         rescheduled_from_booking_id: existingBookingToReschedule?.id ?? null,
@@ -320,6 +359,19 @@ export async function POST(req: Request) {
 
     if (insertErr) {
       return NextResponse.json({ error: insertErr.message }, { status: 500 });
+    }
+
+    if (packageCreditId) {
+      const { error: creditErr } = await supabase.rpc("decrement_package_credit", {
+        credit_id: packageCreditId,
+      });
+
+      if (creditErr) {
+        return NextResponse.json(
+          { error: creditErr.message },
+          { status: 500 }
+        );
+      }
     }
 
     if (existingBookingToReschedule) {

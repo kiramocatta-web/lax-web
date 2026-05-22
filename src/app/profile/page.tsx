@@ -29,6 +29,13 @@ type AffiliateRow = {
   bank_account: string | null;
 };
 
+type PackageCreditRow = {
+  plan: string | null;
+  total_sessions: number | null;
+  remaining_sessions: number | null;
+  status: string | null;
+};
+
 type BookingRow = {
   id: number;
   booking_date: string | null;
@@ -42,6 +49,7 @@ type BookingRow = {
   rescheduled_to_booking_id?: number | null;
   rescheduled_from_booking_id?: number | null;
 };
+
 
 function fmtDate(iso: string | null) {
   if (!iso) return "—";
@@ -428,6 +436,7 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<ProfileRow | null>(null);
   const [affiliate, setAffiliate] = useState<AffiliateRow | null>(null);
   const [bookings, setBookings] = useState<BookingRow[]>([]);
+  const [packageCredits, setPackageCredits] = useState<PackageCreditRow[]>([]);
   const [bookingToCancel, setBookingToCancel] = useState<BookingRow | null>(null);
 
   const [cancelReason, setCancelReason] = useState("");
@@ -449,7 +458,8 @@ export default function ProfilePage() {
       setProfile(null);
       setAffiliate(null);
       setBookings([]);
-      setEmail("—");
+setPackageCredits([]);
+setEmail("—");
       setFullName("");
       setBsb("");
       setAccountNumber("");
@@ -484,6 +494,7 @@ export default function ProfilePage() {
       setProfile(null);
       setAffiliate(null);
       setBookings([]);
+      setPackageCredits([]);
       setLoading(false);
       return;
     }
@@ -498,6 +509,14 @@ export default function ProfilePage() {
     setIsEditingName(!(prof.full_name ?? "").trim());
 
     const role = String(prof.role ?? "").toLowerCase();
+
+    const { data: credits } = await supabase
+  .from("package_credits")
+  .select("plan,total_sessions,remaining_sessions,status")
+  .eq("user_id", session.user.id)
+  .order("purchased_at", { ascending: false });
+
+setPackageCredits((credits as PackageCreditRow[]) ?? []);
 
     if (role === "affiliate") {
       const { data: aff, error: affErr } = await supabase
@@ -616,6 +635,15 @@ export default function ProfilePage() {
       const bKey = getBookingStartKey(b) ?? "";
       return bKey.localeCompare(aKey);
     });
+
+    const activePackageCredits = packageCredits.filter(
+  (credit) => String(credit.status ?? "").toLowerCase() === "active"
+);
+
+const totalRemainingSessions = activePackageCredits.reduce(
+  (sum, credit) => sum + Number(credit.remaining_sessions ?? 0),
+  0
+);
 
   const enquiryHref = "/profile/enquiry?returnTo=%2Fprofile";
 
@@ -1025,6 +1053,48 @@ export default function ProfilePage() {
                       </div>
                     </Card>
                   )}
+
+                  <Card>
+  <div>
+    <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#d8c6b4]/55">
+      Session packages
+    </p>
+    <h2 className="mt-2 text-2xl font-bold">Recovery credits</h2>
+    <p className="mt-1 text-sm text-[#d8c6b4]/65">
+      Your available prepaid recovery sessions.
+    </p>
+  </div>
+
+  <div className="mt-6 rounded-3xl bg-[#1c120f]/35 p-4">
+    <DetailRow label="Sessions remaining" value={totalRemainingSessions} />
+
+    {activePackageCredits.length > 0 ? (
+      activePackageCredits.map((credit, index) => (
+        <DetailRow
+          key={`${credit.plan}-${index}`}
+          label={
+            credit.plan === "pack5"
+              ? "5 Pack"
+              : credit.plan === "pack10"
+              ? "10 Pack"
+              : credit.plan ?? "Package"
+          }
+          value={`${Number(credit.remaining_sessions ?? 0)} / ${Number(
+            credit.total_sessions ?? 0
+          )} left`}
+        />
+      ))
+    ) : (
+      <DetailRow label="Active package" value="0 sessions" />
+    )}
+  </div>
+
+  <div className="mt-5">
+    <ActionButton href="/membership" variant="warning">
+      Want to buy session packages for yourself or a friend?
+    </ActionButton>
+  </div>
+</Card>
 
                   <Card>
                     <div className="flex items-center justify-between gap-3">

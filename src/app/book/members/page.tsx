@@ -30,6 +30,15 @@ export default async function BookMembersPage() {
 
   const role = String(profile?.role ?? "").toLowerCase();
 
+  const { data: packageCredit } = await supabase
+  .from("package_credits")
+  .select("id,remaining_sessions,status")
+  .eq("user_id", user.id)
+  .eq("status", "active")
+  .gt("remaining_sessions", 0)
+  .limit(1)
+  .maybeSingle();
+
   // Affiliates can access bookings
   if (role === "affiliate") {
     return <BookMembersClient />;
@@ -50,7 +59,8 @@ export default async function BookMembersPage() {
     status === "trialing" ||
     status === "cancellation_requested" ||
     (status === "cancelled" && hasFutureExpiry) ||
-    (membershipPlan === "pass7" && hasFutureExpiry);
+    (membershipPlan === "pass7" && hasFutureExpiry) ||
+Boolean(packageCredit);
 
   if (!hasAccess) {
     redirect("/membership");
