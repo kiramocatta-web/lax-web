@@ -96,7 +96,7 @@ export default function HomePage() {
             <div className="mt-10 flex flex-col items-center gap-4 sm:mt-12 sm:gap-5">
 
               <a
-  href="/membership"
+  href="/pricing-membership-and-packages"
   className="w-full max-w-[320px] rounded-full border border-white/30 bg-white/10 px-8 py-4 text-center text-sm font-medium uppercase tracking-[0.12em] transition hover:bg-white hover:text-black sm:min-w-[270px] sm:text-lg"
 >
   Prices, Packages & Memberships

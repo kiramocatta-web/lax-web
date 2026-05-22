@@ -18,7 +18,7 @@ export default function HomePageHeader() {
     []
   );
 
-  const [memberHref, setMemberHref] = useState("/membership");
+  const [memberHref, setMemberHref] = useState("/pricing-membership-and-packages");
   const [singleHref, setSingleHref] = useState("/book/single");
   const [profileHref, setProfileHref] = useState("/profile");
 
@@ -33,7 +33,7 @@ export default function HomePageHeader() {
       if (!mounted) return;
 
       if (!session?.user) {
-        setMemberHref("/membership");
+        setMemberHref("/pricing-membership-and-packages");
         setSingleHref("/book/single");
         setProfileHref("/profile");
         return;
@@ -51,7 +51,7 @@ export default function HomePageHeader() {
       if (!mounted) return;
 
       const isMember = !!profile?.membership_plan;
-      setMemberHref(isMember ? "/book/members" : "/membership");
+      setMemberHref(isMember ? "/book/members" : "/pricing-membership-and-packages");
     }
 
     loadHeaderState();

@@ -882,7 +882,7 @@ const totalRemainingSessions = activePackageCredits.reduce(
                   <SidebarItem label="Account" active />
 <SidebarItem
   label={isAffiliate ? "Affiliate" : isMember ? "Membership" : "Bookings"}
-  href={isMember ? "/membership" : undefined}
+  href={isMember ? "/pricing-membership-and-packages" : undefined}
 />
 <SidebarItem label="Support" href={enquiryHref} />
                 </nav>
@@ -1105,7 +1105,7 @@ const totalRemainingSessions = activePackageCredits.reduce(
 
     <div className="mt-5">
       <ActionButton
-        href="/membership"
+        href="/pricing-membership-and-packages"
         variant="warning"
       >
         Want to buy session packages for yourself or a friend?
@@ -1199,7 +1199,7 @@ const totalRemainingSessions = activePackageCredits.reduce(
                               Cancellation request sent. Admin will review it shortly.
                             </div>
                           ) : (membershipStatusValue === "cancelled" || membershipStatusValue === "canceled") && membershipExpired ? (
-                            <ActionButton href="/membership" variant="neutral">Want to re-sign up?</ActionButton>
+                            <ActionButton href="/pricing-membership-and-packages" variant="neutral">Want to re-sign up or purchase a package?</ActionButton>
                           ) : (
                             <ActionButton disabled={busy !== null || membershipExpired} onClick={() => setShowCancelRequestModal(true)} variant="danger">
                               Send cancellation request
@@ -1210,7 +1210,7 @@ const totalRemainingSessions = activePackageCredits.reduce(
                       ) : (
                         <>
                           <ActionButton href="/book/single" variant="primary">Book another session</ActionButton>
-                          <ActionButton href="/membership" variant="warning">Become a member</ActionButton>
+                          <ActionButton href="//pricing-membership-and-packages" variant="warning">Become a member or purchase a package</ActionButton>
                           <ActionButton href={enquiryHref} variant="neutral">Send us a message</ActionButton>
                         </>
                       )}

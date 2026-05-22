@@ -17,7 +17,7 @@ export default async function GiftClaimPage({
   const cleanToken = String(token ?? "").trim();
 
   if (!cleanToken) {
-    redirect("/membership?gift=missing-token");
+    redirect("/pricing-membership-and-packages?gift=missing-token");
   }
 
   const { data: gift, error: giftErr } = await supabaseAdmin
@@ -27,11 +27,11 @@ export default async function GiftClaimPage({
     .maybeSingle();
 
   if (giftErr) {
-  redirect(`/membership?gift=query-error&message=${encodeURIComponent(giftErr.message)}`);
+  redirect(`/pricing-membership-and-packages?gift=query-error&message=${encodeURIComponent(giftErr.message)}`);
 }
 
 if (!gift) {
-  redirect(`/membership?gift=no-gift-found&token=${encodeURIComponent(cleanToken)}`);
+  redirect(`/pricing-membership-and-packages?gift=no-gift-found&token=${encodeURIComponent(cleanToken)}`);
 }
 
   if (gift.status === "claimed" || gift.claimed_by_user_id) {

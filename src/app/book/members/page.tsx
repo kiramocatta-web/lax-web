@@ -17,7 +17,7 @@ export default async function BookMembersPage() {
 
   // Not logged in → send to membership signup
   if (!user) {
-    redirect("/membership");
+    redirect("/pricing-membership-and-packages");
   }
 
   const { data: profile } = await supabase
@@ -63,7 +63,7 @@ export default async function BookMembersPage() {
 Boolean(packageCredit);
 
   if (!hasAccess) {
-    redirect("/membership");
+    redirect("/pricing-membership-and-packages");
   }
 
   return <BookMembersClient />;

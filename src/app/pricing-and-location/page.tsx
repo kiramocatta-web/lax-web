@@ -89,10 +89,10 @@ export default function PricingAndLocationPage() {
         </h2>
 
         <a
-    href="/membership"
+    href="/pricing-membership-and-packages"
     className="mt-3 inline-block text-sm text-white/70 hover:text-white underline underline-offset-4"
   >
-    I'm ready to commit →
+    I'm ready to commit  →
   </a>
 
         <div className="mx-auto mt-10 grid max-w-3xl gap-6 sm:grid-cols-2">

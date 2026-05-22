@@ -27,7 +27,7 @@ export default function MembersGatePage() {
       const session = sessionData.session;
 
       if (!session?.user) {
-        router.replace("/membership");
+        router.replace("/pricing-membership-and-packages");
         return;
       }
 
@@ -39,7 +39,7 @@ export default function MembersGatePage() {
         .single<Profile>();
 
       if (error || !profile) {
-        router.replace("/membership");
+        router.replace("/pricing-membership-and-packages");
         return;
       }
 
@@ -69,7 +69,7 @@ export default function MembersGatePage() {
         return;
       }
 
-      router.replace("/membership");
+      router.replace("/pricing-membership-and-packages");
     })();
   }, [router]);
 

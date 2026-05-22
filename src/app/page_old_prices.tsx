@@ -48,7 +48,7 @@
           <h2 className="text-3xl font-light">Memberships & Packages</h2>
 
           <a
-            href="/membership"
+            href="/pricing-membership-and-packages"
             className="mt-3 inline-block text-sm text-white/70 underline underline-offset-4 hover:text-white"
           >
             I'm ready →

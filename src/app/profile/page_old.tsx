@@ -1026,10 +1026,10 @@ export default function ProfilePage() {
                       membershipStatusValue === "canceled") &&
                     membershipExpired ? (
                     <a
-                      href="/membership"
+                      href="/pricing-membership-and-packages"
                       className="w-full rounded-2xl bg-white/10 py-4 text-center font-semibold text-white transition hover:bg-white/20"
                     >
-                      Want to re-sign up?
+                      Want to re-sign up or purchase a package?
                     </a>
                   ) : (
                     <button

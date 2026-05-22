@@ -140,7 +140,7 @@ export async function POST(req: Request) {
         },
       ],
       success_url: `${siteUrl}/membership/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${siteUrl}/membership`,
+      cancel_url: `${siteUrl}/pricing-membership-and-packages`,
       metadata: {
         user_id: targetProfile.id,
         plan,
