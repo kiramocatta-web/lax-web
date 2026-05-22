@@ -293,6 +293,85 @@ const res = await fetch(endpoint, {
     Flexible options without the ongoing commitment.
   </p>
 
+  {/* WHO IS IT FOR */}
+<div className="mt-8">
+  <div className="flex justify-center">
+    <div className="inline-flex rounded-2xl border border-white/10 bg-white/5 p-1">
+      <button
+        type="button"
+        onClick={() => setRecipientType("self")}
+        className={`rounded-xl px-5 py-2 text-sm transition ${
+          recipientType === "self"
+            ? "bg-white text-black"
+            : "text-white/70 hover:text-white"
+        }`}
+      >
+        Myself
+      </button>
+
+      <button
+        type="button"
+        onClick={() => setRecipientType("gift")}
+        className={`rounded-xl px-5 py-2 text-sm transition ${
+          recipientType === "gift"
+            ? "bg-white text-black"
+            : "text-white/70 hover:text-white"
+        }`}
+      >
+        Someone else
+      </button>
+    </div>
+  </div>
+
+  {recipientType === "gift" && selectedPlan ? (
+    <div className="mx-auto mt-8 max-w-xl rounded-3xl border border-white/10 bg-white p-6 text-black shadow-2xl">
+      <h3 className="text-2xl font-semibold">
+        Who are you sending it to?
+      </h3>
+
+      <p className="mt-1 text-sm text-black/60">
+        We’ll email them a redemption link so they can claim it on their account.
+      </p>
+
+      <div className="mt-5 space-y-4">
+        <input
+          type="text"
+          placeholder="Recipient name"
+          value={giftName}
+          onChange={(e) => setGiftName(e.target.value)}
+          className="w-full rounded-2xl border border-black/10 p-3 outline-none"
+        />
+
+        <input
+          type="email"
+          placeholder="Recipient email"
+          value={giftEmail}
+          onChange={(e) => setGiftEmail(e.target.value)}
+          className="w-full rounded-2xl border border-black/10 p-3 outline-none"
+        />
+
+        <input
+          type="tel"
+          placeholder="Recipient phone"
+          value={giftPhone}
+          onChange={(e) => setGiftPhone(e.target.value)}
+          className="w-full rounded-2xl border border-black/10 p-3 outline-none"
+        />
+
+        <textarea
+          placeholder="Optional message"
+          rows={3}
+          value={giftMessage}
+          onChange={(e) => setGiftMessage(e.target.value)}
+          className="w-full rounded-2xl border border-black/10 p-3 outline-none"
+        />
+      </div>
+    </div>
+  ) : null}
+</div>
+</section>
+
+
   <div className="mx-auto mt-6 grid max-w-4xl gap-5 md:grid-cols-2">
     <button
       type="button"
@@ -399,84 +478,7 @@ const res = await fetch(endpoint, {
     </button>
   </div>
 
-  {/* WHO IS IT FOR */}
-<div className="mt-10">
-  <div className="flex justify-center">
-    <div className="inline-flex rounded-2xl border border-white/10 bg-white/5 p-1">
-      <button
-        type="button"
-        onClick={() => setRecipientType("self")}
-        className={`rounded-xl px-5 py-2 text-sm transition ${
-          recipientType === "self"
-            ? "bg-white text-black"
-            : "text-white/70 hover:text-white"
-        }`}
-      >
-        Myself
-      </button>
-
-      <button
-        type="button"
-        onClick={() => setRecipientType("gift")}
-        className={`rounded-xl px-5 py-2 text-sm transition ${
-          recipientType === "gift"
-            ? "bg-white text-black"
-            : "text-white/70 hover:text-white"
-        }`}
-      >
-        Someone else
-      </button>
-    </div>
-  </div>
-
-  {recipientType === "gift" && selectedPlan ? (
-    <div className="mx-auto mt-8 max-w-xl rounded-3xl border border-white/10 bg-white p-6 text-black shadow-2xl">
-      <h3 className="text-2xl font-semibold">
-        Who are you sending it to?
-      </h3>
-
-      <p className="mt-1 text-sm text-black/60">
-        We’ll email them a redemption link so they can claim it on their account.
-      </p>
-
-      <div className="mt-5 space-y-4">
-        <input
-          type="text"
-          placeholder="Recipient name"
-          value={giftName}
-          onChange={(e) => setGiftName(e.target.value)}
-          className="w-full rounded-2xl border border-black/10 p-3 outline-none"
-        />
-
-        <input
-          type="email"
-          placeholder="Recipient email"
-          value={giftEmail}
-          onChange={(e) => setGiftEmail(e.target.value)}
-          className="w-full rounded-2xl border border-black/10 p-3 outline-none"
-        />
-
-        <input
-          type="tel"
-          placeholder="Recipient phone"
-          value={giftPhone}
-          onChange={(e) => setGiftPhone(e.target.value)}
-          className="w-full rounded-2xl border border-black/10 p-3 outline-none"
-        />
-
-        <textarea
-          placeholder="Optional message"
-          rows={3}
-          value={giftMessage}
-          onChange={(e) => setGiftMessage(e.target.value)}
-          className="w-full rounded-2xl border border-black/10 p-3 outline-none"
-        />
-      </div>
-    </div>
-  ) : null}
-</div>
-</section>
-
+  
         {/* MEMBERSHIP */}
 <section className="mt-20">
   <h2 className="text-center text-2xl font-semibold">Membership</h2>
