@@ -358,13 +358,19 @@ const res = await fetch(endpoint, {
           className="w-full rounded-2xl border border-black/10 p-3 outline-none"
         />
 
-        <textarea
-          placeholder="Optional message"
-          rows={3}
-          value={giftMessage}
-          onChange={(e) => setGiftMessage(e.target.value)}
-          className="w-full rounded-2xl border border-black/10 p-3 outline-none"
-        />
+        <div>
+  <label className="text-sm font-semibold text-black/70">
+    Leave a note? optional
+  </label>
+
+  <textarea
+    placeholder="Example: Hope this helps you recover after training — enjoy!"
+    rows={3}
+    value={giftMessage}
+    onChange={(e) => setGiftMessage(e.target.value)}
+    className="mt-2 w-full rounded-2xl border border-black/10 p-3 outline-none"
+  />
+</div>
       </div>
     </div>
   ) : null}
