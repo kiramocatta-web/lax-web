@@ -16,12 +16,16 @@ export default async function GiftClaimPage({
   const cleanToken = String(searchParams.token ?? "").trim();
 
   if (!cleanToken) {
-    redirect("/membership?gift=missing-token");
+    redirect("/membership?gift=invalid");
   }
 
-  const { data: gift, error: giftErr } = await supabaseAdmin
+  const supabase = supabaseAdmin;
+
+  const { data: gift, error: giftErr } = await supabase
     .from("package_gifts")
-    .select("id,recipient_email,plan,total_sessions,status,claimed_by_user_id")
+    .select(
+      "id,recipient_email,plan,total_sessions,status,claimed_by_user_id"
+    )
     .eq("claim_token", cleanToken)
     .maybeSingle();
 
@@ -33,11 +37,9 @@ export default async function GiftClaimPage({
     redirect("/profile?gift=already-claimed");
   }
 
-  const auth = await supabaseServer();
-
   const {
     data: { user },
-  } = await auth.auth.getUser();
+  } = await supabase.auth.getUser();
 
   if (!user) {
     redirect(`/gift/redeem?token=${cleanToken}`);
@@ -58,22 +60,39 @@ export default async function GiftClaimPage({
       redirect("/profile?gift=credit-error");
     }
 
-    const { error: creditErr } = await supabaseAdmin
-      .from("package_credits")
-      .insert({
-        user_id: user.id,
-        plan: gift.plan,
-        total_sessions: totalSessions,
-        remaining_sessions: totalSessions,
-        status: "active",
-      });
+    const { error: creditErr } = await supabase.from("package_credits").insert({
+      user_id: user.id,
+      plan: gift.plan,
+      total_sessions: totalSessions,
+      remaining_sessions: totalSessions,
+      status: "active",
+    });
 
     if (creditErr) {
       redirect("/profile?gift=credit-error");
     }
   }
 
-  const { error: claimErr } = await supabaseAdmin
+  if (gift.plan === "pass7" || gift.plan === "monthly") {
+    const days = gift.plan === "monthly" ? 28 : 7;
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + days);
+
+    const { error: profileErr } = await supabase
+      .from("profiles")
+      .update({
+        membership_plan: gift.plan,
+        membership_status: "active",
+        membership_expires_at: expiresAt.toISOString(),
+      })
+      .eq("id", user.id);
+
+    if (profileErr) {
+      redirect("/profile?gift=profile-error");
+    }
+  }
+
+  const { error: claimErr } = await supabase
     .from("package_gifts")
     .update({
       status: "claimed",
