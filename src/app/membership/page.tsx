@@ -347,38 +347,45 @@ export default function SignupPage() {
     </section>
 
         {/* MEMBERSHIP */}
-        <section className="mt-16">
-          <h2 className="text-center text-2xl font-semibold">Membership</h2>
-          <p className="mt-2 text-center text-white/60">
-            For consistent recovery and unlimited access.
-          </p>
+<section className="mt-20">
+  <h2 className="text-center text-2xl font-semibold">Membership</h2>
 
-          <div className="mt-6">
-            <MembershipPerks />
-          </div>
+  <p className="mt-2 text-center text-white/60">
+    For consistent recovery and unlimited access.
+  </p>
 
-          <div className="mx-auto mt-6 max-w-2xl">
-            <button
-              type="button"
-              onClick={() => handlePlanSelect("weekly")}
-              className={`rounded-3xl border p-6 text-left transition-all duration-300 ${
-                selectedPlan === "weekly"
-                  ? "border-pink-300 bg-pink-500/20 ring-2 ring-pink-300 shadow-2xl scale-[1.01]"
-                  : "border-white/15 bg-white/5 hover:bg-white/10"
-              }`}
-            >
-              <div className="text-sm uppercase tracking-[0.2em] text-pink-200/80">
-                Weekly Unlimited
-              </div>
-              <div className="mt-3 text-3xl font-semibold text-pink-300">$20 p/w</div>
-              <div className="mt-1 text-lg text-white/85">Unlimited</div>
-              <div className="mt-4 text-sm text-white/55">
-                Ongoing weekly access to your recovery space.
-              </div>
-            </button>
+  <div className="mt-8">
+    <MembershipPerks />
+  </div>
 
-          </div>
-        </section>
+  <div className="mt-8 flex justify-center">
+    <button
+      type="button"
+      onClick={() => handlePlanSelect("weekly")}
+      className={`w-full max-w-xl min-h-[220px] rounded-3xl border p-8 text-center transition-all duration-300 ${
+        selectedPlan === "weekly"
+          ? "border-pink-300 bg-pink-500/20 ring-2 ring-pink-300 shadow-2xl scale-[1.01]"
+          : "border-white/15 bg-white/5 hover:bg-white/10"
+      }`}
+    >
+      <div className="text-sm uppercase tracking-[0.25em] text-pink-200/80">
+        Weekly Unlimited
+      </div>
+
+      <div className="mt-4 text-5xl font-semibold text-pink-300">
+        $20 p/w
+      </div>
+
+      <div className="mt-3 text-2xl text-white/90">
+        Unlimited
+      </div>
+
+      <div className="mt-6 text-sm leading-relaxed text-white/55">
+        Ongoing weekly access to your recovery space.
+      </div>
+    </button>
+  </div>
+</section>
 
         {selectedPlan && accountCreated && !checkingSession ? (
           <div className="mt-8 rounded-3xl border border-emerald-300/20 bg-emerald-500/10 p-5">
