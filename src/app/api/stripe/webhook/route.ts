@@ -8,7 +8,7 @@ import { sendBookingEmail } from "@/lib/email/sendBookingEmail";
 import { sendAdminBookingNotification } from "@/lib/email/sendAdminBookingNotification";
 import { sendMembershipEmail } from "@/lib/email/sendMembershipEmail";
 import { sendSimpleAdminBookingEmail } from "@/lib/email/sendSimpleAdminBookingEmail";
-import { sendAdminMembershipSignupEmail } from "@/lib/email/sendAdminMembershipSignupEmail";
+import { sendAdminPurchaseEmail } from "@/lib/email/sendAdminPurchaseEmail";
 import { giftEmail } from "@/lib/email/templates/giftEmail";
 
 
@@ -643,6 +643,25 @@ export async function POST(req: Request) {
 
         const flow = String(expanded.metadata?.flow ?? "").trim();
 
+        const customerName = expanded.customer_details?.name || null;
+const customerPhone = expanded.customer_details?.phone || null;
+
+await sendAdminPurchaseEmail({
+  name: customerName,
+  email: customerEmail,
+  phone: customerPhone,
+  plan,
+  amount:
+    typeof expanded.amount_total === "number"
+      ? `$${(expanded.amount_total / 100).toFixed(2)}`
+      : null,
+  stripeCustomerId: customerId,
+  stripeSubscriptionId:
+    typeof expanded.subscription === "string"
+      ? expanded.subscription
+      : expanded.subscription?.id ?? null,
+});
+
 if (flow === "package_gift") {
   const giftPlan = String(expanded.metadata?.plan ?? "").trim();
   const recipientEmail = normalizeEmail(expanded.metadata?.recipient_email);
@@ -756,26 +775,6 @@ if (flow === "package_gift") {
   } catch (e) {
     console.error("weekly membership email failed:", e);
   }
-}
-
-try {
-  await sendAdminMembershipSignupEmail({
-    name: expanded.customer_details?.name ?? null,
-    email:
-      expanded.customer_details?.email ??
-      expanded.customer_email ??
-      null,
-    phone: expanded.customer_details?.phone ?? null,
-    membershipPlan: plan,
-    amount:
-      typeof expanded.amount_total === "number"
-        ? `$${(expanded.amount_total / 100).toFixed(2)}`
-        : null,
-    stripeCustomerId: customerId,
-    stripeSubscriptionId: subscriptionId,
-  });
-} catch (e) {
-  console.error("admin membership signup email failed:", e);
 }
 
         if (subscription) {
