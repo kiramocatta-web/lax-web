@@ -271,7 +271,7 @@ export default function SignupPage() {
         <button
           type="button"
           onClick={() => handlePlanSelect("pass7")}
-          className={`min-h-[250px] rounded-3xl border p-8 text-left transition-all duration-300 ${
+          className={`min-h-[220px] rounded-3xl border p-6 text-center md:text-left transition-all duration-300 ${
             selectedPlan === "pass7"
               ? "border-sky-300 bg-sky-500/20 ring-2 ring-sky-300 shadow-2xl scale-[1.01]"
               : "border-white/15 bg-white/5 hover:bg-white/10"
@@ -280,9 +280,9 @@ export default function SignupPage() {
           <div className="text-sm uppercase tracking-[0.2em] text-sky-200/80">
             7-Day Pass
           </div>
-          <div className="mt-3 text-4xl font-semibold text-sky-300">$25</div>
+          <div className="mt-4 text-5xl font-semibold text-sky-300">$25</div>
           <div className="mt-3 text-xl text-white/85">Unlimited</div>
-          <div className="mt-5 text-sm text-white/55">
+          <div className="mt-6 text-sm leading-relaxed text-white/55">
             Unlimited recovery for 7 days.
           </div>
         </button>
