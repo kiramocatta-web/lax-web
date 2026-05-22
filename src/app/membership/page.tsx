@@ -249,104 +249,102 @@ export default function SignupPage() {
   return (
   <>
     <div className="min-h-screen bg-emerald-950 px-4 pb-12 text-white">
-      <div className="mx-auto max-w-4xl pt-8 sm:pt-14">
-        <div className="pb-10 text-center">
-          <h1 className="mt-4 text-4xl sm:text-5xl font-semibold tracking-tight">
-            Membership & Packages
-          </h1>
+  <div className="mx-auto max-w-4xl pt-8 sm:pt-14">
+    <div className="pb-10 text-center">
+      <h1 className="mt-4 text-4xl sm:text-5xl font-semibold tracking-tight">
+        Membership & Packages
+      </h1>
 
-          <p className="mt-5 text-base sm:text-lg text-white/70">
-            Choose what fits your recovery rhythm.
-          </p>
-        </div>
+      <p className="mt-5 text-base sm:text-lg text-white/70">
+        Choose what fits your recovery rhythm.
+      </p>
+    </div>
 
-        {/* PACKAGES */}
-        <section>
-          <h2 className="text-center text-2xl font-semibold">Packages</h2>
-          <p className="mt-2 text-center text-white/60">
-            Flexible options without the ongoing commitment.
-          </p>
+    {/* PACKAGES */}
+    <section>
+      <h2 className="text-center text-2xl font-semibold">Packages</h2>
+      <p className="mt-2 text-center text-white/60">
+        Flexible options without the ongoing commitment.
+      </p>
 
-          <div className="mt-6 grid gap-4 sm:grid-cols-3">
-            <button
-              type="button"
-              onClick={() => handlePlanSelect("pass7")}
-              className={`rounded-3xl border p-6 text-left transition-all duration-300 ${
-                selectedPlan === "pass7"
-                  ? "border-sky-300 bg-sky-500/20 ring-2 ring-sky-300 shadow-2xl scale-[1.01]"
-                  : "border-white/15 bg-white/5 hover:bg-white/10"
-              }`}
-            >
-              <div className="text-sm uppercase tracking-[0.2em] text-sky-200/80">
-                7-Day Pass
-              </div>
-              <div className="mt-3 text-3xl font-semibold text-sky-300">$25</div>
-              <div className="mt-1 text-lg text-white/85">Unlimited</div>
-              <div className="mt-4 text-sm text-white/55">
-                Unlimited recovery for 7 days.
-              </div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handlePlanSelect("pack5")}
-              className={`rounded-3xl border p-6 text-left transition-all duration-300 ${
-                selectedPlan === "pack5"
-                  ? "border-emerald-300 bg-emerald-500/20 ring-2 ring-emerald-300 shadow-2xl scale-[1.01]"
-                  : "border-white/15 bg-white/5 hover:bg-white/10"
-              }`}
-            >
-              <div className="text-sm uppercase tracking-[0.2em] text-emerald-200/80">
-                5 Pack
-              </div>
-              <div className="mt-3 text-3xl font-semibold text-emerald-300">$50</div>
-              <div className="mt-1 text-lg text-white/85">5 × 1hr sessions</div>
-              <div className="mt-4 text-sm text-white/55">
-                Save $15 compared to casual bookings.
-              </div>
-            </button>
-
-          
-
-            <button
-              type="button"
-              onClick={() => handlePlanSelect("pack10")}
-              className={`rounded-3xl border p-6 text-left transition-all duration-300 ${
-                selectedPlan === "pack10"
-                  ? "border-amber-300 bg-amber-500/20 ring-2 ring-amber-300 shadow-2xl scale-[1.01]"
-                  : "border-white/15 bg-white/5 hover:bg-white/10"
-              }`}
-            >
-              <div className="text-sm uppercase tracking-[0.2em] text-amber-200/80">
-                10 Pack
-              </div>
-              <div className="mt-3 text-3xl font-semibold text-amber-300">$95</div>
-              <div className="mt-1 text-lg text-white/85">10 × 1hr sessions</div>
-              <div className="mt-4 text-sm text-white/55">
-                Save $55 compared to casual bookings.
-              </div>
-            </button>
+      <div className="mx-auto mt-6 grid max-w-4xl gap-5 md:grid-cols-2">
+        <button
+          type="button"
+          onClick={() => handlePlanSelect("pass7")}
+          className={`min-h-[250px] rounded-3xl border p-8 text-left transition-all duration-300 ${
+            selectedPlan === "pass7"
+              ? "border-sky-300 bg-sky-500/20 ring-2 ring-sky-300 shadow-2xl scale-[1.01]"
+              : "border-white/15 bg-white/5 hover:bg-white/10"
+          }`}
+        >
+          <div className="text-sm uppercase tracking-[0.2em] text-sky-200/80">
+            7-Day Pass
           </div>
-        </section>
+          <div className="mt-3 text-4xl font-semibold text-sky-300">$25</div>
+          <div className="mt-2 text-lg text-white/85">Unlimited</div>
+          <div className="mt-5 text-sm text-white/55">
+            Unlimited recovery for 7 days.
+          </div>
+        </button>
 
         <button
-              type="button"
-              onClick={() => handlePlanSelect("monthly")}
-              className={`rounded-3xl border p-6 text-left transition-all duration-300 ${
-                selectedPlan === "monthly"
-                  ? "border-violet-300 bg-violet-500/20 ring-2 ring-violet-300 shadow-2xl scale-[1.01]"
-                  : "border-white/15 bg-white/5 hover:bg-white/10"
-              }`}
-            >
-              <div className="text-sm uppercase tracking-[0.2em] text-violet-200/80">
-                Monthly Unlimited
-              </div>
-              <div className="mt-3 text-3xl font-semibold text-violet-300">$50</div>
-              <div className="mt-1 text-lg text-white/85">4 weeks access</div>
-              <div className="mt-4 text-sm text-white/55">
-                One single payment. Unlimited recovery for 4 weeks.
-              </div>
-            </button>
+          type="button"
+          onClick={() => handlePlanSelect("pack5")}
+          className={`min-h-[250px] rounded-3xl border p-8 text-left transition-all duration-300 ${
+            selectedPlan === "pack5"
+              ? "border-emerald-300 bg-emerald-500/20 ring-2 ring-emerald-300 shadow-2xl scale-[1.01]"
+              : "border-white/15 bg-white/5 hover:bg-white/10"
+          }`}
+        >
+          <div className="text-sm uppercase tracking-[0.2em] text-emerald-200/80">
+            5 Pack
+          </div>
+          <div className="mt-3 text-4xl font-semibold text-emerald-300">$50</div>
+          <div className="mt-2 text-lg text-white/85">5 × 1hr sessions</div>
+          <div className="mt-5 text-sm text-white/55">
+            Save $15 compared to casual bookings.
+          </div>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => handlePlanSelect("pack10")}
+          className={`min-h-[250px] rounded-3xl border p-8 text-left transition-all duration-300 ${
+            selectedPlan === "pack10"
+              ? "border-amber-300 bg-amber-500/20 ring-2 ring-amber-300 shadow-2xl scale-[1.01]"
+              : "border-white/15 bg-white/5 hover:bg-white/10"
+          }`}
+        >
+          <div className="text-sm uppercase tracking-[0.2em] text-amber-200/80">
+            10 Pack
+          </div>
+          <div className="mt-3 text-4xl font-semibold text-amber-300">$95</div>
+          <div className="mt-2 text-lg text-white/85">10 × 1hr sessions</div>
+          <div className="mt-5 text-sm text-white/55">
+            Save $55 compared to casual bookings.
+          </div>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => handlePlanSelect("monthly")}
+          className={`min-h-[250px] rounded-3xl border p-8 text-left transition-all duration-300 ${
+            selectedPlan === "monthly"
+              ? "border-violet-300 bg-violet-500/20 ring-2 ring-violet-300 shadow-2xl scale-[1.01]"
+              : "border-white/15 bg-white/5 hover:bg-white/10"
+          }`}
+        >
+          <div className="text-sm uppercase tracking-[0.2em] text-violet-200/80">
+            Monthly Unlimited
+          </div>
+          <div className="mt-3 text-4xl font-semibold text-violet-300">$50</div>
+          <div className="mt-2 text-lg text-white/85">4 weeks access</div>
+          <div className="mt-5 text-sm text-white/55">
+            One single payment. Unlimited recovery for 4 weeks.
+          </div>
+        </button>
+      </div>
+    </section>
 
         {/* MEMBERSHIP */}
         <section className="mt-16">
