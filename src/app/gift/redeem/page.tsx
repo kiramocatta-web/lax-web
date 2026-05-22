@@ -1,10 +1,20 @@
-export default function GiftRedeemPage({
+import { supabaseServer } from "@/lib/supabase/server";
+
+export default async function GiftRedeemPage({
   searchParams,
 }: {
   searchParams: { token?: string };
 }) {
   const token = String(searchParams.token ?? "").trim();
   const claimHref = `/gift/claim?token=${token}`;
+
+  const supabase = await supabaseServer();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const isLoggedIn = Boolean(user);
 
   return (
     <main className="min-h-screen bg-emerald-950 px-6 py-16 text-white">
@@ -17,32 +27,48 @@ export default function GiftRedeemPage({
           You’ve been gifted recovery.
         </h1>
 
-        <p className="mt-4 text-white/70">
-          Create an account or log in first, then come back to this claim link
-          to redeem your package.
-        </p>
+        {isLoggedIn ? (
+          <p className="mt-4 text-white/70">
+            You’re logged in. Claim your gifted recovery below.
+          </p>
+        ) : (
+          <p className="mt-4 text-white/70">
+            Create an account or log in first to redeem your package.
+          </p>
+        )}
 
         <div className="mt-8 grid gap-3">
-          <a
-            href="/signup"
-            className="rounded-2xl bg-white px-5 py-4 font-semibold text-black"
-          >
-            Create account
-          </a>
+          {isLoggedIn ? (
+            <a
+              href={claimHref}
+              className="rounded-2xl bg-white px-5 py-4 font-semibold text-black"
+            >
+              Claim my gift
+            </a>
+          ) : (
+            <>
+              <a
+                href={`/signup?returnTo=${encodeURIComponent(claimHref)}`}
+                className="rounded-2xl bg-white px-5 py-4 font-semibold text-black"
+              >
+                Create account
+              </a>
 
-          <a
-            href="/login"
-            className="rounded-2xl border border-white/15 px-5 py-4 font-semibold text-white"
-          >
-            Log in
-          </a>
+              <a
+                href={`/login?returnTo=${encodeURIComponent(claimHref)}`}
+                className="rounded-2xl border border-white/15 px-5 py-4 font-semibold text-white"
+              >
+                Log in
+              </a>
 
-          <a
-            href={claimHref}
-            className="text-sm text-white/60 underline underline-offset-4"
-          >
-            I’m logged in — claim my gift
-          </a>
+              <a
+                href={claimHref}
+                className="text-sm text-white/60 underline underline-offset-4"
+              >
+                I’m already logged in — claim my gift
+              </a>
+            </>
+          )}
         </div>
       </div>
     </main>

@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { supabaseServer } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 
 function getTotalSessions(plan: string | null) {
   if (plan === "pack5") return 5;
@@ -18,7 +18,7 @@ export default async function GiftClaimPage({
     redirect("/membership?gift=invalid");
   }
 
-  const supabase = await supabaseServer();
+  const supabase = supabaseAdmin;
 
   const { data: gift, error: giftErr } = await supabase
     .from("package_gifts")
