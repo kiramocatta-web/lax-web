@@ -44,31 +44,38 @@ export default function ForgotPasswordPage() {
     <div>
 
       <div className="max-w-xl mx-auto px-6 py-10">
-        <h1 className="text-3xl font-semibold">Forgot Password</h1>
+        <h1 className="text-3xl font-semibold text-white">Forgot Password</h1>
         <p className="mt-2 text-white/70">
           Enter your email and we’ll send you instructions to reset your password.
         </p>
 
         <div className="mt-6 bg-white/10 rounded-2xl p-5 space-y-4">
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Email"
-            className="w-full bg-white text-black p-3 rounded-xl"
-          />
+  <input
+    type="email"
+    value={email}
+    onChange={(e) => setEmail(e.target.value)}
+    placeholder="Email"
+    className="w-full bg-white text-black p-3 rounded-xl"
+  />
 
-          <button
-            onClick={sendReset}
-            disabled={sending || !email.trim()}
-            className="w-full bg-emerald-600 hover:bg-emerald-500 transition text-white py-4 rounded-2xl text-lg font-semibold disabled:opacity-50"
-          >
-            {sending ? "Sending…" : "Send reset instructions"}
-          </button>
+  <button
+    onClick={sendReset}
+    disabled={sending || !email.trim()}
+    className="w-full bg-emerald-600 hover:bg-emerald-500 transition text-white py-4 rounded-2xl text-lg font-semibold disabled:opacity-50"
+  >
+    {sending ? "Sending…" : "Send reset instructions"}
+  </button>
 
-          {msg ? <div className="text-sm text-emerald-200">{msg}</div> : null}
-          {err ? <div className="text-sm text-red-300">{err}</div> : null}
-        </div>
+  <a
+    href="/login"
+    className="block w-full text-center bg-white/10 hover:bg-white/15 transition text-white py-4 rounded-2xl text-lg font-semibold border border-white/10"
+  >
+    Back to Login
+  </a>
+
+  {msg ? <div className="text-sm text-emerald-200">{msg}</div> : null}
+  {err ? <div className="text-sm text-red-300">{err}</div> : null}
+</div>
       </div>
     </div>
   );

@@ -11,6 +11,7 @@ function LoginPageContent() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const supabase = useMemo(
@@ -68,7 +69,7 @@ function LoginPageContent() {
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            type="password"
+            type={showPassword ? "text" : "password"}
             autoComplete="current-password"
           />
 

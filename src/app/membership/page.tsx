@@ -32,6 +32,7 @@ const [giftPhone, setGiftPhone] = useState("");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [phone, setPhone] = useState("");
 
   const [loading, setLoading] = useState(false);
@@ -585,7 +586,7 @@ const res = await fetch(endpoint, {
               />
 
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 placeholder="Password"
                 required
                 autoComplete="new-password"

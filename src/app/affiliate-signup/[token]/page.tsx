@@ -14,6 +14,7 @@ export default function AffiliateSignupPage() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [phone, setPhone] = useState("");
   const [desiredCode, setDesiredCode] = useState("");
   const [acceptedAgreement, setAcceptedAgreement] = useState(false);
@@ -120,7 +121,7 @@ export default function AffiliateSignupPage() {
             <div>
               <label className="text-sm text-white/70">Password</label>
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="mt-2 w-full rounded-xl bg-white p-3 text-black"

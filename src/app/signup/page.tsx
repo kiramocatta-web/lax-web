@@ -22,6 +22,7 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   function validatePhone(value: string) {
     return /^04\d{8}$/.test(value);
@@ -132,7 +133,7 @@ const emailRedirectTo =
           />
 
           <input
-            type="password"
+            type={showPassword ? "text" : "password"}
             placeholder="Password"
             required
             autoComplete="new-password"
