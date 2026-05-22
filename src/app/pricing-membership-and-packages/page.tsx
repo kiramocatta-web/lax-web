@@ -278,12 +278,18 @@ const res = await fetch(endpoint, {
 
   return (
   <>
-    <div className="min-h-screen bg-emerald-950 px-4 pb-12 text-white">
-  <div className="mx-auto max-w-4xl pt-8 sm:pt-14">
-    <div className="pb-10 text-center">
-      <h1 className="mt-4 text-4xl sm:text-5xl font-semibold tracking-tight">
-        Membership & Packages
-      </h1>
+    <div className="relative min-h-screen overflow-hidden bg-[#160d0a] px-4 pb-12 text-[#fff7ec]">
+      <div className="pointer-events-none fixed inset-0 opacity-70">
+        <div className="absolute left-[-20%] top-[-10%] h-96 w-96 rounded-full bg-[#5b392a]/35 blur-3xl" />
+        <div className="absolute bottom-[-20%] right-[-15%] h-[28rem] w-[28rem] rounded-full bg-emerald-900/20 blur-3xl" />
+      </div>
+
+      <div className="relative z-10">
+        <div className="mx-auto max-w-4xl pt-8 sm:pt-14">
+          <div className="pb-10 text-center">
+            <h1 className="mt-4 text-4xl sm:text-5xl font-semibold tracking-tight">
+              Membership & Packages
+            </h1>
 
       <p className="mt-5 text-base sm:text-lg text-white/70">
         Choose what fits your recovery rhythm.
@@ -724,6 +730,8 @@ const res = await fetch(endpoint, {
         </div>
       </div>
     )}
+    </div>
   </>
+
 );
 }

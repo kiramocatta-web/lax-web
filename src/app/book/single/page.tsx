@@ -509,7 +509,13 @@ useEffect(() => {
 
   return (
     <>
-      <div className="min-h-screen bg-emerald-950 text-white pb-28">
+      <div className="relative min-h-screen overflow-hidden bg-[#160d0a] text-[#fff7ec] pb-28">
+  <div className="pointer-events-none fixed inset-0 opacity-70">
+    <div className="absolute left-[-20%] top-[-10%] h-96 w-96 rounded-full bg-[#5b392a]/35 blur-3xl" />
+    <div className="absolute bottom-[-20%] right-[-15%] h-[28rem] w-[28rem] rounded-full bg-emerald-900/20 blur-3xl" />
+  </div>
+
+  <div className="relative z-10">
 
         <div className="max-w-xl mx-auto px-4 py-6">
           <h1 className="text-3xl text-white text-center font-semibold">
@@ -783,8 +789,11 @@ useEffect(() => {
           </div>
         </div>
       )}
+      </div>
     </>
+    
   );
+  
 }
 
 export default function SingleEntryBookingPage() {
