@@ -47,10 +47,13 @@ export default function SignupPage() {
     setLoading(true);
 
     try {
-      const emailRedirectTo =
-        typeof window !== "undefined"
-          ? `${window.location.origin}/login`
-          : undefined;
+      const params = new URLSearchParams(window.location.search);
+const returnTo = params.get("returnTo");
+
+const emailRedirectTo =
+  typeof window !== "undefined"
+    ? `${window.location.origin}${returnTo || "/profile"}`
+    : undefined;
 
       const { data, error: signUpErr } = await supabase.auth.signUp({
         email: cleanEmail,
