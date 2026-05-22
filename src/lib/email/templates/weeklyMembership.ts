@@ -185,7 +185,7 @@ export const weeklyMembershipTemplate = `
             />
             <h3>Hydration Cupboard</h3>
             <p>
-              Use <strong>code 8888</strong> to access the electrolytes cupboard in the laundry.
+              Use <strong>code 4747</strong> to access the electrolytes cupboard in the laundry.
             </p>
           </div>
 

@@ -132,15 +132,25 @@ const emailRedirectTo =
             onChange={(e) => setEmail(e.target.value)}
           />
 
-          <input
-            type={showPassword ? "text" : "password"}
-            placeholder="Password"
-            required
-            autoComplete="new-password"
-            className="w-full rounded-xl border p-3 text-black"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+          <div className="relative">
+  <input
+    type={showPassword ? "text" : "password"}
+    placeholder="Password"
+    required
+    autoComplete="new-password"
+    className="w-full rounded-xl border p-3 pr-16 text-black"
+    value={password}
+    onChange={(e) => setPassword(e.target.value)}
+  />
+
+  <button
+    type="button"
+    onClick={() => setShowPassword((prev) => !prev)}
+    className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-black/60 hover:text-black"
+  >
+    {showPassword ? "Hide" : "Show"}
+  </button>
+</div>
 
           <input
             type="tel"

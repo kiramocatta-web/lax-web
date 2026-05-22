@@ -56,30 +56,40 @@ function LoginPageContent() {
         <p className="mt-2 text-white/70 text-lg text-center">Log in</p>
 
         <div className="mt-6 grid gap-3">
-          <input
-            className="w-full bg-white text-black p-3 rounded-xl"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            autoComplete="email"
-          />
+  <input
+    className="w-full bg-white text-black p-3 rounded-xl"
+    placeholder="Email"
+    value={email}
+    onChange={(e) => setEmail(e.target.value)}
+    autoComplete="email"
+  />
 
-          <input
-            className="w-full bg-white text-black p-3 rounded-xl"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            type={showPassword ? "text" : "password"}
-            autoComplete="current-password"
-          />
+  <div className="relative">
+    <input
+      className="w-full bg-white text-black p-3 pr-12 rounded-xl"
+      placeholder="Password"
+      value={password}
+      onChange={(e) => setPassword(e.target.value)}
+      type={showPassword ? "text" : "password"}
+      autoComplete="current-password"
+    />
 
-          <button
-            onClick={handleLogin}
-            disabled={loading || !email || !password}
-            className="w-full bg-white text-black py-4 rounded-xl text-lg font-semibold disabled:opacity-50"
-          >
-            {loading ? "Logging in…" : "Lets go!"}
-          </button>
+    <button
+      type="button"
+      onClick={() => setShowPassword((prev) => !prev)}
+      className="absolute right-3 top-1/2 -translate-y-1/2 text-black/60 hover:text-black text-sm font-semibold"
+    >
+      {showPassword ? "Hide" : "Show"}
+    </button>
+  </div>
+
+  <button
+    onClick={handleLogin}
+    disabled={loading || !email || !password}
+    className="w-full bg-white text-black py-4 rounded-xl text-lg font-semibold disabled:opacity-50"
+  >
+    {loading ? "Logging in…" : "Lets go!"}
+  </button>
 
           <a
             href="/forgot-password"

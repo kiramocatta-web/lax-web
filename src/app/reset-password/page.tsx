@@ -97,30 +97,41 @@ export default function ResetPasswordPage() {
         <p className="mt-2 text-white/70">Enter your new password below.</p>
 
         <div className="mt-6 bg-white/10 rounded-2xl p-5 space-y-4">
-          <input
-            type={showPassword ? "text" : "password"}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="New password"
-            className="w-full bg-white text-black p-3 rounded-xl"
-          />
+          <div className="relative">
+  <input
+    type={showPassword ? "text" : "password"}
+    value={password}
+    onChange={(e) => setPassword(e.target.value)}
+    placeholder="New password"
+    className="w-full bg-white text-black p-3 pr-16 rounded-xl"
+  />
 
-          <input
-            type={showPassword ? "text" : "password"}
-            value={confirm}
-            onChange={(e) => setConfirm(e.target.value)}
-            placeholder="Confirm new password"
-            className="w-full bg-white text-black p-3 rounded-xl"
-          />
+  <button
+    type="button"
+    onClick={() => setShowPassword((prev) => !prev)}
+    className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-black/60 hover:text-black"
+  >
+    {showPassword ? "Hide" : "Show"}
+  </button>
+</div>
 
-          <label className="flex items-center gap-2 text-sm text-white/70">
-            <input
-              type="checkbox"
-              checked={showPassword}
-              onChange={(e) => setShowPassword(e.target.checked)}
-            />
-            Show password
-          </label>
+<div className="relative">
+  <input
+    type={showPassword ? "text" : "password"}
+    value={confirm}
+    onChange={(e) => setConfirm(e.target.value)}
+    placeholder="Confirm new password"
+    className="w-full bg-white text-black p-3 pr-16 rounded-xl"
+  />
+
+  <button
+    type="button"
+    onClick={() => setShowPassword((prev) => !prev)}
+    className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-black/60 hover:text-black"
+  >
+    {showPassword ? "Hide" : "Show"}
+  </button>
+</div>
 
           <button
             onClick={updatePassword}

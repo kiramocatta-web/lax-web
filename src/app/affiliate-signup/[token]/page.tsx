@@ -119,16 +119,27 @@ export default function AffiliateSignupPage() {
             </div>
 
             <div>
-              <label className="text-sm text-white/70">Password</label>
-              <input
-                type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="mt-2 w-full rounded-xl bg-white p-3 text-black"
-                placeholder="Min 8 characters"
-                autoComplete="new-password"
-              />
-            </div>
+  <label className="text-sm text-white/70">Password</label>
+
+  <div className="relative mt-2">
+    <input
+      type={showPassword ? "text" : "password"}
+      value={password}
+      onChange={(e) => setPassword(e.target.value)}
+      className="w-full rounded-xl bg-white p-3 pr-16 text-black"
+      placeholder="Min 8 characters"
+      autoComplete="new-password"
+    />
+
+    <button
+      type="button"
+      onClick={() => setShowPassword((prev) => !prev)}
+      className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-black/60 hover:text-black"
+    >
+      {showPassword ? "Hide" : "Show"}
+    </button>
+  </div>
+</div>
 
             <div>
               <label className="text-sm text-white/70">Phone (optional)</label>
