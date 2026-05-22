@@ -11,9 +11,10 @@ function getTotalSessions(plan: string | null) {
 export default async function GiftClaimPage({
   searchParams,
 }: {
-  searchParams: { token?: string };
+  searchParams: Promise<{ token?: string }>;
 }) {
-  const cleanToken = String(searchParams.token ?? "").trim();
+  const { token } = await searchParams;
+  const cleanToken = String(token ?? "").trim();
 
   if (!cleanToken) {
     redirect("/membership?gift=missing-token");
