@@ -281,7 +281,7 @@ export default function SignupPage() {
             7-Day Pass
           </div>
           <div className="mt-3 text-4xl font-semibold text-sky-300">$25</div>
-          <div className="mt-2 text-lg text-white/85">Unlimited</div>
+          <div className="mt-3 text-xl text-white/85">Unlimited</div>
           <div className="mt-5 text-sm text-white/55">
             Unlimited recovery for 7 days.
           </div>
@@ -290,7 +290,7 @@ export default function SignupPage() {
         <button
           type="button"
           onClick={() => handlePlanSelect("pack5")}
-          className={`min-h-[250px] rounded-3xl border p-8 text-left transition-all duration-300 ${
+          className={`min-h-[220px] rounded-3xl border p-6 text-center md:text-left transition-all duration-300 ${
             selectedPlan === "pack5"
               ? "border-emerald-300 bg-emerald-500/20 ring-2 ring-emerald-300 shadow-2xl scale-[1.01]"
               : "border-white/15 bg-white/5 hover:bg-white/10"
@@ -300,8 +300,8 @@ export default function SignupPage() {
             5 Pack
           </div>
           <div className="mt-3 text-4xl font-semibold text-emerald-300">$50</div>
-          <div className="mt-2 text-lg text-white/85">5 × 1hr sessions</div>
-          <div className="mt-5 text-sm text-white/55">
+          <div className="mt-3 text-xl text-white/85">5 × 1hr sessions</div>
+          <div className="mt-6 text-sm leading-relaxed text-white/55">
             Save $15 compared to casual bookings.
           </div>
         </button>
@@ -309,7 +309,7 @@ export default function SignupPage() {
         <button
           type="button"
           onClick={() => handlePlanSelect("pack10")}
-          className={`min-h-[250px] rounded-3xl border p-8 text-left transition-all duration-300 ${
+          className={`min-h-[220px] rounded-3xl border p-6 text-center md:text-left transition-all duration-300 ${
             selectedPlan === "pack10"
               ? "border-amber-300 bg-amber-500/20 ring-2 ring-amber-300 shadow-2xl scale-[1.01]"
               : "border-white/15 bg-white/5 hover:bg-white/10"
@@ -319,8 +319,8 @@ export default function SignupPage() {
             10 Pack
           </div>
           <div className="mt-3 text-4xl font-semibold text-amber-300">$95</div>
-          <div className="mt-2 text-lg text-white/85">10 × 1hr sessions</div>
-          <div className="mt-5 text-sm text-white/55">
+          <div className="mt-3 text-xl text-white/85">10 × 1hr sessions</div>
+          <div className="mt-6 text-sm leading-relaxed text-white/55">
             Save $55 compared to casual bookings.
           </div>
         </button>
@@ -328,7 +328,7 @@ export default function SignupPage() {
         <button
           type="button"
           onClick={() => handlePlanSelect("monthly")}
-          className={`min-h-[250px] rounded-3xl border p-8 text-left transition-all duration-300 ${
+          className={`min-h-[220px] rounded-3xl border p-6 text-center md:text-left transition-all duration-300 ${
             selectedPlan === "monthly"
               ? "border-violet-300 bg-violet-500/20 ring-2 ring-violet-300 shadow-2xl scale-[1.01]"
               : "border-white/15 bg-white/5 hover:bg-white/10"
@@ -337,9 +337,9 @@ export default function SignupPage() {
           <div className="text-sm uppercase tracking-[0.2em] text-violet-200/80">
             Monthly Unlimited
           </div>
-          <div className="mt-3 text-4xl font-semibold text-violet-300">$50</div>
-          <div className="mt-2 text-lg text-white/85">4 weeks access</div>
-          <div className="mt-5 text-sm text-white/55">
+          <div className="mt-4 text-5xl font-semibold text-violet-300">$50</div>
+          <div className="mt-3 text-xl text-white/85">4 weeks access</div>
+          <div className="mt-6 text-sm leading-relaxed text-white/55">
             One single payment. Unlimited recovery for 4 weeks.
           </div>
         </button>
@@ -357,7 +357,7 @@ export default function SignupPage() {
             <MembershipPerks />
           </div>
 
-          <div className="mt-6 grid gap-4 sm:grid-cols-2">
+          <div className="mx-auto mt-6 max-w-2xl">
             <button
               type="button"
               onClick={() => handlePlanSelect("weekly")}
