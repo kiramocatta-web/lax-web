@@ -306,6 +306,8 @@ export default function SignupPage() {
               </div>
             </button>
 
+          
+
             <button
               type="button"
               onClick={() => handlePlanSelect("pack10")}
@@ -326,6 +328,25 @@ export default function SignupPage() {
             </button>
           </div>
         </section>
+
+        <button
+              type="button"
+              onClick={() => handlePlanSelect("monthly")}
+              className={`rounded-3xl border p-6 text-left transition-all duration-300 ${
+                selectedPlan === "monthly"
+                  ? "border-violet-300 bg-violet-500/20 ring-2 ring-violet-300 shadow-2xl scale-[1.01]"
+                  : "border-white/15 bg-white/5 hover:bg-white/10"
+              }`}
+            >
+              <div className="text-sm uppercase tracking-[0.2em] text-violet-200/80">
+                Monthly Unlimited
+              </div>
+              <div className="mt-3 text-3xl font-semibold text-violet-300">$50</div>
+              <div className="mt-1 text-lg text-white/85">4 weeks access</div>
+              <div className="mt-4 text-sm text-white/55">
+                One single payment. Unlimited recovery for 4 weeks.
+              </div>
+            </button>
 
         {/* MEMBERSHIP */}
         <section className="mt-16">
@@ -358,24 +379,6 @@ export default function SignupPage() {
               </div>
             </button>
 
-            <button
-              type="button"
-              onClick={() => handlePlanSelect("monthly")}
-              className={`rounded-3xl border p-6 text-left transition-all duration-300 ${
-                selectedPlan === "monthly"
-                  ? "border-violet-300 bg-violet-500/20 ring-2 ring-violet-300 shadow-2xl scale-[1.01]"
-                  : "border-white/15 bg-white/5 hover:bg-white/10"
-              }`}
-            >
-              <div className="text-sm uppercase tracking-[0.2em] text-violet-200/80">
-                Monthly Unlimited
-              </div>
-              <div className="mt-3 text-3xl font-semibold text-violet-300">$50</div>
-              <div className="mt-1 text-lg text-white/85">4 weeks access</div>
-              <div className="mt-4 text-sm text-white/55">
-                One single payment. Unlimited recovery for 4 weeks.
-              </div>
-            </button>
           </div>
         </section>
 
