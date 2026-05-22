@@ -28,6 +28,7 @@ const [giftPhone, setGiftPhone] = useState("");
   const accountSectionRef = useRef<HTMLDivElement | null>(null);
   const waiverSectionRef = useRef<HTMLDivElement | null>(null);
   const letsGoButtonRef = useRef<HTMLButtonElement | null>(null);
+  const giftSectionRef = useRef<HTMLDivElement | null>(null);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -108,12 +109,17 @@ const [giftPhone, setGiftPhone] = useState("");
     setError("");
 
     setTimeout(() => {
-      if (accountCreated) {
-        scrollToRef(waiverSectionRef);
-      } else {
-        scrollToRef(accountSectionRef);
-      }
-    }, 150);
+  if (recipientType === "gift") {
+    scrollToRef(giftSectionRef);
+    return;
+  }
+
+  if (accountCreated) {
+    scrollToRef(waiverSectionRef);
+  } else {
+    scrollToRef(accountSectionRef);
+  }
+}, 150);
   }
 
   async function handleSignup(e: React.FormEvent<HTMLFormElement>) {
@@ -324,7 +330,10 @@ const res = await fetch(endpoint, {
   </div>
 
   {recipientType === "gift" && selectedPlan ? (
-    <div className="mx-auto mt-8 max-w-xl rounded-3xl border border-white/10 bg-white p-6 text-black shadow-2xl">
+    <div
+  ref={giftSectionRef}
+  className="mx-auto mt-8 max-w-xl rounded-3xl border border-white/10 bg-white p-6 text-black shadow-2xl"
+>
       <h3 className="text-2xl font-semibold">
         Who are you sending it to?
       </h3>
