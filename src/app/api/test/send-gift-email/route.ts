@@ -8,7 +8,7 @@ export const runtime = "nodejs";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-export async function POST() {
+export async function GET() {
   const { data: gift, error } = await supabaseAdmin
     .from("package_gifts")
     .select("recipient_email,gift_message,plan,claim_token")
