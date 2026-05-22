@@ -423,7 +423,7 @@ const res = await fetch(endpoint, {
       </div>
 
       <div className="mt-4 text-5xl font-semibold text-violet-300">
-        $50
+        $55
       </div>
 
       <div className="mt-3 text-xl text-white/85">
