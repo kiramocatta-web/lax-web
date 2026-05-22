@@ -10,9 +10,9 @@ function getTotalSessions(plan: string | null) {
 export default async function GiftClaimPage({
   searchParams,
 }: {
-  searchParams: Promise<{ token?: string }>;
+  searchParams: { token?: string };
 }) {
-  const { token } = await searchParams;
+  const { token } = searchParams;
   const cleanToken = String(token ?? "").trim();
 
   if (!cleanToken) {
