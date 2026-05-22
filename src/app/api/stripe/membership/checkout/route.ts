@@ -50,7 +50,13 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json().catch(() => null);
-    const plan = body?.plan as "weekly" | "pass7" | undefined;
+    const plan = body?.plan as
+  | "weekly"
+  | "pass7"
+  | "pack5"
+  | "pack10"
+  | "monthly"
+  | undefined;
 
     if (plan === "weekly") {
   const status = String(profile?.membership_status ?? "").toLowerCase();
@@ -80,22 +86,22 @@ export async function POST(req: Request) {
       );
     }
 
-    const weeklyPriceId = process.env.STRIPE_WEEKLY_PRICE_ID;
-    const pass7PriceId = process.env.STRIPE_PASS7_PRICE_ID;
+    const priceIdByPlan = {
+  weekly: process.env.STRIPE_WEEKLY_PRICE_ID,
+  pass7: process.env.STRIPE_PASS7_PRICE_ID,
+  pack5: process.env.STRIPE_PACK5_PRICE_ID,
+  pack10: process.env.STRIPE_PACK10_PRICE_ID,
+  monthly: process.env.STRIPE_MONTHLY_PRICE_ID,
+} as const;
 
-    if (plan === "weekly" && !weeklyPriceId) {
-      return NextResponse.json(
-        { error: "Missing STRIPE_WEEKLY_PRICE_ID" },
-        { status: 500 }
-      );
-    }
+const selectedPriceId = plan ? priceIdByPlan[plan] : null;
 
-    if (plan === "pass7" && !pass7PriceId) {
-      return NextResponse.json(
-        { error: "Missing STRIPE_PASS7_PRICE_ID" },
-        { status: 500 }
-      );
-    }
+if (!selectedPriceId) {
+  return NextResponse.json(
+    { error: `Missing Stripe price ID for ${plan}` },
+    { status: 500 }
+  );
+}
 
     const mode: Stripe.Checkout.SessionCreateParams.Mode =
       plan === "weekly" ? "subscription" : "payment";
@@ -111,11 +117,11 @@ export async function POST(req: Request) {
         enabled: true,
       },
       line_items: [
-        {
-          price: plan === "weekly" ? weeklyPriceId! : pass7PriceId!,
-          quantity: 1,
-        },
-      ],
+  {
+    price: selectedPriceId,
+    quantity: 1,
+  },
+],
       success_url: `${siteUrl}/membership/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${siteUrl}/membership`,
       metadata: {

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createBrowserClient } from "@supabase/ssr";
 import MembershipPerks from "@/components/MembershipPerks";
 
-type Plan = "weekly" | "pass7" | null;
+type Plan = "weekly" | "pass7" | "pack5" | "pack10" | "monthly" | null;
 
 export default function SignupPage() {
   const supabase = useMemo(

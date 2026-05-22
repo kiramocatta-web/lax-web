@@ -98,7 +98,7 @@ export default function HomePage() {
                 href="/members"
                 className="w-full max-w-[320px] rounded-full border border-white/30 bg-white/10 px-8 py-4 text-center text-sm font-medium uppercase tracking-[0.12em] transition hover:bg-white hover:text-black sm:min-w-[270px] sm:text-lg"
               >
-                Members Portal
+                Members Booking
               </a>
 
               <a
@@ -229,7 +229,7 @@ export default function HomePage() {
 
         {/* MEMBERSHIPS */}
         <section className="px-6 pb-24 text-center">
-          <h2 className="text-3xl font-light">Memberships</h2>
+          <h2 className="text-3xl font-light">Memberships & Packages</h2>
 
           <a
             href="/membership"
@@ -250,8 +250,38 @@ export default function HomePage() {
             </div>
 
             <div className="rounded-3xl border border-white/10 bg-white/5 p-8">
+  <p className="text-sm uppercase tracking-[0.2em] text-white/50">
+    5 Pack
+  </p>
+  <p className="mt-3 text-3xl font-medium">$50</p>
+  <p className="mt-4 text-white/70">
+    5 × 1hr sessions. Save $15.
+  </p>
+</div>
+
+<div className="rounded-3xl border border-white/10 bg-white/5 p-8">
+  <p className="text-sm uppercase tracking-[0.2em] text-white/50">
+    10 Pack
+  </p>
+  <p className="mt-3 text-3xl font-medium">$95</p>
+  <p className="mt-4 text-white/70">
+    10 × 1hr sessions. Save $55.
+  </p>
+</div>
+
+<div className="rounded-3xl border border-white/10 bg-white/5 p-8">
+  <p className="text-sm uppercase tracking-[0.2em] text-white/50">
+    Monthly Unlimited
+  </p>
+  <p className="mt-3 text-3xl font-medium">$55</p>
+  <p className="mt-4 text-white/70">
+    Unlimited recovery access for 4 weeks.
+  </p>
+</div>
+
+            <div className="rounded-3xl border border-white/10 bg-white/5 p-8">
               <p className="text-sm uppercase tracking-[0.2em] text-white/50">
-                General Membership
+                Weekly Membership
               </p>
               <p className="mt-3 text-3xl font-medium">$20 / week</p>
               <p className="mt-4 text-white/70">
