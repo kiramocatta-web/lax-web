@@ -300,8 +300,7 @@ const res = await fetch(endpoint, {
   </p>
 
   {/* WHO IS IT FOR */}
-<div className="mt-8">
-  <div className="flex justify-center">
+  <div className="mt-8 flex justify-center">
     <div className="inline-flex rounded-2xl border border-white/10 bg-white/5 p-1">
       <button
         type="button"
@@ -329,65 +328,8 @@ const res = await fetch(endpoint, {
     </div>
   </div>
 
-  {recipientType === "gift" && selectedPlan ? (
-    <div
-  ref={giftSectionRef}
-  className="mx-auto mt-8 max-w-xl rounded-3xl border border-white/10 bg-white p-6 text-black shadow-2xl"
->
-      <h3 className="text-2xl font-semibold">
-        Who are you sending it to?
-      </h3>
-
-      <p className="mt-1 text-sm text-black/60">
-        We’ll email them a redemption link so they can claim it on their account.
-      </p>
-
-      <div className="mt-5 space-y-4">
-        <input
-          type="text"
-          placeholder="Recipient name"
-          value={giftName}
-          onChange={(e) => setGiftName(e.target.value)}
-          className="w-full rounded-2xl border border-black/10 p-3 outline-none"
-        />
-
-        <input
-          type="email"
-          placeholder="Recipient email"
-          value={giftEmail}
-          onChange={(e) => setGiftEmail(e.target.value)}
-          className="w-full rounded-2xl border border-black/10 p-3 outline-none"
-        />
-
-        <input
-          type="tel"
-          placeholder="Recipient phone"
-          value={giftPhone}
-          onChange={(e) => setGiftPhone(e.target.value)}
-          className="w-full rounded-2xl border border-black/10 p-3 outline-none"
-        />
-
-        <div>
-  <label className="text-sm font-semibold text-black/70">
-    Leave a note? optional
-  </label>
-
-  <textarea
-    placeholder="Example: Hope this helps you recover after training — enjoy!"
-    rows={3}
-    value={giftMessage}
-    onChange={(e) => setGiftMessage(e.target.value)}
-    className="mt-2 w-full rounded-2xl border border-black/10 p-3 outline-none"
-  />
-</div>
-      </div>
-    </div>
-  ) : null}
-</div>
-</section>
-
-
-  <div className="mx-auto mt-6 grid max-w-4xl gap-5 md:grid-cols-2">
+  {/* PACKAGE CARDS */}
+  <div className="mx-auto mt-8 grid max-w-4xl gap-5 md:grid-cols-2">
     <button
       type="button"
       onClick={() => handlePlanSelect("pass7")}
@@ -493,6 +435,71 @@ const res = await fetch(endpoint, {
     </button>
   </div>
 
+  {/* GIFT FORM */}
+  {recipientType === "gift" && selectedPlan ? (
+    <div
+      ref={giftSectionRef}
+      className="mx-auto mt-8 max-w-xl rounded-3xl border border-white/10 bg-white p-6 text-black shadow-2xl"
+    >
+      <h3 className="text-2xl font-semibold">
+        Who are you sending it to?
+      </h3>
+
+      <p className="mt-1 text-sm text-black/60">
+        We’ll email them a redemption link so they can claim it on their account.
+      </p>
+
+      <div className="mt-5 space-y-4">
+        <input
+          type="text"
+          placeholder="Recipient name"
+          value={giftName}
+          onChange={(e) => setGiftName(e.target.value)}
+          className="w-full rounded-2xl border border-black/10 p-3 outline-none"
+        />
+
+        <input
+          type="email"
+          placeholder="Recipient email"
+          value={giftEmail}
+          onChange={(e) => setGiftEmail(e.target.value)}
+          className="w-full rounded-2xl border border-black/10 p-3 outline-none"
+        />
+
+        <input
+          type="tel"
+          placeholder="Recipient phone"
+          value={giftPhone}
+          onChange={(e) => setGiftPhone(e.target.value)}
+          className="w-full rounded-2xl border border-black/10 p-3 outline-none"
+        />
+
+        <div>
+          <label className="text-sm font-semibold text-black/70">
+            Leave a note? optional
+          </label>
+
+          <textarea
+            placeholder="Example: Happy birthday — enjoy your recovery!"
+            rows={3}
+            value={giftMessage}
+            onChange={(e) => setGiftMessage(e.target.value)}
+            className="mt-2 w-full rounded-2xl border border-black/10 p-3 outline-none"
+          />
+        </div>
+
+        <button
+          type="button"
+          onClick={handleCheckout}
+          disabled={checkoutLoading}
+          className="w-full rounded-2xl bg-black py-4 text-white font-semibold transition hover:opacity-90 disabled:opacity-50"
+        >
+          {checkoutLoading ? "Loading..." : "Continue to checkout"}
+        </button>
+      </div>
+    </div>
+  ) : null}
+</section>
   
         {/* MEMBERSHIP */}
 <section className="mt-20">
