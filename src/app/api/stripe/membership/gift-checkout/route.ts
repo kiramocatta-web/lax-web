@@ -15,6 +15,7 @@ export async function POST(req: Request) {
     const giftEmail = String(body?.giftEmail ?? "").trim().toLowerCase();
     const giftName = String(body?.giftName ?? "").trim();
     const giftMessage = String(body?.giftMessage ?? "").trim();
+    const giftPhone = String(body?.giftPhone ?? "").trim();
 
     if (!plan) {
       return NextResponse.json({ error: "Missing plan." }, { status: 400 });
@@ -67,6 +68,7 @@ export async function POST(req: Request) {
         recipient_email: giftEmail,
         recipient_name: giftName,
         gift_message: giftMessage,
+        recipient_phone: giftPhone,
       },
     });
 

@@ -23,6 +23,7 @@ export default function SignupPage() {
 const [giftEmail, setGiftEmail] = useState("");
 const [giftName, setGiftName] = useState("");
 const [giftMessage, setGiftMessage] = useState("");
+const [giftPhone, setGiftPhone] = useState("");
 
   const accountSectionRef = useRef<HTMLDivElement | null>(null);
   const waiverSectionRef = useRef<HTMLDivElement | null>(null);
@@ -202,15 +203,23 @@ const [giftMessage, setGiftMessage] = useState("");
       return;
     }
 
-    if (!accountCreated) {
+    if (recipientType === "self" && !accountCreated) {
       setError("Please create your account first.");
       return;
     }
 
-    if (!waiverAccepted) {
+    if (recipientType === "gift") {
+  if (!giftName.trim() || !giftEmail.trim() || !giftPhone.trim()) {
+    setError("Please enter the recipient name, email and phone number.");
+    return;
+  }
+}
+
+    if (recipientType === "self" && !waiverAccepted) {
       setError("Please confirm you have read the health waiver.");
       return;
     }
+
 
     setCheckoutLoading(true);
 
@@ -224,12 +233,13 @@ const res = await fetch(endpoint, {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
-    plan: selectedPlan,
-    recipientType,
-    giftEmail,
-    giftName,
-    giftMessage,
-  }),
+  plan: selectedPlan,
+  recipientType,
+  giftEmail,
+  giftName,
+  giftPhone,
+  giftMessage,
+}),
 });
 
       const json = await res.json().catch(() => null);
@@ -390,7 +400,8 @@ const res = await fetch(endpoint, {
   </div>
 
   {/* WHO IS IT FOR */}
-  <div className="mt-10 flex justify-center">
+<div className="mt-10">
+  <div className="flex justify-center">
     <div className="inline-flex rounded-2xl border border-white/10 bg-white/5 p-1">
       <button
         type="button"
@@ -417,6 +428,53 @@ const res = await fetch(endpoint, {
       </button>
     </div>
   </div>
+
+  {recipientType === "gift" && selectedPlan ? (
+    <div className="mx-auto mt-8 max-w-xl rounded-3xl border border-white/10 bg-white p-6 text-black shadow-2xl">
+      <h3 className="text-2xl font-semibold">
+        Who are you sending it to?
+      </h3>
+
+      <p className="mt-1 text-sm text-black/60">
+        We’ll email them a redemption link so they can claim it on their account.
+      </p>
+
+      <div className="mt-5 space-y-4">
+        <input
+          type="text"
+          placeholder="Recipient name"
+          value={giftName}
+          onChange={(e) => setGiftName(e.target.value)}
+          className="w-full rounded-2xl border border-black/10 p-3 outline-none"
+        />
+
+        <input
+          type="email"
+          placeholder="Recipient email"
+          value={giftEmail}
+          onChange={(e) => setGiftEmail(e.target.value)}
+          className="w-full rounded-2xl border border-black/10 p-3 outline-none"
+        />
+
+        <input
+          type="tel"
+          placeholder="Recipient phone"
+          value={giftPhone}
+          onChange={(e) => setGiftPhone(e.target.value)}
+          className="w-full rounded-2xl border border-black/10 p-3 outline-none"
+        />
+
+        <textarea
+          placeholder="Optional message"
+          rows={3}
+          value={giftMessage}
+          onChange={(e) => setGiftMessage(e.target.value)}
+          className="w-full rounded-2xl border border-black/10 p-3 outline-none"
+        />
+      </div>
+    </div>
+  ) : null}
+</div>
 </section>
 
         {/* MEMBERSHIP */}
