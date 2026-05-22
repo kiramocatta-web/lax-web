@@ -12,27 +12,18 @@ export default async function GiftClaimPage({
 }: {
   searchParams: { token?: string };
 }) {
-  const { token } = searchParams;
-  const cleanToken = String(token ?? "").trim();
+  const cleanToken = String(searchParams.token ?? "").trim();
 
   if (!cleanToken) {
-    redirect("/membership");
+    redirect("/membership?gift=invalid");
   }
 
   const supabase = await supabaseServer();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect(`/login?returnTo=/gift/claim?token=${cleanToken}`);
-  }
-
   const { data: gift, error: giftErr } = await supabase
     .from("package_gifts")
     .select(
-      "id,recipient_email,plan,total_sessions,remaining_sessions,status,claimed_by_user_id"
+      "id,recipient_email,plan,total_sessions,status,claimed_by_user_id"
     )
     .eq("claim_token", cleanToken)
     .maybeSingle();
@@ -43,6 +34,14 @@ export default async function GiftClaimPage({
 
   if (gift.status === "claimed" || gift.claimed_by_user_id) {
     redirect("/profile?gift=already-claimed");
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect(`/gift/redeem?token=${cleanToken}`);
   }
 
   const userEmail = String(user.email ?? "").trim().toLowerCase();
@@ -56,6 +55,10 @@ export default async function GiftClaimPage({
     Number(gift.total_sessions ?? 0) || getTotalSessions(gift.plan);
 
   if (gift.plan === "pack5" || gift.plan === "pack10") {
+    if (!totalSessions) {
+      redirect("/profile?gift=credit-error");
+    }
+
     const { error: creditErr } = await supabase.from("package_credits").insert({
       user_id: user.id,
       plan: gift.plan,
