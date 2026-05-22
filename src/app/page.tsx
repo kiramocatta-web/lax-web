@@ -235,7 +235,7 @@ export default function HomePage() {
             href="/membership"
             className="mt-3 inline-block text-sm text-white/70 underline underline-offset-4 hover:text-white"
           >
-            I'm ready to commit →
+            I'm ready →
           </a>
 
           <div className="mx-auto mt-10 grid max-w-3xl gap-6 sm:grid-cols-2">
@@ -275,7 +275,7 @@ export default function HomePage() {
   </p>
   <p className="mt-3 text-3xl font-medium">$55</p>
   <p className="mt-4 text-white/70">
-    Unlimited recovery access for 4 weeks.
+    Unlimited recovery access for 4 weeks. (Non-reoccuring)
   </p>
 </div>
 
