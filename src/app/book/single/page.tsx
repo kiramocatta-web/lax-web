@@ -4,6 +4,7 @@ import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import StickyCheckoutBar from "@/components/StickyCheckoutBar";
 
+
 const OPEN_HOUR = 5;
 const CLOSE_HOUR = 22;
 const INTERVAL_MINUTES = 15;
@@ -92,6 +93,7 @@ const PRICE_BY_DURATION_CENTS: Record<number, number> = {
 function SingleEntryBookingPageContent() {
   const searchParams = useSearchParams();
   const rescheduleBookingId = searchParams.get("reschedule_booking_id");
+  const codeFromUrl = searchParams.get("code")?.trim().toUpperCase() || "";
 
   const waiverRef = useRef<HTMLDivElement | null>(null);
 
@@ -109,7 +111,7 @@ function SingleEntryBookingPageContent() {
   const [loadError, setLoadError] = useState<string>("");
   const [paying, setPaying] = useState<boolean>(false);
 
-  const [discountCode, setDiscountCode] = useState<string>("");
+  const [discountCode, setDiscountCode] = useState<string>(codeFromUrl);
   const [waiverOk, setWaiverOk] = useState(false);
   const [waiverError, setWaiverError] = useState("");
 
@@ -464,7 +466,7 @@ useEffect(() => {
           start_minute: selectedStartMinute,
           duration_minutes: duration,
           people_count: peopleCount,
-          discount_code: discountCode.trim(),
+          discount_code: discountCode.trim() || codeFromUrl,
           reschedule_booking_id: null,
         }),
       });
