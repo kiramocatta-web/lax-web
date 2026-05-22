@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { supabaseServer } from "@/lib/supabase/server";
 
 function getTotalSessions(plan: string | null) {
   if (plan === "pack5") return 5;
