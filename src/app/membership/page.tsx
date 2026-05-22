@@ -299,7 +299,7 @@ export default function SignupPage() {
           <div className="text-sm uppercase tracking-[0.2em] text-emerald-200/80">
             5 Pack
           </div>
-          <div className="mt-3 text-4xl font-semibold text-emerald-300">$50</div>
+          <div className="mt-4 text-5xl font-semibold text-emerald-300">$50</div>
           <div className="mt-3 text-xl text-white/85">5 × 1hr sessions</div>
           <div className="mt-6 text-sm leading-relaxed text-white/55">
             Save $15 compared to casual bookings.
@@ -318,7 +318,7 @@ export default function SignupPage() {
           <div className="text-sm uppercase tracking-[0.2em] text-amber-200/80">
             10 Pack
           </div>
-          <div className="mt-3 text-4xl font-semibold text-amber-300">$95</div>
+          <div className="mt-4 text-5xl font-semibold text-amber-300">$95</div>
           <div className="mt-3 text-xl text-white/85">10 × 1hr sessions</div>
           <div className="mt-6 text-sm leading-relaxed text-white/55">
             Save $55 compared to casual bookings.
@@ -337,7 +337,7 @@ export default function SignupPage() {
           <div className="text-sm uppercase tracking-[0.2em] text-violet-200/80">
             Monthly Unlimited
           </div>
-          <div className="mt-4 text-5xl font-semibold text-violet-300">$50</div>
+          <div className="mt-4 text-5xl font-semibold text-violet-300">$55</div>
           <div className="mt-3 text-xl text-white/85">4 weeks access</div>
           <div className="mt-6 text-sm leading-relaxed text-white/55">
             One single payment. Unlimited recovery for 4 weeks.
