@@ -1054,47 +1054,65 @@ const totalRemainingSessions = activePackageCredits.reduce(
                     </Card>
                   )}
 
-                  <Card>
-  <div>
-    <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#d8c6b4]/55">
-      Session packages
-    </p>
-    <h2 className="mt-2 text-2xl font-bold">Recovery credits</h2>
-    <p className="mt-1 text-sm text-[#d8c6b4]/65">
-      Your available prepaid recovery sessions.
-    </p>
-  </div>
 
-  <div className="mt-6 rounded-3xl bg-[#1c120f]/35 p-4">
-    <DetailRow label="Sessions remaining" value={totalRemainingSessions} />
+  {!isAffiliate ? (
+  <Card>
+    <div>
+      <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#d8c6b4]/55">
+        Session Packages
+      </p>
 
-    {activePackageCredits.length > 0 ? (
-      activePackageCredits.map((credit, index) => (
+      <h2 className="mt-2 text-2xl font-bold">
+        Recovery Credits
+      </h2>
+
+      <p className="mt-1 text-sm text-[#d8c6b4]/65">
+        Your available prepaid recovery sessions.
+      </p>
+    </div>
+
+    <div className="mt-6 rounded-3xl bg-[#1c120f]/35 p-4">
+      <DetailRow
+        label="Sessions remaining"
+        value={totalRemainingSessions}
+      />
+
+      {activePackageCredits.length > 0 ? (
+        activePackageCredits.map((credit, index) => (
+          <DetailRow
+            key={`${credit.plan}-${index}`}
+            label={
+              credit.plan === "pack5"
+                ? "5 Pack"
+                : credit.plan === "pack10"
+                ? "10 Pack"
+                : credit.plan ?? "Package"
+            }
+            value={`${Number(
+              credit.remaining_sessions ?? 0
+            )} / ${Number(
+              credit.total_sessions ?? 0
+            )} left`}
+          />
+        ))
+      ) : (
         <DetailRow
-          key={`${credit.plan}-${index}`}
-          label={
-            credit.plan === "pack5"
-              ? "5 Pack"
-              : credit.plan === "pack10"
-              ? "10 Pack"
-              : credit.plan ?? "Package"
-          }
-          value={`${Number(credit.remaining_sessions ?? 0)} / ${Number(
-            credit.total_sessions ?? 0
-          )} left`}
+          label="Active package"
+          value="0 sessions"
         />
-      ))
-    ) : (
-      <DetailRow label="Active package" value="0 sessions" />
-    )}
-  </div>
+      )}
+    </div>
 
-  <div className="mt-5">
-    <ActionButton href="/membership" variant="warning">
-      Want to buy session packages for yourself or a friend?
-    </ActionButton>
-  </div>
-</Card>
+    <div className="mt-5">
+      <ActionButton
+        href="/membership"
+        variant="warning"
+      >
+        Want to buy session packages for yourself or a friend?
+      </ActionButton>
+    </div>
+  </Card>
+) : null}
 
                   <Card>
                     <div className="flex items-center justify-between gap-3">
