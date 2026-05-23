@@ -22,35 +22,27 @@ export default function ResetPasswordPage() {
   const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
-    async function prepareRecoverySession() {
-      setErr("");
+  async function checkRecoverySession() {
+    setErr("");
 
-      try {
-        const url = new URL(window.location.href);
-        const code = url.searchParams.get("code");
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
-        if (code) {
-          const { error } = await supabase.auth.exchangeCodeForSession(code);
-          if (error) throw error;
-        }
-
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-
-        if (!session) {
-          setErr("This reset link has expired or is invalid. Please request a new one.");
-          return;
-        }
-
-        setReady(true);
-      } catch (e: any) {
-        setErr(e?.message || "Could not prepare password reset.");
+      if (!session) {
+        setErr("This reset link has expired or is invalid. Please request a new one.");
+        return;
       }
-    }
 
-    prepareRecoverySession();
-  }, [supabase]);
+      setReady(true);
+    } catch (e: any) {
+      setErr(e?.message || "Could not prepare password reset.");
+    }
+  }
+
+  checkRecoverySession();
+}, [supabase]);
 
   const updatePassword = async () => {
     setErr("");
