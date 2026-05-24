@@ -18,6 +18,12 @@ type AvailabilityBookingRow = {
   people_count: number;
 };
 
+type BookingBlockRow = {
+  is_full_day: boolean;
+  start_time: string | null;
+  end_time: string | null;
+};
+
 type ExistingBookingRow = {
   id: number;
   booking_date: string | null;
@@ -107,6 +113,7 @@ function SingleEntryBookingPageContent() {
 
 
   const [bookings, setBookings] = useState<AvailabilityBookingRow[]>([]);
+  const [bookingBlocks, setBookingBlocks] = useState<BookingBlockRow[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [loadError, setLoadError] = useState<string>("");
   const [paying, setPaying] = useState<boolean>(false);
@@ -217,26 +224,29 @@ function SingleEntryBookingPageContent() {
       setLoadError("");
 
       try {
-        const res = await fetch(`/api/bookings?date=${selectedDate}`);
-        const json = await res.json().catch(() => null);
+  const res = await fetch(`/api/bookings?date=${selectedDate}`);
+  const json = await res.json().catch(() => null);
+  
 
-        if (!res.ok) {
-          throw new Error(json?.error || "Failed to load bookings");
-        }
+  if (!res.ok) {
+    throw new Error(json?.error || "Failed to load bookings");
+  }
 
-        if (!cancelled) {
-          setBookings(json?.bookings ?? []);
-        }
-      } catch (e: any) {
-        if (!cancelled) {
-          setBookings([]);
-          setLoadError(e?.message || "Failed to load bookings");
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
+  if (!cancelled) {
+    setBookings(json?.bookings ?? []);
+    setBookingBlocks(json?.bookingBlocks ?? []);
+  }
+} catch (e: any) {
+  if (!cancelled) {
+    setBookings([]);
+    setBookingBlocks([]);
+    setLoadError(e?.message || "Failed to load bookings");
+  }
+} finally {
+  if (!cancelled) {
+    setLoading(false);
+  }
+}
     })();
 
     return () => {
@@ -280,20 +290,35 @@ function SingleEntryBookingPageContent() {
   };
 
   const canStartAt = (startMinute: number) => {
-    if (isPastStartTime(startMinute)) return false;
+  if (isPastStartTime(startMinute)) return false;
 
-    const blocks = duration / INTERVAL_MINUTES;
+  const endMinute = startMinute + duration;
 
-    for (let i = 0; i < blocks; i++) {
-      const m = startMinute + i * INTERVAL_MINUTES;
-      if (!(m in occupancy)) return false;
+  const slotIsBlocked = (bookingBlocks ?? []).some((block) => {
+    if (block.is_full_day) return true;
 
-      const used = occupancy[m] ?? 0;
-      if (used + peopleCount > MAX_CAPACITY) return false;
-    }
+    if (!block.start_time || !block.end_time) return false;
 
-    return true;
-  };
+    const blockStart = timeToMinutes(block.start_time);
+const blockEnd = timeToMinutes(block.end_time);
+
+    return startMinute < blockEnd && endMinute > blockStart;
+  });
+
+  if (slotIsBlocked) return false;
+
+  const blocks = duration / INTERVAL_MINUTES;
+
+  for (let i = 0; i < blocks; i++) {
+    const m = startMinute + i * INTERVAL_MINUTES;
+    if (!(m in occupancy)) return false;
+
+    const used = occupancy[m] ?? 0;
+    if (used + peopleCount > MAX_CAPACITY) return false;
+  }
+
+  return true;
+};
 
   const canFitBeforeClose = (startMinute: number) => {
     return startMinute + duration <= CLOSE_HOUR * 60;

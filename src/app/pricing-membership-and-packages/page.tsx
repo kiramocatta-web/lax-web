@@ -288,7 +288,7 @@ const res = await fetch(endpoint, {
         <div className="mx-auto max-w-4xl pt-8 sm:pt-14">
           <div className="pb-10 text-center">
             <h1 className="mt-4 text-4xl sm:text-5xl font-semibold tracking-tight">
-              Membership & Packages
+              Pricing, Membership & Packages
             </h1>
 
       <p className="mt-5 text-base sm:text-lg text-white/70">
@@ -320,6 +320,26 @@ const res = await fetch(endpoint, {
       >
         Myself
       </button>
+
+      {/* SINGLE BOOKING */}
+<a
+  href="/book/single"
+  className="mx-auto mt-8 block max-w-4xl rounded-3xl border border-[#d7b98c]/30 bg-[#d7b98c]/10 p-5 text-center transition hover:bg-[#d7b98c]/15 hover:scale-[1.01]"
+>
+  <div className="text-sm uppercase tracking-[0.25em] text-[#d7b98c]">
+    Single Booking
+  </div>
+
+  <div className="mt-4 flex flex-col justify-center gap-3 text-white sm:flex-row">
+    <span className="rounded-full bg-white/10 px-5 py-3">1 hr $15</span>
+    <span className="rounded-full bg-white/10 px-5 py-3">1.5 hr $20</span>
+    <span className="rounded-full bg-white/10 px-5 py-3">2 hr $25</span>
+  </div>
+
+  <div className="mt-4 text-sm text-white/55">
+    Casual recovery session — no membership needed.
+  </div>
+</a>
 
       <button
         type="button"
