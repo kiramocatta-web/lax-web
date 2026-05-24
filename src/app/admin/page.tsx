@@ -244,7 +244,7 @@ export default async function AdminPage() {
   const [
     { count: totalWebsiteClicks, error: totalWebsiteClicksError },
     { count: todayWebsiteClicks, error: todayWebsiteClicksError },
-    { data: websiteVisitorsRaw, error: websiteVisitorsError },
+    { data: uniqueVisitorsTotalRaw, error: uniqueVisitorsError },
   ] = await Promise.all([
     supabase
       .from("website_clicks")
@@ -255,10 +255,7 @@ export default async function AdminPage() {
       .select("*", { count: "exact", head: true })
       .gte("created_at", startOfToday.toISOString()),
 
-    supabase
-      .from("website_clicks")
-      .select("visitor_id")
-      .not("visitor_id", "is", null),
+    supabase.rpc("count_unique_website_visitors"),
   ]);
 
   if (totalWebsiteClicksError) {
@@ -269,15 +266,11 @@ export default async function AdminPage() {
     logSupabaseError("Today website clicks query", todayWebsiteClicksError);
   }
 
-  if (websiteVisitorsError) {
-    logSupabaseError("Website visitors query", websiteVisitorsError);
-  }
+  if (uniqueVisitorsError) {
+  logSupabaseError("Unique visitors query", uniqueVisitorsError);
+}
 
-  const uniqueVisitorsTotal = new Set(
-    ((websiteVisitorsRaw ?? []) as { visitor_id: string | null }[])
-      .map((row) => row.visitor_id)
-      .filter((id): id is string => Boolean(id))
-  ).size;
+const uniqueVisitorsTotal = Number(uniqueVisitorsTotalRaw ?? 0);
 
   const { data: membersRaw, error: membersError } = await supabase
   .from("profiles")
