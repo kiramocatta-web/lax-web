@@ -9,6 +9,15 @@ type BookingRow = {
   people_count: number;
 };
 
+type BookingBlockRow = {
+  id: number;
+  block_date: string;
+  is_full_day: boolean;
+  start_time: string | null;
+  end_time: string | null;
+  reason: string | null;
+};
+
 export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
@@ -57,7 +66,7 @@ export async function GET(req: Request) {
       people_count: Number(row.people_count ?? 1),
     }));
 
-    const blocks = (blocksData ?? []).map((row: any) => ({
+    const bookingBlocks: BookingBlockRow[] = (blocksData ?? []).map((row: any) => ({
       id: Number(row.id),
       block_date: String(row.block_date),
       is_full_day: Boolean(row.is_full_day),
@@ -66,7 +75,10 @@ export async function GET(req: Request) {
       reason: row.reason === null ? null : String(row.reason),
     }));
 
-    return NextResponse.json({ bookings, blocks });
+    return NextResponse.json({
+      bookings,
+      bookingBlocks,
+    });
   } catch (e: any) {
     return NextResponse.json(
       { error: e?.message || "Failed to load bookings" },
