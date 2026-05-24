@@ -13,11 +13,18 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json().catch(() => null);
 
-    const path = String(body?.path ?? "").trim() || null;
-    const visitorId = String(body?.visitor_id ?? "").trim() || null;
+    const path = String(body?.path ?? "").trim();
+    const visitorId = String(body?.visitor_id ?? "").trim();
+
+    if (!visitorId) {
+      return NextResponse.json(
+        { error: "Missing visitor_id" },
+        { status: 400 }
+      );
+    }
 
     const { error } = await supabaseAdmin.from("website_clicks").insert({
-      path,
+      path: path || "/",
       visitor_id: visitorId,
     });
 
