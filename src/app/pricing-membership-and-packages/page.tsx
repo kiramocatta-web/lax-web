@@ -296,7 +296,7 @@ const res = await fetch(endpoint, {
       </p>
     </div>
 
-   {/* PACKAGES */}
+  {/* PACKAGES */}
 <section>
   <h2 className="text-center text-2xl font-semibold">
     Packages
@@ -306,52 +306,66 @@ const res = await fetch(endpoint, {
     Flexible options without the ongoing commitment.
   </p>
 
+  {/* SINGLE BOOKING */}
+  <a
+    href="/book/single"
+    className="mx-auto mt-8 block max-w-4xl rounded-3xl border border-[#d7b98c]/30 bg-[#d7b98c]/10 p-5 text-center transition hover:bg-[#d7b98c]/15 hover:scale-[1.01]"
+  >
+    <div className="text-sm uppercase tracking-[0.25em] text-[#d7b98c]">
+      Single Booking
+    </div>
+
+    <div className="mt-4 flex flex-col justify-center gap-3 text-white sm:flex-row">
+      <span className="rounded-full bg-white/10 px-5 py-3">
+        1 hr $15
+      </span>
+
+      <span className="rounded-full bg-white/10 px-5 py-3">
+        1.5 hr $20
+      </span>
+
+      <span className="rounded-full bg-white/10 px-5 py-3">
+        2 hr $25
+      </span>
+    </div>
+
+    <div className="mt-4 text-sm text-white/55">
+      Casual recovery session — no membership needed.
+    </div>
+  </a>
+
   {/* WHO IS IT FOR */}
   <div className="mt-8 flex justify-center">
-    <div className="inline-flex rounded-2xl border border-white/10 bg-white/5 p-1">
-      <button
-        type="button"
-        onClick={() => setRecipientType("self")}
-        className={`rounded-xl px-5 py-2 text-sm transition ${
-          recipientType === "self"
-            ? "bg-white text-black"
-            : "text-white/70 hover:text-white"
-        }`}
-      >
-        Myself
-      </button>
+    <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+      <div className="mb-3 text-center text-xs uppercase tracking-[0.2em] text-white/45">
+        Who’s it for?
+      </div>
 
-      {/* SINGLE BOOKING */}
-<a
-  href="/book/single"
-  className="mx-auto mt-8 block max-w-4xl rounded-3xl border border-[#d7b98c]/30 bg-[#d7b98c]/10 p-5 text-center transition hover:bg-[#d7b98c]/15 hover:scale-[1.01]"
->
-  <div className="text-sm uppercase tracking-[0.25em] text-[#d7b98c]">
-    Single Booking
-  </div>
+      <div className="inline-flex rounded-2xl border border-white/10 bg-black/20 p-1">
+        <button
+          type="button"
+          onClick={() => setRecipientType("self")}
+          className={`rounded-xl px-5 py-2 text-sm transition ${
+            recipientType === "self"
+              ? "bg-white text-black"
+              : "text-white/70 hover:text-white"
+          }`}
+        >
+          Myself
+        </button>
 
-  <div className="mt-4 flex flex-col justify-center gap-3 text-white sm:flex-row">
-    <span className="rounded-full bg-white/10 px-5 py-3">1 hr $15</span>
-    <span className="rounded-full bg-white/10 px-5 py-3">1.5 hr $20</span>
-    <span className="rounded-full bg-white/10 px-5 py-3">2 hr $25</span>
-  </div>
-
-  <div className="mt-4 text-sm text-white/55">
-    Casual recovery session — no membership needed.
-  </div>
-</a>
-
-      <button
-        type="button"
-        onClick={() => setRecipientType("gift")}
-        className={`rounded-xl px-5 py-2 text-sm transition ${
-          recipientType === "gift"
-            ? "bg-white text-black"
-            : "text-white/70 hover:text-white"
-        }`}
-      >
-        Someone else
-      </button>
+        <button
+          type="button"
+          onClick={() => setRecipientType("gift")}
+          className={`rounded-xl px-5 py-2 text-sm transition ${
+            recipientType === "gift"
+              ? "bg-white text-black"
+              : "text-white/70 hover:text-white"
+          }`}
+        >
+          Someone else
+        </button>
+      </div>
     </div>
   </div>
 

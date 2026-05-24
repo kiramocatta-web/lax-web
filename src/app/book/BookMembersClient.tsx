@@ -16,6 +16,13 @@ type AvailabilityBookingRow = {
   people_count: number;
 };
 
+type BookingBlockRow = {
+  is_full_day: boolean;
+  start_time: string | null;
+  end_time: string | null;
+  reason: string | null;
+};
+
 type ExistingBookingRow = {
   id: number;
   booking_date: string | null;
@@ -102,6 +109,8 @@ export default function BookMembersClient() {
 
 
   const [bookings, setBookings] = useState<AvailabilityBookingRow[]>([]);
+  const [bookingBlocks, setBookingBlocks] = useState<BookingBlockRow[]>([]);
+const [dismissedBlockNoticeKey, setDismissedBlockNoticeKey] = useState("");
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -192,10 +201,12 @@ export default function BookMembersClient() {
 
         if (!cancelled) {
           setBookings(json?.bookings ?? []);
+setBookingBlocks(json?.bookingBlocks ?? []);
         }
       } catch (e: any) {
         if (!cancelled) {
           setBookings([]);
+          setBookingBlocks([]);
           setLoadError(e?.message || "Failed to load bookings");
         }
       } finally {
@@ -246,21 +257,36 @@ export default function BookMembersClient() {
   };
 
   const canStartAt = (startMinute: number) => {
-    if (isPastStartTime(startMinute)) return false;
+  if (isPastStartTime(startMinute)) return false;
 
-    const blocks = duration / INTERVAL_MINUTES;
+  const endMinute = startMinute + duration;
 
-    for (let i = 0; i < blocks; i++) {
-      const m = startMinute + i * INTERVAL_MINUTES;
+  const slotIsBlocked = (bookingBlocks ?? []).some((block) => {
+    if (block.is_full_day) return true;
 
-      if (!(m in occupancy)) return false;
+    if (!block.start_time || !block.end_time) return false;
 
-      const used = occupancy[m] ?? 0;
-      if (used + peopleCount > MAX_CAPACITY) return false;
-    }
+    const blockStart = timeToMinutes(block.start_time);
+    const blockEnd = timeToMinutes(block.end_time);
 
-    return true;
-  };
+    return startMinute < blockEnd && endMinute > blockStart;
+  });
+
+  if (slotIsBlocked) return false;
+
+  const blocks = duration / INTERVAL_MINUTES;
+
+  for (let i = 0; i < blocks; i++) {
+    const m = startMinute + i * INTERVAL_MINUTES;
+
+    if (!(m in occupancy)) return false;
+
+    const used = occupancy[m] ?? 0;
+    if (used + peopleCount > MAX_CAPACITY) return false;
+  }
+
+  return true;
+};
 
   const canFitBeforeClose = (startMinute: number) => {
   return startMinute + duration <= CLOSE_HOUR * 60;
@@ -281,6 +307,29 @@ export default function BookMembersClient() {
 
   return Math.max(0, minLeft);
 };
+
+const activeBlockNotice = useMemo(() => {
+  const nowMinute = getBrisbaneCurrentMinuteOfDay();
+  const today = getBrisbaneDateString();
+
+  return (bookingBlocks ?? []).find((block) => {
+    if (!block.reason) return false;
+
+    if (block.is_full_day) {
+      return selectedDate !== today || nowMinute < CLOSE_HOUR * 60;
+    }
+
+    if (!block.start_time || !block.end_time) return false;
+
+    const blockEnd = timeToMinutes(block.end_time);
+
+    if (selectedDate === today && nowMinute >= blockEnd) {
+      return false;
+    }
+
+    return true;
+  });
+}, [bookingBlocks, selectedDate]);
 
 useEffect(() => {
   const today = getBrisbaneDateString();
@@ -314,7 +363,7 @@ useEffect(() => {
   } else {
     setAutoMovedToNextDay(false);
   }
-}, [selectedDate, duration, bookings, slotMinutes]);
+}, [selectedDate, duration, bookings, bookingBlocks, slotMinutes]);
 
   const selectedEndMinute =
     selectedStartMinute !== null ? selectedStartMinute + duration : null;
@@ -365,7 +414,40 @@ useEffect(() => {
   const buttonText = originalBooking ? "Confirm reschedule" : "Book now";
 
   return (
-  <div className="relative min-h-screen overflow-hidden bg-[#160d0a] text-[#fff7ec] pb-28">
+  <>
+    {activeBlockNotice &&
+    dismissedBlockNoticeKey !==
+      `${selectedDate}-${activeBlockNotice.start_time ?? "full"}-${activeBlockNotice.end_time ?? "day"}` ? (
+      <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/70 px-4">
+        <div className="w-full max-w-md rounded-3xl bg-white p-6 text-center text-black shadow-2xl">
+          <div className="text-sm font-semibold uppercase tracking-[0.25em] text-black/50">
+            Notice
+          </div>
+
+          <h2 className="mt-3 text-2xl font-semibold">
+            Booking notice for {selectedDate}
+          </h2>
+
+          <p className="mt-4 text-sm leading-6 text-black/70">
+            {activeBlockNotice.reason}
+          </p>
+
+          <button
+            type="button"
+            onClick={() =>
+              setDismissedBlockNoticeKey(
+                `${selectedDate}-${activeBlockNotice.start_time ?? "full"}-${activeBlockNotice.end_time ?? "day"}`
+              )
+            }
+            className="mt-6 w-full rounded-2xl bg-black py-4 font-semibold text-white"
+          >
+            Accept
+          </button>
+        </div>
+      </div>
+    ) : null}
+
+    <div className="relative min-h-screen overflow-hidden bg-[#160d0a] text-[#fff7ec] pb-28">
     <div className="pointer-events-none fixed inset-0 opacity-70">
       <div className="absolute left-[-20%] top-[-10%] h-96 w-96 rounded-full bg-[#5b392a]/35 blur-3xl" />
       <div className="absolute bottom-[-20%] right-[-15%] h-[28rem] w-[28rem] rounded-full bg-emerald-900/20 blur-3xl" />
@@ -525,5 +607,6 @@ useEffect(() => {
       </div>
     </div>
     </div>
+    </>
   );
 }
