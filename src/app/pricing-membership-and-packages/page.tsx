@@ -296,17 +296,7 @@ const res = await fetch(endpoint, {
       </p>
     </div>
 
-  {/* PACKAGES */}
-<section>
-  <h2 className="text-center text-2xl font-semibold">
-    Packages
-  </h2>
-
-  <p className="mt-2 text-center text-white/60">
-    Flexible options without the ongoing commitment.
-  </p>
-
-  {/* SINGLE BOOKING */}
+    {/* SINGLE BOOKING */}
   <a
     href="/book/single"
     className="mx-auto mt-8 block max-w-4xl rounded-3xl border border-[#d7b98c]/30 bg-[#d7b98c]/10 p-5 text-center transition hover:bg-[#d7b98c]/15 hover:scale-[1.01]"
@@ -333,6 +323,17 @@ const res = await fetch(endpoint, {
       Casual recovery session — no membership needed.
     </div>
   </a>
+
+  {/* PACKAGES */}
+<section>
+  <h2 className="text-center text-2xl font-semibold">
+    Packages
+  </h2>
+
+  <p className="mt-2 text-center text-white/60">
+    Flexible options without the ongoing commitment.
+  </p>
+
 
   {/* WHO IS IT FOR */}
   <div className="mt-8 flex justify-center">
