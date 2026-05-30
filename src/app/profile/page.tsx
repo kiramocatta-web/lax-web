@@ -568,26 +568,31 @@ setPackageCredits((credits as PackageCreditRow[]) ?? []);
   const role = String(profile?.role ?? "").toLowerCase();
   const isAffiliate = role === "affiliate";
 
-  const hasMembership =
-    !!profile?.membership_plan &&
-    ["weekly", "pass7"].includes(String(profile.membership_plan).toLowerCase());
+  const membershipPlan = String(profile?.membership_plan ?? "").toLowerCase();
+
+const hasMembership =
+  !!profile?.membership_plan &&
+  ["weekly", "pass7", "monthly"].includes(membershipPlan);
 
   const isMember = !isAffiliate && hasMembership;
-  const isSingleAccount = !isAffiliate && !isMember;
+
 
   const displayName =
     fullName.trim() || (email !== "—" ? email.split("@")[0] : "") || "there";
 
-  const isWeekly = profile?.membership_plan === "weekly";
-  const isPass7 = profile?.membership_plan === "pass7";
+const isWeekly = membershipPlan === "weekly";
+const isPass7 = membershipPlan === "pass7";
+const isMonthly = membershipPlan === "monthly";
 
-  const planLabel = isWeekly
-    ? "$20 p/w Unlimited"
-    : isPass7
-    ? "7-Day Pass (Unlimited)"
-    : "—";
+const planLabel = isWeekly
+  ? "$20 p/w Unlimited"
+  : isPass7
+  ? "7-Day Pass (Unlimited)"
+  : isMonthly
+  ? "$55 Monthly Unlimited"
+  : "—";
 
-  const dateLabel = isWeekly ? "Next payment" : "Expiry date";
+const dateLabel = isWeekly ? "Next payment" : "Expiry date";
   const dateValue = isWeekly
     ? fmtDate(profile?.stripe_current_period_end ?? null)
     : fmtDate(profile?.membership_expires_at ?? null);
@@ -604,6 +609,19 @@ setPackageCredits((credits as PackageCreditRow[]) ?? []);
   const membershipExpired =
     !!profile?.membership_expires_at &&
     new Date(profile.membership_expires_at).getTime() <= Date.now();
+
+    const isSingleAccount = !isAffiliate && (!isMember || membershipExpired);
+
+    const monthlyWeeksLeft =
+  isMonthly && profile?.membership_expires_at
+    ? Math.max(
+        0,
+        Math.ceil(
+          (new Date(profile.membership_expires_at).getTime() - Date.now()) /
+            (1000 * 60 * 60 * 24 * 7)
+        )
+      )
+    : 0;
 
   const membershipStatusValue = String(profile?.membership_status ?? "").toLowerCase();
 
@@ -824,7 +842,13 @@ const totalRemainingSessions = activePackageCredits.reduce(
   };
 
   const bookHref = !isLoggedIn || isSingleAccount ? "/book/single" : "/book";
-  const accountTypeLabel = isAffiliate ? "Affiliate" : isMember ? "Member" : "Single booking";
+  const accountTypeLabel = isAffiliate
+  ? "Affiliate"
+  : isMonthly && !membershipExpired
+  ? "Non-recurring member"
+  : isMember && !membershipExpired
+  ? "Member"
+  : "Single booking";
 
   return (
     <div className="min-h-screen bg-[#160d0a] text-[#fff7ec]">
@@ -1030,8 +1054,20 @@ const totalRemainingSessions = activePackageCredits.reduce(
                         <DetailRow label="Membership" value={planLabel} />
                         <DetailRow label="Status" value={membershipStatusUI.label} />
                         <DetailRow label={dateLabel} value={dateValue} />
-                        <DetailRow label="Paused until" value={fmtDate(profile?.membership_paused_until ?? null)} />
-                        <DetailRow label={`Pause weeks used (${pauseYear})`} value={`${pauseUsed} / 6`} />
+
+{isMonthly ? (
+  <DetailRow
+    label="Weeks left"
+    value={`${monthlyWeeksLeft} week${monthlyWeeksLeft === 1 ? "" : "s"}`}
+  />
+) : null}
+
+{!isMonthly ? (
+  <DetailRow label="Paused until" value={fmtDate(profile?.membership_paused_until ?? null)} />
+) : null}
+                        {!isMonthly ? (
+  <DetailRow label={`Pause weeks used (${pauseYear})`} value={`${pauseUsed} / 6`} />
+) : null}
                       </div>
 
                       {membershipStatusUI.helper ? (
@@ -1175,8 +1211,23 @@ const totalRemainingSessions = activePackageCredits.reduce(
                       {isAffiliate ? (
                         <ActionButton href={enquiryHref} variant="neutral">Send us a message</ActionButton>
                       ) : isMember ? (
-                        <>
-                          <ActionButton disabled={busy !== null} onClick={openCustomerPortal} variant="primary">
+  isMonthly ? (
+    <>
+      <ActionButton href="/book" variant="primary">
+        Book recovery
+      </ActionButton>
+
+      <ActionButton href="/pricing-membership-and-packages" variant="warning">
+        Renew month now
+      </ActionButton>
+
+      <ActionButton href={enquiryHref} variant="neutral">
+        Send us a message
+      </ActionButton>
+    </>
+  ) : (
+    <>
+      <ActionButton disabled={busy !== null} onClick={openCustomerPortal} variant="primary">
                             {busy === "portal" ? "Opening…" : "Update card details"}
                           </ActionButton>
 
@@ -1207,10 +1258,11 @@ const totalRemainingSessions = activePackageCredits.reduce(
                           )}
 
                         </>
+  )
                       ) : (
                         <>
                           <ActionButton href="/book/single" variant="primary">Book another session</ActionButton>
-                          <ActionButton href="//pricing-membership-and-packages" variant="warning">Become a member or purchase a package</ActionButton>
+                          <ActionButton href="/pricing-membership-and-packages" variant="warning">Become a member or purchase a package</ActionButton>
                           <ActionButton href={enquiryHref} variant="neutral">Send us a message</ActionButton>
                         </>
                       )}

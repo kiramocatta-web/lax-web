@@ -291,10 +291,15 @@ We’d love to welcome you back in for a reset soon 🤍
     const status = normalizeMemberStatus(member.membership_status);
     const role = String(member.role ?? "").toLowerCase();
 
+    const isExpired =
+      !!member.membership_expires_at &&
+      new Date(member.membership_expires_at).getTime() <= Date.now();
+
     const isGuest =
       role === "guest" ||
       (!plan && status === "none") ||
-      status === "none";
+      status === "none" ||
+      isExpired;
 
     const isMember = !isGuest;
 
@@ -303,6 +308,7 @@ We’d love to welcome you back in for a reset soon 🤍
     return true;
   });
 }, [membersState, memberBucket]);
+
 
 const copyVisibleMemberEmails = async () => {
   const emails = memberRows

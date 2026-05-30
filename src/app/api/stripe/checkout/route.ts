@@ -18,7 +18,7 @@ const PRICE_BY_DURATION_CENTS: Record<number, number> = {
   120: 2500,
 };
 
-const STRIPE_PROMO_CODES = ["SPA", "VOLLEYBALL", "AF", "RUSH", "FINE"];
+const STRIPE_PROMO_CODES = ["SPA", "VOLLEYBALL", "AF", "RUSH", "FINE", "RHI"];
 
 function minutesToTimeString(startMinute: number) {
   const hh = String(Math.floor(startMinute / 60)).padStart(2, "0");
@@ -40,6 +40,7 @@ function getPromoIdForCode(code: string) {
   if (code === "AF") return process.env.STRIPE_PROMO_AF_ID;
   if (code === "RUSH") return process.env.STRIPE_PROMO_RUSH_ID;
   if (code === "FINE") return process.env.STRIPE_PROMO_FINE_ID;
+  if (code === "RHI") return process.env.STRIPE_PROMO_RHI_ID;
   return null;
 }
 
