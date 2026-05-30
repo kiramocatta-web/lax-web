@@ -47,8 +47,8 @@ const formattedDate = `${day}-${month}`;
 const formattedTime = startTime.slice(0, 5);
 
 const subject = rescheduled
-  ? `Booking Rescheduled - ${formattedTime} ${peopleCount} ${peopleCount === 1 ? "person" : "people"} ${formattedDate}`
-  : `Booking Confirmed - ${formattedTime} ${peopleCount} ${peopleCount === 1 ? "person" : "people"} ${formattedDate}`;
+  ? `Booking Rescheduled - ${formattedDate} ${formattedTime}`
+  : `Booking - ${formattedDate} ${formattedTime}`;
 
   const { data, error } = await resend.emails.send({
     from,

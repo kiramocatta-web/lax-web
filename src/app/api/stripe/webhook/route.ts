@@ -559,23 +559,6 @@ try {
 }
 
 try {
-  await sendSimpleAdminBookingEmail({
-    bookingId: inserted.id,
-    customerName,
-    customerEmail,
-    customerPhone,
-    bookingDate: booking_date,
-    startTime: start_time,
-    endTime: end_time,
-    peopleCount: people_count,
-    totalAmountCents: session.amount_total ?? null,
-    discountCode: md.discount_code || null,
-  });
-} catch (e) {
-  console.warn("sendSimpleAdminBookingEmail failed:", e);
-}
-
-try {
   await sendAdminBookingNotification({
     bookingId: inserted.id,
     bookingDate: booking_date,
