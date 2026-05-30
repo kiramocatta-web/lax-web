@@ -1,152 +1,230 @@
-export const monthlyUnlimited = `<!DOCTYPE html>
+export const monthlyUnlimited = `
+<!DOCTYPE html>
 <html>
-  <body style="margin:0;padding:0;background:#f0f1f5;font-family:Helvetica,Arial,sans-serif;">
-    <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f1f5;">
-      <tr>
-        <td align="center">
-          <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ede9e2;">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-            <!-- Banner -->
-            <tr>
-              <td>
-                <img
-                  src="https://www.laxnlounge.com.au/emails/monthly-unlimited.png"
-                  width="600"
-                  style="display:block;width:100%;height:auto;"
-                  alt="LAX N LOUNGE"
-                />
-              </td>
-            </tr>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #f0f1f5;
+      font-family: Arial, Helvetica, sans-serif;
+    }
 
-            <!-- Heading -->
-            <tr>
-              <td style="padding:42px 32px 14px;text-align:center;">
-                <h1 style="margin:0;font-size:36px;line-height:1.1;color:#2f2a24;font-weight:700;">
-                  Unlimited Recovery Starts Now.
-                </h1>
-              </td>
-            </tr>
+    .wrapper {
+      width: 100%;
+      padding: 24px 12px;
+      background-color: #f0f1f5;
+    }
 
-            <!-- Intro -->
-            <tr>
-              <td style="padding:0 34px 30px;text-align:center;">
-                <p style="margin:0;font-size:18px;line-height:1.8;color:#5a544d;">
-                  One payment. Four full weeks of unlimited recovery access.
-                </p>
-              </td>
-            </tr>
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: #ede9e2;
+      overflow: hidden;
+    }
 
-            <!-- Main Card -->
-            <tr>
-              <td style="padding:0 24px 28px;">
-                <table
-                  width="100%"
-                  cellpadding="0"
-                  cellspacing="0"
-                  style="
-                    background:#31291d;
-                    border-radius:24px;
-                    border:1px solid #4a4034;
-                  "
-                >
-                  <tr>
-                    <td style="padding:30px;">
+    .hero-image {
+      width: 100%;
+      display: block;
+    }
 
-                      <h2 style="
-                        margin:0 0 20px;
-                        font-size:28px;
-                        color:#ffffff;
-                        font-weight:700;
-                      ">
-                        What’s Included
-                      </h2>
+    .content {
+      padding: 32px 24px;
+      text-align: center;
+      color: #323232;
+    }
 
-                      <p style="
-                        margin:0 0 16px;
-                        font-size:16px;
-                        line-height:1.8;
-                        color:#d8d2ca;
-                      ">
-                        • Unlimited recovery access for 4 weeks
-                      </p>
+    .text {
+      font-size: 18px;
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
 
-                      <p style="
-                        margin:0 0 16px;
-                        font-size:16px;
-                        line-height:1.8;
-                        color:#d8d2ca;
-                      ">
-                        • Sauna, magnesium hot tub, ice bath & compression boots
-                      </p>
+    .button {
+      display: inline-block;
+      background-color: #31291d;
+      color: #ffffff !important;
+      text-decoration: none;
+      padding: 14px 28px;
+      border-radius: 8px;
+      font-size: 18px;
+      font-style: italic;
+      font-weight: 700;
+      margin: 8px 0 24px;
+    }
 
-                      <p style="
-                        margin:0 0 16px;
-                        font-size:16px;
-                        line-height:1.8;
-                        color:#d8d2ca;
-                      ">
-                        • Recover more often without thinking about session limits
-                      </p>
+    .benefits-title {
+      font-size: 20px;
+      margin: 24px 0 18px;
+    }
 
-                      <p style="
-                        margin:0;
-                        font-size:16px;
-                        line-height:1.8;
-                        color:#d8d2ca;
-                      ">
-                        • Built for consistency, performance & feeling your best
-                      </p>
+    .benefits {
+      display: table;
+      width: 100%;
+      border-spacing: 12px;
+    }
 
-                    </td>
-                  </tr>
-                </table>
-              </td>
-            </tr>
+    .benefit-card {
+      display: table-cell;
+      width: 50%;
+      background-color: #31291d;
+      color: #ffffff;
+      border-radius: 10px;
+      padding: 14px;
+      vertical-align: top;
+      text-align: left;
+    }
 
-            <!-- CTA -->
-            <tr>
-              <td align="center" style="padding:8px 24px 42px;">
-                <a
-                  href="https://www.laxnlounge.com.au/book"
-                  style="
-                    display:inline-block;
-                    background:#31291d;
-                    color:#ffffff;
-                    text-decoration:none;
-                    padding:16px 38px;
-                    border-radius:14px;
-                    font-size:18px;
-                    font-weight:700;
-                  "
-                >
-                  Book Your Recovery
-                </a>
-              </td>
-            </tr>
+    .benefit-card img {
+      width: 100%;
+      display: block;
+      border-radius: 6px;
+      margin-bottom: 14px;
+    }
 
-            <!-- Footer -->
-            <tr>
-              <td style="
-                padding:28px 24px;
-                background:#323232;
-                text-align:center;
-              ">
-                <p style="
-                  margin:0;
-                  color:#ede9e2;
-                  font-size:14px;
-                  line-height:1.8;
-                ">
-                  88 Cook Street, Northgate QLD
-                  <br />
-                  © LAX N LOUNGE
-                </p>
-              </td>
-            </tr>
+    .benefit-card h3 {
+      margin: 0 0 12px;
+      font-size: 18px;
+      line-height: 1.3;
+      font-style: italic;
+      text-align: center;
+    }
 
-          </table>
-        </td>
-      </tr>
-    </table>
-  </body>
-</html>`;
+    .benefit-card p {
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .footer {
+      background-color: #323232;
+      color: #ede9e2;
+      text-align: center;
+      padding: 32px 24px;
+      font-size: 14px;
+      line-height: 1.8;
+    }
+
+    .divider {
+      width: 100%;
+      height: 1px;
+      background-color: #ede9e2;
+      margin-bottom: 24px;
+    }
+
+    @media only screen and (max-width: 600px) {
+      .content {
+        padding: 28px 20px;
+      }
+
+      .text {
+        font-size: 17px;
+      }
+
+      .button {
+        width: 100%;
+        box-sizing: border-box;
+      }
+
+      .benefits {
+        display: block;
+        border-spacing: 0;
+      }
+
+      .benefit-card {
+        display: block;
+        width: auto;
+        margin-bottom: 16px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrapper">
+    <div class="container">
+
+      <img
+        class="hero-image"
+        src="https://www.laxnlounge.com.au/emails/monthly-unlimited.png"
+        alt="Monthly Unlimited Recovery"
+      />
+
+      <div class="content">
+
+        <div class="text">
+          Thank you for purchasing Monthly Unlimited!
+        </div>
+
+        <div class="text">
+          One payment. Four full weeks of unlimited affordable recovery.
+        </div>
+
+        <a
+          href="https://www.laxnlounge.com.au/book"
+          class="button"
+        >
+          Book now!
+        </a>
+
+        <div class="benefits-title">
+          Check out your <strong><em>benefits</em></strong>:
+        </div>
+
+        <div class="benefits">
+
+          <div class="benefit-card">
+            <img
+              src="https://www.laxnlounge.com.au/emails/hydrationcupboard.png"
+              alt="Hydration cupboard"
+            />
+            <h3>Hydration Cupboard</h3>
+            <p>
+              Use <strong>code 4747</strong> to access the electrolytes cupboard in the laundry.
+            </p>
+          </div>
+
+          <div class="benefit-card">
+            <img
+              src="https://www.laxnlounge.com.au/emails/unlimitedrecovery.png"
+              alt="Unlimited recovery"
+            />
+            <h3>Unlimited Recovery</h3>
+            <p>
+              Book in as many times as you want for the next 4 weeks.
+            </p>
+          </div>
+
+        </div>
+
+        <div class="text" style="margin-top: 32px;">
+          Your access is active for 4 weeks from purchase.
+        </div>
+
+        <a
+          href="https://www.laxnlounge.com.au/book"
+          class="button"
+        >
+          Book your recovery
+        </a>
+
+      </div>
+
+      <div class="footer">
+        <div class="divider"></div>
+
+        88 Cook Street, Northgate, QLD
+
+        <br /><br />
+
+        © Lax N Lounge
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>
+`;
