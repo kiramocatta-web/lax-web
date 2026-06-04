@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabase/server";
+import { sendAdminBookingNotification } from "@/lib/email/sendAdminBookingNotification";
 
 export const runtime = "nodejs";
 

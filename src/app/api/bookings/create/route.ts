@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabase/server";
+import { sendAdminBookingNotification } from "@/lib/email/sendAdminBookingNotification";
 
 export const runtime = "nodejs";
 
@@ -395,6 +396,22 @@ export async function POST(req: Request) {
     if (role === "affiliate") {
       await supabase.rpc("increment_affiliate_visits", { p_user_id: user.id });
     }
+
+    try {
+  await sendAdminBookingNotification({
+    bookingId: inserted.id,
+    bookingDate: booking_date,
+    startTime: start_time,
+    endTime: end_time,
+    peopleCount: people_count,
+    customerEmail: user.email ?? null,
+    customerPhone: profile.phone,
+    totalAmountCents: 0,
+    rescheduled: Boolean(existingBookingToReschedule),
+  });
+} catch (e) {
+  console.warn("sendAdminBookingNotification failed:", e);
+}
 
     return NextResponse.json({
       ok: true,

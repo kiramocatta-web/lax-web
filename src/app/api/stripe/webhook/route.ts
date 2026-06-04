@@ -7,7 +7,6 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { sendBookingEmail } from "@/lib/email/sendBookingEmail";
 import { sendAdminBookingNotification } from "@/lib/email/sendAdminBookingNotification";
 import { sendMembershipEmail } from "@/lib/email/sendMembershipEmail";
-import { sendSimpleAdminBookingEmail } from "@/lib/email/sendSimpleAdminBookingEmail";
 import { sendAdminPurchaseEmail } from "@/lib/email/sendAdminPurchaseEmail";
 import { giftEmail } from "@/lib/email/templates/giftEmail";
 

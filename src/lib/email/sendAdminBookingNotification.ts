@@ -14,6 +14,16 @@ type Props = {
   rescheduled?: boolean;
 };
 
+function formatDateDM(date: string) {
+  const [year, month, day] = date.slice(0, 10).split("-");
+  if (!year || !month || !day) return date;
+  return `${day}-${month}`;
+}
+
+function formatTime(time: string) {
+  return time.slice(0, 5);
+}
+
 function formatMoney(cents: number | null) {
   if (cents == null) return "—";
   return `$${(cents / 100).toFixed(2)}`;
@@ -33,45 +43,34 @@ export async function sendAdminBookingNotification({
   const to = process.env.BOOKING_NOTIFICATION_EMAIL;
   const from = process.env.RESEND_FROM_EMAIL;
 
-  if (!process.env.RESEND_API_KEY) {
-    throw new Error("Missing RESEND_API_KEY");
+  if (!to || !from) {
+    console.warn("Missing BOOKING_NOTIFICATION_EMAIL or RESEND_FROM_EMAIL");
+    return;
   }
 
-  if (!to) throw new Error("Missing BOOKING_NOTIFICATION_EMAIL");
-  if (!from) throw new Error("Missing RESEND_FROM_EMAIL");
+  const cleanDate = formatDateDM(bookingDate);
+  const cleanStart = formatTime(startTime);
+  const cleanEnd = formatTime(endTime);
 
-  const [year, month, day] = bookingDate.split("-");
+  const subject = rescheduled
+    ? `Booking Rescheduled - ${cleanStart} ${peopleCount} people ${cleanDate}`
+    : `Booking Confirmed - ${cleanStart} ${peopleCount} people ${cleanDate}`;
 
-const formattedDate = `${day}-${month}`;
-
-const formattedTime = startTime.slice(0, 5);
-
-const subject = rescheduled
-  ? `Booking Rescheduled - ${formattedDate} ${formattedTime}`
-  : `Booking - ${formattedDate} ${formattedTime}`;
-
-  const { data, error } = await resend.emails.send({
+  await resend.emails.send({
     from,
     to,
     subject,
     html: `
-      <div style="font-family: Arial, sans-serif; line-height: 1.6;">
-        <h2>${rescheduled ? "Booking rescheduled" : "New booking made"}</h2>
+      <div style="font-family:Arial,sans-serif;line-height:1.6;">
+        <h2>${rescheduled ? "Booking Rescheduled" : "New Booking Confirmed"}</h2>
         <p><strong>Booking ID:</strong> ${bookingId}</p>
-        <p><strong>Date:</strong> ${bookingDate}</p>
-        <p><strong>Time:</strong> ${startTime} – ${endTime}</p>
+        <p><strong>Date:</strong> ${cleanDate}</p>
+        <p><strong>Time:</strong> ${cleanStart} - ${cleanEnd}</p>
         <p><strong>People:</strong> ${peopleCount}</p>
-        <p><strong>Customer email:</strong> ${customerEmail ?? "—"}</p>
-        <p><strong>Customer phone:</strong> ${customerPhone ?? "—"}</p>
-        <p><strong>Amount paid:</strong> ${formatMoney(totalAmountCents)}</p>
+        <p><strong>Email:</strong> ${customerEmail ?? "—"}</p>
+        <p><strong>Phone:</strong> ${customerPhone ?? "—"}</p>
+        <p><strong>Total:</strong> ${formatMoney(totalAmountCents)}</p>
       </div>
     `,
   });
-
-  if (error) {
-    console.error("sendAdminBookingNotification Resend error:", error);
-    throw new Error(error.message || "Failed to send admin booking notification");
-  }
-
-  console.log("sendAdminBookingNotification success:", data);
 }
