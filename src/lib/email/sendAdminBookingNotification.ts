@@ -40,10 +40,10 @@ export async function sendAdminBookingNotification({
   totalAmountCents,
   rescheduled = false,
 }: Props) {
-  const to = process.env.BOOKING_NOTIFICATION_EMAIL;
-  const from = process.env.RESEND_FROM_EMAIL;
+  const notifyTo = process.env.BOOKING_NOTIFICATION_EMAIL;
+  const fromEmail = process.env.RESEND_FROM_EMAIL;
 
-  if (!to || !from) {
+  if (!notifyTo || !fromEmail) {
     console.warn("Missing BOOKING_NOTIFICATION_EMAIL or RESEND_FROM_EMAIL");
     return;
   }
@@ -56,21 +56,28 @@ export async function sendAdminBookingNotification({
     ? `Booking Rescheduled - ${cleanStart} ${peopleCount} people ${cleanDate}`
     : `Booking Confirmed - ${cleanStart} ${peopleCount} people ${cleanDate}`;
 
-  await resend.emails.send({
-    from,
-    to,
-    subject,
-    html: `
-      <div style="font-family:Arial,sans-serif;line-height:1.6;">
-        <h2>${rescheduled ? "Booking Rescheduled" : "New Booking Confirmed"}</h2>
-        <p><strong>Booking ID:</strong> ${bookingId}</p>
-        <p><strong>Date:</strong> ${cleanDate}</p>
-        <p><strong>Time:</strong> ${cleanStart} - ${cleanEnd}</p>
-        <p><strong>People:</strong> ${peopleCount}</p>
-        <p><strong>Email:</strong> ${customerEmail ?? "—"}</p>
-        <p><strong>Phone:</strong> ${customerPhone ?? "—"}</p>
-        <p><strong>Total:</strong> ${formatMoney(totalAmountCents)}</p>
-      </div>
-    `,
-  });
+  try {
+    await resend.emails.send({
+      from: fromEmail,
+      to: notifyTo,
+      subject,
+      html: `
+        <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+          <h2>${rescheduled ? "Booking Rescheduled" : "New Booking Confirmed"}</h2>
+          <p><strong>Booking ID:</strong> ${bookingId}</p>
+          <p><strong>Date:</strong> ${cleanDate}</p>
+          <p><strong>Start time:</strong> ${cleanStart}</p>
+          <p><strong>End time:</strong> ${cleanEnd}</p>
+          <p><strong>People:</strong> ${peopleCount}</p>
+          <p><strong>Email:</strong> ${customerEmail ?? "—"}</p>
+          <p><strong>Phone:</strong> ${customerPhone ?? "—"}</p>
+          <p><strong>Total:</strong> ${formatMoney(totalAmountCents)}</p>
+          <hr />
+          <p style="color:#666;">Sent automatically from Lax N Lounge.</p>
+        </div>
+      `,
+    });
+  } catch (err) {
+    console.error("Failed to send admin booking notification:", err);
+  }
 }
