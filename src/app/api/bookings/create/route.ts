@@ -398,6 +398,15 @@ export async function POST(req: Request) {
   await supabase.rpc("increment_affiliate_visits", { p_user_id: user.id });
 }
 
+console.log("MEMBER BOOKING CREATED - ABOUT TO SEND EMAILS", {
+  bookingId: inserted.id,
+  userEmail: user.email,
+  bookingDate: booking_date,
+  startTime: start_time,
+  endTime: end_time,
+});
+
+
 try {
   if (user.email) {
     await sendBookingEmail({
