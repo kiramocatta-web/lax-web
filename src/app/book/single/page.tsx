@@ -257,31 +257,35 @@ function SingleEntryBookingPageContent() {
   }, [selectedDate]);
 
   const occupancy = useMemo(() => {
-    const occ: Record<number, number> = {};
-    slotMinutes.forEach((m) => {
-      occ[m] = 0;
+  const occ: Record<number, number> = {};
+
+  slotMinutes.forEach((m) => {
+    occ[m] = 0;
+  });
+
+  bookings.forEach((b) => {
+    if (!b.end_time) return;
+
+    const start = timeToMinutes(b.start_time);
+    const end = timeToMinutes(b.end_time);
+    const size = b.people_count ?? 1;
+
+    slotMinutes.forEach((slot) => {
+      const slotStart = slot;
+      const slotEnd = slot + INTERVAL_MINUTES;
+      const overlaps = start < slotEnd && end > slotStart;
+
+      if (overlaps) {
+        occ[slot] = (occ[slot] ?? 0) + size;
+      }
     });
+  });
 
-    bookings.forEach((b) => {
-      if (!b.end_time) return;
+  console.log("BOOKINGS:", bookings);
+  console.log("OCCUPANCY:", occ);
 
-      const start = timeToMinutes(b.start_time);
-      const end = timeToMinutes(b.end_time);
-      const size = b.people_count ?? 1;
-
-      slotMinutes.forEach((slot) => {
-        const slotStart = slot;
-        const slotEnd = slot + INTERVAL_MINUTES;
-        const overlaps = start < slotEnd && end > slotStart;
-
-        if (overlaps) {
-          occ[slot] = (occ[slot] ?? 0) + size;
-        }
-      });
-    });
-
-    return occ;
-  }, [bookings, slotMinutes]);
+  return occ;
+}, [bookings, slotMinutes]);
 
   const isTodaySelected = selectedDate === getBrisbaneDateString();
   const currentMinuteOfDay = getBrisbaneCurrentMinuteOfDay();

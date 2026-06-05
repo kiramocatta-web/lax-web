@@ -245,6 +245,9 @@ setBookingBlocks(json?.bookingBlocks ?? []);
       });
     });
 
+    console.log("BOOKINGS FROM API:", bookings);
+console.log("OCCUPANCY:", occ);
+
     return occ;
   }, [bookings, slotMinutes]);
 
