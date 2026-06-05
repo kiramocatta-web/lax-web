@@ -192,8 +192,11 @@ const [dismissedBlockNoticeKey, setDismissedBlockNoticeKey] = useState("");
       setLoadError("");
 
       try {
-        const res = await fetch(`/api/bookings?date=${selectedDate}`);
-        const json = await res.json().catch(() => null);
+  const res = await fetch(`/api/bookings?date=${selectedDate}`, {
+    cache: "no-store",
+  });
+
+  const json = await res.json().catch(() => null);
 
         if (!res.ok) {
           throw new Error(json?.error || "Failed to load bookings");
