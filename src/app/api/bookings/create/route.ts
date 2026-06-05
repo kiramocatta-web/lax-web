@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabase/server";
 import { sendAdminBookingNotification } from "@/lib/email/sendAdminBookingNotification";
+import { sendBookingEmail } from "@/lib/email/sendBookingEmail";
 
 export const runtime = "nodejs";
 
@@ -394,10 +395,24 @@ export async function POST(req: Request) {
     }
 
     if (role === "affiliate") {
-      await supabase.rpc("increment_affiliate_visits", { p_user_id: user.id });
-    }
+  await supabase.rpc("increment_affiliate_visits", { p_user_id: user.id });
+}
 
-    try {
+try {
+  if (user.email) {
+    await sendBookingEmail({
+      to: user.email,
+      bookingDate: booking_date,
+      startTime: start_time,
+      endTime: end_time,
+      peopleCount: people_count,
+    });
+  }
+} catch (e) {
+  console.warn("sendBookingEmail failed:", e);
+}
+
+try {
   await sendAdminBookingNotification({
     bookingId: inserted.id,
     bookingDate: booking_date,

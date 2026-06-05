@@ -558,6 +558,19 @@ try {
 }
 
 try {
+
+  console.log("ABOUT TO SEND ADMIN BOOKING EMAIL", {
+    bookingId: inserted.id,
+    bookingDate: booking_date,
+    startTime: start_time,
+    endTime: end_time,
+    peopleCount: people_count,
+    customerEmail,
+    customerPhone,
+    totalAmountCents: session.amount_total ?? null,
+  });
+
+  
   await sendAdminBookingNotification({
     bookingId: inserted.id,
     bookingDate: booking_date,
