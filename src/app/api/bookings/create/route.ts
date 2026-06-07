@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabase/server";
 import { sendAdminBookingNotification } from "@/lib/email/sendAdminBookingNotification";
 import { sendBookingEmail } from "@/lib/email/sendBookingEmail";
+import { Resend } from "resend";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export const runtime = "nodejs";
 
@@ -362,6 +365,23 @@ export async function POST(req: Request) {
     if (insertErr) {
       return NextResponse.json({ error: insertErr.message }, { status: 500 });
     }
+
+    await resend.emails.send({
+  from: "LAX N LOUNGE <bookings@laxnlounge.com.au>",
+  to: "admin@laxnlounge.com.au",
+  subject: `New member booking - ${booking_date} ${start_time}`,
+  html: `
+    <h2>New Member Booking</h2>
+    <p><strong>Booking ID:</strong> ${inserted.id}</p>
+    <p><strong>Date:</strong> ${booking_date}</p>
+    <p><strong>Time:</strong> ${start_time} - ${end_time}</p>
+    <p><strong>Duration:</strong> ${duration_minutes} minutes</p>
+    <p><strong>People:</strong> ${people_count}</p>
+    <p><strong>Email:</strong> ${user.email ?? "N/A"}</p>
+    <p><strong>Phone:</strong> ${profile.phone ?? "N/A"}</p>
+    <p><strong>Name:</strong> ${profile.full_name ?? "N/A"}</p>
+  `,
+});
 
     if (packageCreditId) {
       const { error: creditErr } = await supabase.rpc("decrement_package_credit", {
