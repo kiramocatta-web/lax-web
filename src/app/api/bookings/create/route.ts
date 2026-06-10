@@ -7,6 +7,8 @@ import { Resend } from "resend";
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 const OPEN_HOUR = 5;
 const CLOSE_HOUR = 22;
@@ -66,7 +68,9 @@ export async function POST(req: Request) {
     const booking_date: string | undefined = body?.booking_date;
     const start_minute: number | undefined = body?.start_minute;
     const duration_minutes: number | undefined = body?.duration_minutes;
-    const rescheduleBookingId = Number(body?.reschedule_booking_id ?? 0) || null;
+    const rescheduleBookingId =
+      Number(body?.reschedule_booking_id ?? 0) || null;
+
     const people_count = 1;
 
     if (!booking_date || typeof start_minute !== "number" || !duration_minutes) {
@@ -98,7 +102,6 @@ export async function POST(req: Request) {
 
     const role = String(profile?.role ?? "").toLowerCase();
     const status = String(profile?.membership_status ?? "inactive").toLowerCase();
-    const membershipPlan = String(profile?.membership_plan ?? "").toLowerCase();
 
     let packageCreditId: string | null = null;
 
@@ -287,7 +290,6 @@ export async function POST(req: Request) {
 
       const blockStart = timeToMinutes(block.start_time);
       const blockEnd = timeToMinutes(block.end_time);
-
       const overlaps = blockStart < end_minute && blockEnd > start_minute;
 
       if (overlaps) {
@@ -306,7 +308,7 @@ export async function POST(req: Request) {
       .from("bookings")
       .select("id,start_time,end_time,people_count")
       .eq("booking_date", booking_date)
-      .neq("status", "cancelled")
+      .or("status.is.null,status.neq.cancelled")
       .lt("start_time", end_time)
       .gt("end_time", start_time);
 
@@ -366,27 +368,39 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: insertErr.message }, { status: 500 });
     }
 
-    await resend.emails.send({
-  from: "LAX N LOUNGE <bookings@laxnlounge.com.au>",
-  to: "admin@laxnlounge.com.au",
-  subject: `New member booking - ${booking_date} ${start_time}`,
-  html: `
-    <h2>New Member Booking</h2>
-    <p><strong>Booking ID:</strong> ${inserted.id}</p>
-    <p><strong>Date:</strong> ${booking_date}</p>
-    <p><strong>Time:</strong> ${start_time} - ${end_time}</p>
-    <p><strong>Duration:</strong> ${duration_minutes} minutes</p>
-    <p><strong>People:</strong> ${people_count}</p>
-    <p><strong>Email:</strong> ${user.email ?? "N/A"}</p>
-    <p><strong>Phone:</strong> ${profile.phone ?? "N/A"}</p>
-    <p><strong>Name:</strong> ${profile.full_name ?? "N/A"}</p>
-  `,
-});
+    console.log("MEMBER BOOKING INSERTED:", inserted.id);
+
+    try {
+      const simpleAdminEmail = await resend.emails.send({
+        from: "LAX N LOUNGE <bookings@laxnlounge.com.au>",
+        to: "admin@laxnlounge.com.au",
+        subject: `URGENT New member booking #${inserted.id}`,
+        text: `
+New member booking made.
+
+Booking ID: ${inserted.id}
+Date: ${booking_date}
+Time: ${start_time} - ${end_time}
+Duration: ${duration_minutes} minutes
+People: ${people_count}
+Email: ${user.email ?? "N/A"}
+Phone: ${profile.phone ?? "N/A"}
+Name: ${profile.full_name ?? "N/A"}
+        `,
+      });
+
+      console.log("SIMPLE MEMBER ADMIN EMAIL SENT:", simpleAdminEmail);
+    } catch (e) {
+      console.error("SIMPLE MEMBER ADMIN EMAIL FAILED:", e);
+    }
 
     if (packageCreditId) {
-      const { error: creditErr } = await supabase.rpc("decrement_package_credit", {
-        credit_id: packageCreditId,
-      });
+      const { error: creditErr } = await supabase.rpc(
+        "decrement_package_credit",
+        {
+          credit_id: packageCreditId,
+        }
+      );
 
       if (creditErr) {
         return NextResponse.json(
@@ -415,47 +429,38 @@ export async function POST(req: Request) {
     }
 
     if (role === "affiliate") {
-  await supabase.rpc("increment_affiliate_visits", { p_user_id: user.id });
-}
+      await supabase.rpc("increment_affiliate_visits", { p_user_id: user.id });
+    }
 
-console.log("MEMBER BOOKING CREATED - ABOUT TO SEND EMAILS", {
-  bookingId: inserted.id,
-  userEmail: user.email,
-  bookingDate: booking_date,
-  startTime: start_time,
-  endTime: end_time,
-});
+    try {
+      if (user.email) {
+        await sendBookingEmail({
+          to: user.email,
+          bookingDate: booking_date,
+          startTime: start_time,
+          endTime: end_time,
+          peopleCount: people_count,
+        });
+      }
+    } catch (e) {
+      console.warn("sendBookingEmail failed:", e);
+    }
 
-
-try {
-  if (user.email) {
-    await sendBookingEmail({
-      to: user.email,
-      bookingDate: booking_date,
-      startTime: start_time,
-      endTime: end_time,
-      peopleCount: people_count,
-    });
-  }
-} catch (e) {
-  console.warn("sendBookingEmail failed:", e);
-}
-
-try {
-  await sendAdminBookingNotification({
-    bookingId: inserted.id,
-    bookingDate: booking_date,
-    startTime: start_time,
-    endTime: end_time,
-    peopleCount: people_count,
-    customerEmail: user.email ?? null,
-    customerPhone: profile.phone,
-    totalAmountCents: 0,
-    rescheduled: Boolean(existingBookingToReschedule),
-  });
-} catch (e) {
-  console.warn("sendAdminBookingNotification failed:", e);
-}
+    try {
+      await sendAdminBookingNotification({
+        bookingId: inserted.id,
+        bookingDate: booking_date,
+        startTime: start_time,
+        endTime: end_time,
+        peopleCount: people_count,
+        customerEmail: user.email ?? null,
+        customerPhone: profile.phone,
+        totalAmountCents: 0,
+        rescheduled: Boolean(existingBookingToReschedule),
+      });
+    } catch (e) {
+      console.warn("sendAdminBookingNotification failed:", e);
+    }
 
     return NextResponse.json({
       ok: true,
@@ -463,6 +468,8 @@ try {
       rescheduled: Boolean(existingBookingToReschedule),
     });
   } catch (e: any) {
+    console.error("BOOKING CREATE FAILED:", e);
+
     return NextResponse.json(
       { error: e?.message || "Booking failed" },
       { status: 500 }

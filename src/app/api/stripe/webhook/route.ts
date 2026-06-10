@@ -365,9 +365,7 @@ async function updateProfileByStripeIds(
 async function handleSingleBookingCheckout(session: Stripe.Checkout.Session) {
   const md = session.metadata ?? {};
 
-  if ((md.booking_type ?? "").trim().toLowerCase() !== "single") {
-    return;
-  }
+  if (String(md.booking_type ?? "").toLowerCase() !== "single") return;
 
   const booking_date = md.booking_date;
   const start_minute = Number(md.start_minute);
@@ -384,15 +382,10 @@ async function handleSingleBookingCheckout(session: Stripe.Checkout.Session) {
   );
 
   const customerName =
-  session.customer_details?.name ||
-  md.customer_name ||
-  md.full_name ||
-  null;
+    session.customer_details?.name || md.customer_name || md.full_name || null;
 
   const customerPhone =
-    session.customer_details?.phone ||
-    md.customer_phone ||
-    null;
+    session.customer_details?.phone || md.customer_phone || null;
 
   if (
     !booking_date ||
@@ -412,179 +405,108 @@ async function handleSingleBookingCheckout(session: Stripe.Checkout.Session) {
 
   const { data: existing } = await supabaseAdmin
     .from("bookings")
-    .select(
-      "id, booking_date, start_time, end_time, people_count, status, booking_type, customer_email"
-    )
+    .select("id")
     .eq("stripe_checkout_session_id", session.id)
     .maybeSingle();
 
-  if (existing) {
-    return;
-  }
-
-  let originalBookingToReschedule:
-    | {
-        id: number;
-        booking_type: string | null;
-        status: string | null;
-        booking_date: string | null;
-        start_time: string | null;
-        user_id: string | null;
-      }
-    | null = null;
-
-  if (rescheduleBookingId) {
-    const { data: originalBooking, error: originalBookingErr } =
-      await supabaseAdmin
-        .from("bookings")
-        .select("id,booking_type,status,booking_date,start_time,user_id")
-        .eq("id", rescheduleBookingId)
-        .single();
-
-    if (originalBookingErr || !originalBooking) {
-      throw new Error("Original booking not found.");
-    }
-
-    if (String(originalBooking.booking_type ?? "").toLowerCase() !== "single") {
-      throw new Error("Only single bookings can be rescheduled here.");
-    }
-
-    if (
-      ["cancelled", "rescheduled"].includes(
-        String(originalBooking.status ?? "").toLowerCase()
-      )
-    ) {
-      throw new Error("This booking can no longer be rescheduled.");
-    }
-
-    if (
-      user_id &&
-      originalBooking.user_id &&
-      originalBooking.user_id !== user_id
-    ) {
-      throw new Error("Original booking does not belong to this user.");
-    }
-
-    if (!originalBooking.booking_date || !originalBooking.start_time) {
-      throw new Error("Original booking is missing date/time.");
-    }
-
-    const originalStart = getBookingStartDateTime(
-      originalBooking.booking_date,
-      originalBooking.start_time
-    );
-
-    if (
-      Number.isNaN(originalStart.getTime()) ||
-      originalStart.getTime() <= Date.now()
-    ) {
-      throw new Error("Past bookings cannot be rescheduled.");
-    }
-
-    originalBookingToReschedule = originalBooking;
-  }
+  if (existing) return;
 
   const insertPayload = {
-  booking_type: "single",
-  status: "confirmed",
-  booking_date,
-  start_time,
-  end_time,
-  duration_minutes,
-  people_count,
-  customer_email: customerEmail,
-  customer_name: customerName,
-  customer_phone: customerPhone,
-  user_id,
-  stripe_checkout_session_id: session.id,
-  stripe_payment_intent_id:
-    typeof session.payment_intent === "string"
-      ? session.payment_intent
-      : session.payment_intent?.id ?? null,
-  total_amount_cents: session.amount_total ?? null,
-  rescheduled_from_booking_id: originalBookingToReschedule?.id ?? null,
-};
+    booking_type: "single",
+    status: "confirmed",
+    booking_date,
+    start_time,
+    end_time,
+    duration_minutes,
+    people_count,
+    customer_email: customerEmail,
+    customer_name: customerName,
+    customer_phone: customerPhone,
+    user_id,
+    stripe_checkout_session_id: session.id,
+    stripe_payment_intent_id:
+      typeof session.payment_intent === "string"
+        ? session.payment_intent
+        : session.payment_intent?.id ?? null,
+    total_amount_cents: session.amount_total ?? null,
+    rescheduled_from_booking_id: rescheduleBookingId || null,
+  };
 
   const { data: inserted, error: insertErr } = await supabaseAdmin
     .from("bookings")
     .insert(insertPayload)
-    .select(
-      "id, booking_date, start_time, end_time, people_count, status, booking_type, customer_email, customer_name, customer_phone"
-    )
+    .select("id")
     .single();
 
   if (insertErr) {
-    const { data: raceExisting } = await supabaseAdmin
-      .from("bookings")
-      .select(
-        "id, booking_date, start_time, end_time, people_count, status, booking_type, customer_email, customer_name, customer_phone"
-      )
-      .eq("stripe_checkout_session_id", session.id)
-      .maybeSingle();
-
-    if (!raceExisting) {
-      throw new Error(insertErr.message);
-    }
-
-    return;
+    throw new Error(insertErr.message);
   }
 
-  if (originalBookingToReschedule) {
-    const { error: oldUpdateErr } = await supabaseAdmin
-      .from("bookings")
-      .update({
-        status: "rescheduled",
-        rescheduled_to_booking_id: inserted.id,
-      })
-      .eq("id", originalBookingToReschedule.id);
+  console.log("SINGLE BOOKING INSERTED:", inserted.id);
 
-    if (oldUpdateErr) {
-      throw new Error(oldUpdateErr.message);
-    }
+  try {
+    const simpleAdminEmail = await resend.emails.send({
+      from:
+        process.env.RESEND_FROM_EMAIL ||
+        "LAX N LOUNGE <bookings@laxnlounge.com.au>",
+      to:
+        process.env.BOOKING_NOTIFICATION_EMAIL ||
+        process.env.LAX_ADMIN_EMAIL ||
+        "admin@laxnlounge.com.au",
+      subject: `URGENT New single booking #${inserted.id}`,
+      text: `
+New single booking made.
+
+Booking ID: ${inserted.id}
+Date: ${booking_date}
+Time: ${start_time} - ${end_time}
+Duration: ${duration_minutes} minutes
+People: ${people_count}
+Email: ${customerEmail ?? "N/A"}
+Phone: ${customerPhone ?? "N/A"}
+Name: ${customerName ?? "N/A"}
+Total: ${
+        session.amount_total != null
+          ? `$${(session.amount_total / 100).toFixed(2)}`
+          : "N/A"
+      }
+      `,
+    });
+
+    console.log("SIMPLE SINGLE ADMIN EMAIL SENT:", simpleAdminEmail);
+  } catch (e) {
+    console.error("SIMPLE SINGLE ADMIN EMAIL FAILED:", e);
   }
 
-try {
-  if (customerEmail) {
-    await sendBookingEmail({
-      to: customerEmail,
+  try {
+    if (customerEmail) {
+      await sendBookingEmail({
+        to: customerEmail,
+        bookingDate: booking_date,
+        startTime: start_time,
+        endTime: end_time,
+        peopleCount: people_count,
+      });
+    }
+  } catch (e) {
+    console.warn("sendBookingEmail failed:", e);
+  }
+
+  try {
+    await sendAdminBookingNotification({
+      bookingId: inserted.id,
       bookingDate: booking_date,
       startTime: start_time,
       endTime: end_time,
       peopleCount: people_count,
+      customerEmail,
+      customerPhone,
+      totalAmountCents: session.amount_total ?? null,
+      rescheduled: Boolean(rescheduleBookingId),
     });
+  } catch (e) {
+    console.warn("sendAdminBookingNotification failed:", e);
   }
-} catch (e) {
-  console.warn("sendBookingEmail failed:", e);
-}
-
-try {
-
-  console.log("ABOUT TO SEND ADMIN BOOKING EMAIL", {
-    bookingId: inserted.id,
-    bookingDate: booking_date,
-    startTime: start_time,
-    endTime: end_time,
-    peopleCount: people_count,
-    customerEmail,
-    customerPhone,
-    totalAmountCents: session.amount_total ?? null,
-  });
-
-  
-  await sendAdminBookingNotification({
-    bookingId: inserted.id,
-    bookingDate: booking_date,
-    startTime: start_time,
-    endTime: end_time,
-    peopleCount: people_count,
-    customerEmail,
-    customerPhone,
-    totalAmountCents: session.amount_total ?? null,
-    rescheduled: Boolean(originalBookingToReschedule),
-  });
-} catch (e) {
-  console.warn("sendAdminBookingNotification failed:", e);
-}
 }
 
 export async function POST(req: Request) {

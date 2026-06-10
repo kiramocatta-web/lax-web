@@ -5,16 +5,19 @@ import { supabaseServer } from "@/lib/supabase/server";
 export const runtime = "nodejs";
 
 const stripeSecret = process.env.STRIPE_SECRET_KEY;
+
 if (!stripeSecret) {
   throw new Error("Missing STRIPE_SECRET_KEY");
 }
 
 const stripe = new Stripe(stripeSecret);
 
+type MembershipPlan = "weekly" | "pass7" | "pack5" | "pack10" | "monthly";
+
 function getTransferTrialEndUnix() {
-  const now = new Date();
-  now.setDate(now.getDate() + 14);
-  return Math.floor(now.getTime() / 1000);
+  const trialEnd = new Date();
+  trialEnd.setDate(trialEnd.getDate() + 14);
+  return Math.floor(trialEnd.getTime() / 1000);
 }
 
 export async function POST(req: Request) {
@@ -30,11 +33,27 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const body = await req.json().catch(() => null);
+
+    const plan = body?.plan as MembershipPlan | undefined;
+    const transferOffer = body?.transfer_offer === true;
+
+    if (!plan) {
+      return NextResponse.json({ error: "Missing plan" }, { status: 400 });
+    }
+
+    if (transferOffer && plan !== "weekly") {
+      return NextResponse.json(
+        { error: "Transfer offer is only valid for weekly memberships." },
+        { status: 400 }
+      );
+    }
+
     const { data: profile, error: profileErr } = await supabase
       .from("profiles")
       .select(
-  "phone,stripe_customer_id,membership_plan,membership_status,stripe_subscription_id,membership_expires_at"
-)
+        "phone,stripe_customer_id,membership_plan,membership_status,stripe_subscription_id,membership_expires_at"
+      )
       .eq("id", user.id)
       .single();
 
@@ -49,59 +68,38 @@ export async function POST(req: Request) {
       );
     }
 
-    const body = await req.json().catch(() => null);
-    const plan = body?.plan as
-  | "weekly"
-  | "pass7"
-  | "pack5"
-  | "pack10"
-  | "monthly"
-  | undefined;
-
     if (plan === "weekly") {
-  const status = String(profile?.membership_status ?? "").toLowerCase();
-  const existingPlan = String(profile?.membership_plan ?? "").toLowerCase();
+      const status = String(profile.membership_status ?? "").toLowerCase();
+      const existingPlan = String(profile.membership_plan ?? "").toLowerCase();
 
-  const alreadyHasWeekly =
-    existingPlan === "weekly" &&
-    ["active", "trialing", "cancellation_requested"].includes(status);
+      const alreadyHasWeekly =
+        existingPlan === "weekly" &&
+        ["active", "trialing", "cancellation_requested"].includes(status);
 
-  if (alreadyHasWeekly) {
-    return NextResponse.json(
-      { error: "You already have an active weekly membership." },
-      { status: 409 }
-    );
-  }
-}
-    const transferOffer = body?.transfer_offer === true;
-
-    if (!plan) {
-      return NextResponse.json({ error: "Missing plan" }, { status: 400 });
+      if (alreadyHasWeekly) {
+        return NextResponse.json(
+          { error: "You already have an active weekly membership." },
+          { status: 409 }
+        );
+      }
     }
 
-    if (transferOffer && plan !== "weekly") {
+    const priceIdByPlan: Record<MembershipPlan, string | undefined> = {
+      weekly: process.env.STRIPE_WEEKLY_PRICE_ID,
+      pass7: process.env.STRIPE_PASS7_PRICE_ID,
+      pack5: process.env.STRIPE_PACK5_PRICE_ID,
+      pack10: process.env.STRIPE_PACK10_PRICE_ID,
+      monthly: process.env.STRIPE_MONTHLY_PRICE_ID,
+    };
+
+    const selectedPriceId = priceIdByPlan[plan];
+
+    if (!selectedPriceId) {
       return NextResponse.json(
-        { error: "Transfer offer is only valid for weekly memberships." },
-        { status: 400 }
+        { error: `Missing Stripe price ID for ${plan}` },
+        { status: 500 }
       );
     }
-
-    const priceIdByPlan = {
-  weekly: process.env.STRIPE_WEEKLY_PRICE_ID,
-  pass7: process.env.STRIPE_PASS7_PRICE_ID,
-  pack5: process.env.STRIPE_PACK5_PRICE_ID,
-  pack10: process.env.STRIPE_PACK10_PRICE_ID,
-  monthly: process.env.STRIPE_MONTHLY_PRICE_ID,
-} as const;
-
-const selectedPriceId = plan ? priceIdByPlan[plan] : null;
-
-if (!selectedPriceId) {
-  return NextResponse.json(
-    { error: `Missing Stripe price ID for ${plan}` },
-    { status: 500 }
-  );
-}
 
     const mode: Stripe.Checkout.SessionCreateParams.Mode =
       plan === "weekly" ? "subscription" : "payment";
@@ -117,11 +115,11 @@ if (!selectedPriceId) {
         enabled: true,
       },
       line_items: [
-  {
-    price: selectedPriceId,
-    quantity: 1,
-  },
-],
+        {
+          price: selectedPriceId,
+          quantity: 1,
+        },
+      ],
       success_url: `${siteUrl}/membership/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${siteUrl}/pricing-membership-and-packages`,
       metadata: {
@@ -144,12 +142,12 @@ if (!selectedPriceId) {
 
     if (profile.stripe_customer_id) {
       try {
-        const existingCustomer = await stripe.customers.retrieve(
+        const customer = await stripe.customers.retrieve(
           profile.stripe_customer_id
         );
 
-        if (!("deleted" in existingCustomer)) {
-          validStripeCustomerId = existingCustomer.id;
+        if (!("deleted" in customer)) {
+          validStripeCustomerId = customer.id;
         } else {
           await supabase
             .from("profiles")
@@ -178,6 +176,7 @@ if (!selectedPriceId) {
     return NextResponse.json({ url: session.url });
   } catch (err: any) {
     console.error("membership/checkout error:", err);
+
     return NextResponse.json(
       { error: err?.message || "Server error" },
       { status: 500 }
