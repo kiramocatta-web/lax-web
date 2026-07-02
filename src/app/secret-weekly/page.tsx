@@ -15,7 +15,12 @@ export default function SecretWeeklyPage() {
 
   const [checkingSession, setCheckingSession] = useState(true);
   const [loggedIn, setLoggedIn] = useState(false);
-  const [loading, setLoading] = useState(false);
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const [loginLoading, setLoginLoading] = useState(false);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -25,15 +30,39 @@ export default function SecretWeeklyPage() {
       } = await supabase.auth.getSession();
 
       setLoggedIn(!!session?.user);
+      setEmail(session?.user?.email ?? "");
       setCheckingSession(false);
     }
 
     checkSession();
   }, [supabase]);
 
+  async function handleLogin(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setError("");
+    setLoginLoading(true);
+
+    try {
+      const { error: loginErr } = await supabase.auth.signInWithPassword({
+        email: email.trim().toLowerCase(),
+        password,
+      });
+
+      if (loginErr) {
+        throw loginErr;
+      }
+
+      setLoggedIn(true);
+    } catch (e: any) {
+      setError(e?.message || "Unable to log in");
+    } finally {
+      setLoginLoading(false);
+    }
+  }
+
   async function handleCheckout() {
     setError("");
-    setLoading(true);
+    setCheckoutLoading(true);
 
     try {
       const res = await fetch("/api/stripe/membership/checkout", {
@@ -59,7 +88,7 @@ export default function SecretWeeklyPage() {
       window.location.href = json.url;
     } catch (e: any) {
       setError(e?.message || "Unable to start checkout");
-      setLoading(false);
+      setCheckoutLoading(false);
     }
   }
 
@@ -84,18 +113,48 @@ export default function SecretWeeklyPage() {
           <button
             type="button"
             onClick={handleCheckout}
-            disabled={loading}
+            disabled={checkoutLoading}
             className="mt-8 w-full rounded-2xl bg-white py-4 font-semibold text-black transition hover:opacity-90 disabled:opacity-50"
           >
-            {loading ? "Loading..." : "Join for $15/week"}
+            {checkoutLoading ? "Loading..." : "Join for $15/week"}
           </button>
         ) : (
-          <a
-            href="/login?redirect=/secret-weekly"
-            className="mt-8 block w-full rounded-2xl bg-white py-4 font-semibold text-black transition hover:opacity-90"
-          >
-            Log in first
-          </a>
+          <form onSubmit={handleLogin} className="mt-8 space-y-4">
+            <input
+              type="email"
+              placeholder="Email"
+              required
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full rounded-2xl border border-white/10 bg-white/10 p-3 text-white placeholder:text-white/40 outline-none"
+            />
+
+            <input
+              type="password"
+              placeholder="Password"
+              required
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full rounded-2xl border border-white/10 bg-white/10 p-3 text-white placeholder:text-white/40 outline-none"
+            />
+
+            <button
+              type="submit"
+              disabled={loginLoading}
+              className="w-full rounded-2xl bg-white py-4 font-semibold text-black transition hover:opacity-90 disabled:opacity-50"
+            >
+              {loginLoading ? "Logging in..." : "Log in to continue"}
+            </button>
+
+            <a
+              href="/pricing-membership-and-packages"
+              className="block text-sm text-white/60 hover:text-white"
+            >
+              Need an account? Create one here →
+            </a>
+          </form>
         )}
 
         {error ? (
