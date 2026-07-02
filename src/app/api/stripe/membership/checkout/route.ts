@@ -12,7 +12,13 @@ if (!stripeSecret) {
 
 const stripe = new Stripe(stripeSecret);
 
-type MembershipPlan = "weekly" | "pass7" | "pack5" | "pack10" | "monthly";
+type MembershipPlan =
+  | "weekly"
+  | "secret_weekly_15"
+  | "pass7"
+  | "pack5"
+  | "pack10"
+  | "monthly";
 
 function getTransferTrialEndUnix() {
   const trialEnd = new Date();
@@ -42,7 +48,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing plan" }, { status: 400 });
     }
 
-    if (transferOffer && plan !== "weekly") {
+    if (transferOffer && plan !== "weekly" && plan !== "secret_weekly_15") {
       return NextResponse.json(
         { error: "Transfer offer is only valid for weekly memberships." },
         { status: 400 }
@@ -68,7 +74,7 @@ export async function POST(req: Request) {
       );
     }
 
-    if (plan === "weekly") {
+    if (plan === "weekly" || plan === "secret_weekly_15") {
       const status = String(profile.membership_status ?? "").toLowerCase();
       const existingPlan = String(profile.membership_plan ?? "").toLowerCase();
 
@@ -85,12 +91,13 @@ export async function POST(req: Request) {
     }
 
     const priceIdByPlan: Record<MembershipPlan, string | undefined> = {
-      weekly: process.env.STRIPE_WEEKLY_PRICE_ID,
-      pass7: process.env.STRIPE_PASS7_PRICE_ID,
-      pack5: process.env.STRIPE_PACK5_PRICE_ID,
-      pack10: process.env.STRIPE_PACK10_PRICE_ID,
-      monthly: process.env.STRIPE_MONTHLY_PRICE_ID,
-    };
+  weekly: process.env.STRIPE_WEEKLY_PRICE_ID,
+  secret_weekly_15: process.env.STRIPE_SECRET_WEEKLY_15_PRICE_ID,
+  pass7: process.env.STRIPE_PASS7_PRICE_ID,
+  pack5: process.env.STRIPE_PACK5_PRICE_ID,
+  pack10: process.env.STRIPE_PACK10_PRICE_ID,
+  monthly: process.env.STRIPE_MONTHLY_PRICE_ID,
+};
 
     const selectedPriceId = priceIdByPlan[plan];
 
@@ -102,7 +109,9 @@ export async function POST(req: Request) {
     }
 
     const mode: Stripe.Checkout.SessionCreateParams.Mode =
-      plan === "weekly" ? "subscription" : "payment";
+  plan === "weekly" || plan === "secret_weekly_15"
+    ? "subscription"
+    : "payment";
 
     const siteUrl = (
       process.env.NEXT_PUBLIC_SITE_URL || "https://www.laxnlounge.com.au"
@@ -123,20 +132,22 @@ export async function POST(req: Request) {
       success_url: `${siteUrl}/membership/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${siteUrl}/pricing-membership-and-packages`,
       metadata: {
-        user_id: user.id,
-        plan,
-        flow: transferOffer
-          ? "membership_transfer_offer"
-          : "membership_purchase",
-        transfer_offer: transferOffer ? "true" : "false",
-      },
+  user_id: user.id,
+  plan: plan === "secret_weekly_15" ? "weekly" : plan,
+  actual_plan: plan,
+  secret_offer: plan === "secret_weekly_15" ? "true" : "false",
+  flow: transferOffer
+    ? "membership_transfer_offer"
+    : "membership_purchase",
+  transfer_offer: transferOffer ? "true" : "false",
+},
     };
 
-    if (plan === "weekly" && transferOffer) {
-      sessionParams.subscription_data = {
-        trial_end: getTransferTrialEndUnix(),
-      };
-    }
+    if ((plan === "weekly" || plan === "secret_weekly_15") && transferOffer) {
+  sessionParams.subscription_data = {
+    trial_end: getTransferTrialEndUnix(),
+  };
+}
 
     let validStripeCustomerId: string | null = null;
 
