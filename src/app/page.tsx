@@ -130,41 +130,45 @@ export default function HomePage() {
                 Physio & Wellness
               </a>
 
-              {/* PARTNERSHIPS */}
-<div className="mt-14 w-full">
-  <p className="mb-6 text-center text-xs uppercase tracking-[0.3em] text-white/40">
+              {/* PERFORMANCE PARTNERS */}
+<div className="mt-20 w-full">
+  <h3 className="text-center text-2xl font-light tracking-[0.25em] text-white/80 uppercase">
     Performance Partners
+  </h3>
+
+  <p className="mx-auto mt-4 max-w-2xl text-center text-base leading-7 text-white/60">
+    Businesses I personally trust and confidently recommend to every member of
+    the LAX community.
   </p>
 
-  <div className="flex flex-wrap items-center justify-center gap-10">
+  <div className="mt-12 flex flex-wrap items-center justify-center gap-20">
     <a
       href="/athletix"
-      className="transition duration-300 hover:scale-105 hover:opacity-100 opacity-80"
+      className="transition duration-300 hover:scale-105 hover:opacity-100 opacity-90"
     >
       <Image
         src="/athletixlogo.png"
         alt="Athletix"
-        width={170}
-        height={80}
-        className="h-auto w-auto max-h-16 object-contain"
+        width={360}
+        height={180}
+        className="h-auto w-auto max-h-32 object-contain"
       />
     </a>
 
     <a
       href="/rush-physio-and-wellness"
-      className="transition duration-300 hover:scale-105 hover:opacity-100 opacity-80"
+      className="transition duration-300 hover:scale-105 hover:opacity-100 opacity-90"
     >
       <Image
         src="/rushphysiologo.png"
         alt="Rush Physio & Wellness"
-        width={170}
-        height={80}
-        className="h-auto w-auto max-h-16 object-contain"
+        width={360}
+        height={180}
+        className="h-auto w-auto max-h-32 object-contain"
       />
     </a>
   </div>
 </div>
-
               <div className="mt-2 flex w-full max-w-[320px] gap-3">
                 <a
                   href="tel:+61436474768"
