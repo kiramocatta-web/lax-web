@@ -1,10 +1,35 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { createBrowserClient } from "@supabase/ssr";
 
 export default function SecretWeeklyPage() {
+  const supabase = useMemo(
+    () =>
+      createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      ),
+    []
+  );
+
+  const [checkingSession, setCheckingSession] = useState(true);
+  const [loggedIn, setLoggedIn] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    async function checkSession() {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      setLoggedIn(!!session?.user);
+      setCheckingSession(false);
+    }
+
+    checkSession();
+  }, [supabase]);
 
   async function handleCheckout() {
     setError("");
@@ -53,14 +78,25 @@ export default function SecretWeeklyPage() {
           Unlimited weekly access to LAX N LOUNGE.
         </p>
 
-        <button
-          type="button"
-          onClick={handleCheckout}
-          disabled={loading}
-          className="mt-8 w-full rounded-2xl bg-white py-4 font-semibold text-black transition hover:opacity-90 disabled:opacity-50"
-        >
-          {loading ? "Loading..." : "Join for $15/week"}
-        </button>
+        {checkingSession ? (
+          <p className="mt-8 text-sm text-white/60">Checking account...</p>
+        ) : loggedIn ? (
+          <button
+            type="button"
+            onClick={handleCheckout}
+            disabled={loading}
+            className="mt-8 w-full rounded-2xl bg-white py-4 font-semibold text-black transition hover:opacity-90 disabled:opacity-50"
+          >
+            {loading ? "Loading..." : "Join for $15/week"}
+          </button>
+        ) : (
+          <a
+            href="/login?redirect=/secret-weekly"
+            className="mt-8 block w-full rounded-2xl bg-white py-4 font-semibold text-black transition hover:opacity-90"
+          >
+            Log in first
+          </a>
+        )}
 
         {error ? (
           <p className="mt-5 text-sm text-red-300">{error}</p>
