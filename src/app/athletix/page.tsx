@@ -31,6 +31,33 @@ export default function AthletixPage() {
           </p>
         </section>
 
+        {/* FACILITY IMAGES */}
+<section className="mt-12">
+  <div className="grid gap-6 md:grid-cols-2">
+
+    <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/5">
+      <Image
+        src="/athletixlayout1.png"
+        alt="Athletix Training Facility"
+        width={1200}
+        height={800}
+        className="h-[300px] w-full object-cover transition duration-500 hover:scale-105"
+      />
+    </div>
+
+    <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/5">
+      <Image
+        src="/athletixlayout2.png"
+        alt="Athletix Gym"
+        width={1200}
+        height={800}
+        className="h-[300px] w-full object-cover transition duration-500 hover:scale-105"
+      />
+    </div>
+
+  </div>
+</section>
+
         {/* Content */}
         <div className="mt-12 grid gap-8 lg:grid-cols-2">
 
