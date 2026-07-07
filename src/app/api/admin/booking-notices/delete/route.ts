@@ -18,15 +18,22 @@ export async function POST(req: Request) {
 
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("role")
+      .select("role,is_admin")
       .eq("id", user.id)
       .single();
 
-    if (profileError) {
-      return NextResponse.json({ error: profileError.message }, { status: 500 });
+    if (profileError || !profile) {
+      return NextResponse.json(
+        { error: "Admin profile not found" },
+        { status: 403 }
+      );
     }
 
-    if (String(profile?.role ?? "").toLowerCase() !== "admin") {
+    const isAdmin =
+      Boolean(profile.is_admin) ||
+      String(profile.role ?? "").toLowerCase() === "admin";
+
+    if (!isAdmin) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -34,7 +41,10 @@ export async function POST(req: Request) {
     const notice_id = Number(body?.notice_id);
 
     if (!Number.isFinite(notice_id)) {
-      return NextResponse.json({ error: "Invalid notice ID" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid notice ID" },
+        { status: 400 }
+      );
     }
 
     const { error } = await supabase

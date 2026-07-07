@@ -18,15 +18,19 @@ export async function POST(req: Request) {
 
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("role")
+      .select("role,is_admin")
       .eq("id", user.id)
       .single();
 
-    if (profileError) {
-      return NextResponse.json({ error: profileError.message }, { status: 500 });
+    if (profileError || !profile) {
+      return NextResponse.json({ error: "Admin profile not found" }, { status: 403 });
     }
 
-    if (String(profile?.role ?? "").toLowerCase() !== "admin") {
+    const isAdmin =
+      Boolean(profile.is_admin) ||
+      String(profile.role ?? "").toLowerCase() === "admin";
+
+    if (!isAdmin) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -42,7 +46,10 @@ export async function POST(req: Request) {
     }
 
     if (!message) {
-      return NextResponse.json({ error: "Notice message is required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Notice message is required" },
+        { status: 400 }
+      );
     }
 
     const { data, error } = await supabase
@@ -61,7 +68,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ ok: true, notice_id: data.id });
+    return NextResponse.json({
+      ok: true,
+      notice_id: data.id,
+    });
   } catch (e: any) {
     return NextResponse.json(
       { error: e?.message || "Failed to create notice" },
