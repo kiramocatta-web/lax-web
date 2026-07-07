@@ -129,6 +129,16 @@ type BookingBlockRow = {
   created_at: string;
 };
 
+type BookingNoticeRow = {
+  id: number;
+  notice_date: string;
+  start_time: string | null;
+  end_time: string | null;
+  message: string;
+  is_active: boolean | null;
+  created_at: string;
+};
+
 type StripeSubRow = {
   id: string;
   email: string | null;
@@ -426,6 +436,19 @@ const uniqueVisitorsTotal = Number(uniqueVisitorsTotalRaw ?? 0);
 
   const bookingBlocks: BookingBlockRow[] = (bookingBlocksRaw ?? []) as BookingBlockRow[];
 
+  const { data: bookingNoticesRaw, error: bookingNoticesError } = await supabase
+    .from("booking_notices")
+    .select("id,notice_date,start_time,end_time,message,is_active,created_at")
+    .order("notice_date", { ascending: true })
+    .order("start_time", { ascending: true });
+
+  if (bookingNoticesError) {
+    logSupabaseError("Booking notices query", bookingNoticesError);
+  }
+
+  const bookingNotices: BookingNoticeRow[] =
+    (bookingNoticesRaw ?? []) as BookingNoticeRow[];
+
   const { data: stripeSubsRaw, error: stripeSubsError } = await supabase
     .from("profiles")
     .select(
@@ -594,6 +617,7 @@ const uniqueVisitorsTotal = Number(uniqueVisitorsTotalRaw ?? 0);
       allMembers={membersData}
       affiliates={affiliates}
       bookingBlocks={bookingBlocks}
+      bookingNotices={bookingNotices}
       stripeSubs={stripeSubs}
       comeBackRecipients={comeBackRecipients}
       comeBackTemplates={comeBackTemplates}

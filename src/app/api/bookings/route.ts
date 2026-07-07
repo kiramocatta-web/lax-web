@@ -18,6 +18,14 @@ type BookingBlockRow = {
   reason: string | null;
 };
 
+type BookingNoticeRow = {
+  id: number;
+  notice_date: string;
+  start_time: string | null;
+  end_time: string | null;
+  message: string;
+};
+
 export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
@@ -60,6 +68,20 @@ export async function GET(req: Request) {
       );
     }
 
+    const { data: noticesData, error: noticesError } = await supabase
+      .from("booking_notices")
+      .select("id,notice_date,start_time,end_time,message")
+      .eq("notice_date", date)
+      .eq("is_active", true)
+      .order("start_time", { ascending: true });
+
+    if (noticesError) {
+      return NextResponse.json(
+        { error: noticesError.message },
+        { status: 500 }
+      );
+    }
+
     const bookings: BookingRow[] = (bookingsData ?? []).map((row: any) => ({
       start_time: String(row.start_time ?? ""),
       end_time: row.end_time === null ? null : String(row.end_time),
@@ -75,9 +97,20 @@ export async function GET(req: Request) {
       reason: row.reason === null ? null : String(row.reason),
     }));
 
+    const bookingNotices: BookingNoticeRow[] = (noticesData ?? []).map(
+      (row: any) => ({
+        id: Number(row.id),
+        notice_date: String(row.notice_date),
+        start_time: row.start_time === null ? null : String(row.start_time),
+        end_time: row.end_time === null ? null : String(row.end_time),
+        message: String(row.message ?? ""),
+      })
+    );
+
     return NextResponse.json({
       bookings,
       bookingBlocks,
+      bookingNotices,
     });
   } catch (e: any) {
     return NextResponse.json(

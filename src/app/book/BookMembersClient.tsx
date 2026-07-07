@@ -23,6 +23,14 @@ type BookingBlockRow = {
   reason: string | null;
 };
 
+type BookingNoticeRow = {
+  id: number;
+  notice_date: string;
+  start_time: string | null;
+  end_time: string | null;
+  message: string;
+};
+
 type ExistingBookingRow = {
   id: number;
   booking_date: string | null;
@@ -110,7 +118,9 @@ export default function BookMembersClient() {
 
   const [bookings, setBookings] = useState<AvailabilityBookingRow[]>([]);
   const [bookingBlocks, setBookingBlocks] = useState<BookingBlockRow[]>([]);
-const [dismissedBlockNoticeKey, setDismissedBlockNoticeKey] = useState("");
+  const [bookingNotices, setBookingNotices] = useState<BookingNoticeRow[]>([]);
+  const [dismissedBlockNoticeKey, setDismissedBlockNoticeKey] = useState("");
+  const [dismissedNoticeKey, setDismissedNoticeKey] = useState("");
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -204,12 +214,14 @@ const [dismissedBlockNoticeKey, setDismissedBlockNoticeKey] = useState("");
 
         if (!cancelled) {
           setBookings(json?.bookings ?? []);
-setBookingBlocks(json?.bookingBlocks ?? []);
+          setBookingBlocks(json?.bookingBlocks ?? []);
+          setBookingNotices(json?.bookingNotices ?? []);
         }
       } catch (e: any) {
         if (!cancelled) {
           setBookings([]);
           setBookingBlocks([]);
+          setBookingNotices([]);
           setLoadError(e?.message || "Failed to load bookings");
         }
       } finally {
@@ -337,6 +349,31 @@ const activeBlockNotice = useMemo(() => {
   });
 }, [bookingBlocks, selectedDate]);
 
+const activeNotice = useMemo(() => {
+  const nowMinute = getBrisbaneCurrentMinuteOfDay();
+  const today = getBrisbaneDateString();
+
+  return (bookingNotices ?? []).find((notice) => {
+    if (!notice.message) return false;
+
+    const hasTimedRange = Boolean(notice.start_time && notice.end_time);
+
+    if (!hasTimedRange) {
+      return selectedDate !== today || nowMinute < CLOSE_HOUR * 60;
+    }
+
+    if (!notice.start_time || !notice.end_time) return false;
+
+    const noticeEnd = timeToMinutes(notice.end_time);
+
+    if (selectedDate === today && nowMinute >= noticeEnd) {
+      return false;
+    }
+
+    return true;
+  });
+}, [bookingNotices, selectedDate]);
+
 useEffect(() => {
   const today = getBrisbaneDateString();
 
@@ -443,6 +480,38 @@ useEffect(() => {
             onClick={() =>
               setDismissedBlockNoticeKey(
                 `${selectedDate}-${activeBlockNotice.start_time ?? "full"}-${activeBlockNotice.end_time ?? "day"}`
+              )
+            }
+            className="mt-6 w-full rounded-2xl bg-black py-4 font-semibold text-white"
+          >
+            Accept
+          </button>
+        </div>
+      </div>
+    ) : null}
+
+    {activeNotice &&
+    dismissedNoticeKey !==
+      `${selectedDate}-${activeNotice.id}-${activeNotice.start_time ?? "full"}-${activeNotice.end_time ?? "day"}` ? (
+      <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/70 px-4">
+        <div className="w-full max-w-md rounded-3xl bg-white p-6 text-center text-black shadow-2xl">
+          <div className="text-sm font-semibold uppercase tracking-[0.25em] text-black/50">
+            Important Information
+          </div>
+
+          <h2 className="mt-3 text-2xl font-semibold">
+            Please read before booking
+          </h2>
+
+          <p className="mt-4 text-sm leading-6 text-black/70">
+            {activeNotice.message}
+          </p>
+
+          <button
+            type="button"
+            onClick={() =>
+              setDismissedNoticeKey(
+                `${selectedDate}-${activeNotice.id}-${activeNotice.start_time ?? "full"}-${activeNotice.end_time ?? "day"}`
               )
             }
             className="mt-6 w-full rounded-2xl bg-black py-4 font-semibold text-white"

@@ -47,6 +47,14 @@ type BookingBlockRow = {
   created_at: string;
 };
 
+type BookingNoticeRow = {
+  id: number;
+  notice_date: string;
+  start_time: string | null;
+  end_time: string | null;
+  message: string;
+};
+
 type StripeSubRow = {
   id: string;
   email: string | null;
@@ -83,6 +91,7 @@ type AdminDashboardClientProps = {
   allMembers: MemberRow[];
   affiliates: AffiliateRow[];
   bookingBlocks: BookingBlockRow[];
+  bookingNotices: BookingNoticeRow[];
   stripeSubs: StripeSubRow[];
   comeBackRecipients: ComeBackRecipientRow[];
   comeBackTemplates: EmailTemplateRow[];
@@ -228,6 +237,7 @@ export default function AdminDashboardClient({
   allMembers,
   affiliates,
   bookingBlocks,
+  bookingNotices,
   stripeSubs,
   comeBackRecipients,
   comeBackTemplates,
@@ -943,13 +953,13 @@ const copyVisibleMemberEmails = async () => {
 
             <select
               value={view}
-              onChange={(e) => setView(e.target.value as AdminView)}
+              onChange={(e) => setView(e.target.value as AdminView)} 
               className="mt-4 w-full max-w-md bg-white text-black p-3 rounded-xl"
             >
               <option value="members">All Members</option>
               <option value="stripe">Stripe Subscription Overview</option>
               <option value="affiliates">Affiliate Performance & Payout Tracking</option>
-              <option value="blocks">Block Out Dates</option>
+              <option value="blocks">Block Out Dates & Notices</option>
               <option value="comeback">Come Back! Emails</option>
             </select>
           </div>
@@ -1416,10 +1426,20 @@ const copyVisibleMemberEmails = async () => {
             ) : view === "blocks" ? (
               <>
                 <h2 className="text-xl font-semibold">Block Out Dates</h2>
-                <p className="mt-2 text-white/70">
-                  Prevent bookings on specific dates or time ranges.
-                </p>
-                <BlockOutManager bookingBlocks={bookingBlocks} />
+<p className="mt-2 text-white/70">
+  Prevent bookings on specific dates or time ranges.
+</p>
+<BlockOutManager bookingBlocks={bookingBlocks} />
+
+<div className="mt-10 border-t border-white/10 pt-8">
+  <h2 className="text-xl font-semibold">Booking Notices</h2>
+  <p className="mt-2 text-white/70">
+    Show custom notices to single and member users without blocking bookings.
+  </p>
+
+  <NoticeManager bookingNotices={bookingNotices} />
+</div>
+          
               </>
             ) : (
               <>
@@ -1775,3 +1795,168 @@ function BlockOutManager({
     </>
   );
 }
+
+function NoticeManager({
+  bookingNotices,
+}: {
+  bookingNotices: BookingNoticeRow[];
+}) {
+  const [date, setDate] = useState("");
+  const [startTime, setStartTime] = useState("");
+  const [endTime, setEndTime] = useState("");
+  const [message, setMessage] = useState("");
+  const [working, setWorking] = useState(false);
+
+  const createNotice = async () => {
+    if (!date) {
+      alert("Please choose a date.");
+      return;
+    }
+
+    if (!message.trim()) {
+      alert("Please write a notice.");
+      return;
+    }
+
+    if ((startTime && !endTime) || (!startTime && endTime)) {
+      alert("Please choose both a start and end time, or leave both blank for an all-day notice.");
+      return;
+    }
+
+    setWorking(true);
+
+    try {
+      const res = await fetch("/api/admin/booking-notices/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          notice_date: date,
+          start_time: startTime || null,
+          end_time: endTime || null,
+          message: message.trim(),
+        }),
+      });
+
+      const json = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(json?.error || "Failed to create notice");
+
+      alert("Notice created ✅");
+      window.location.reload();
+    } catch (e: any) {
+      alert(e?.message || "Something went wrong");
+    } finally {
+      setWorking(false);
+    }
+  };
+
+  const deleteNotice = async (id: number) => {
+    if (!confirm("Delete this notice?")) return;
+
+    try {
+      const res = await fetch("/api/admin/booking-notices/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ notice_id: id }),
+      });
+
+      const json = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(json?.error || "Failed to delete notice");
+
+      alert("Notice removed");
+      window.location.reload();
+    } catch (e: any) {
+      alert(e?.message || "Something went wrong");
+    }
+  };
+
+  return (
+    <>
+      <div className="mt-6 grid md:grid-cols-2 gap-4 max-w-3xl">
+        <input
+          type="date"
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+          className="bg-white text-black p-3 rounded-xl"
+        />
+
+        <div className="grid grid-cols-2 gap-3">
+          <input
+            type="time"
+            value={startTime}
+            onChange={(e) => setStartTime(e.target.value)}
+            className="bg-white text-black p-3 rounded-xl"
+          />
+
+          <input
+            type="time"
+            value={endTime}
+            onChange={(e) => setEndTime(e.target.value)}
+            className="bg-white text-black p-3 rounded-xl"
+          />
+        </div>
+
+        <textarea
+          placeholder="Custom notice message"
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          rows={4}
+          className="bg-white text-black p-3 rounded-xl md:col-span-2"
+        />
+
+        <button
+          type="button"
+          onClick={createNotice}
+          disabled={working}
+          className="px-4 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 font-semibold disabled:opacity-40 md:col-span-2"
+        >
+          {working ? "Creating…" : "Create Notice"}
+        </button>
+      </div>
+
+      <div className="mt-8 overflow-x-auto rounded-2xl border border-white/10 bg-black/10">
+        <table className="w-full text-sm">
+          <thead className="bg-white/10 text-white/80">
+            <tr>
+              <th className="px-4 py-3 text-left">Date</th>
+              <th className="px-4 py-3 text-left">Time</th>
+              <th className="px-4 py-3 text-left">Message</th>
+              <th className="px-4 py-3 text-left">Action</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {bookingNotices.length === 0 ? (
+              <tr>
+                <td colSpan={4} className="px-4 py-6 text-white/60">
+                  No notices yet.
+                </td>
+              </tr>
+            ) : (
+              bookingNotices.map((notice) => (
+                <tr key={notice.id} className="border-t border-white/10">
+                  <td className="px-4 py-3">{notice.notice_date}</td>
+                  <td className="px-4 py-3">
+                    {notice.start_time && notice.end_time
+                      ? `${notice.start_time} – ${notice.end_time}`
+                      : "All day"}
+                  </td>
+                  <td className="px-4 py-3">{notice.message}</td>
+                  <td className="px-4 py-3">
+                    <button
+                      type="button"
+                      onClick={() => deleteNotice(notice.id)}
+                      className="px-3 py-2 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-200 font-semibold"
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </>
+  );
+}
+

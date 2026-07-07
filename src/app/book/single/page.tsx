@@ -25,6 +25,14 @@ type BookingBlockRow = {
   reason: string | null;
 };
 
+type BookingNoticeRow = {
+  id: number;
+  notice_date: string;
+  start_time: string | null;
+  end_time: string | null;
+  message: string;
+};
+
 type ExistingBookingRow = {
   id: number;
   booking_date: string | null;
@@ -115,7 +123,9 @@ function SingleEntryBookingPageContent() {
 
   const [bookings, setBookings] = useState<AvailabilityBookingRow[]>([]);
   const [bookingBlocks, setBookingBlocks] = useState<BookingBlockRow[]>([]);
+  const [bookingNotices, setBookingNotices] = useState<BookingNoticeRow[]>([]);
   const [dismissedBlockNoticeKey, setDismissedBlockNoticeKey] = useState("");
+  const [dismissedNoticeKey, setDismissedNoticeKey] = useState("");
   const [loading, setLoading] = useState<boolean>(false);
   const [loadError, setLoadError] = useState<string>("");
   const [paying, setPaying] = useState<boolean>(false);
@@ -237,11 +247,13 @@ function SingleEntryBookingPageContent() {
   if (!cancelled) {
     setBookings(json?.bookings ?? []);
     setBookingBlocks(json?.bookingBlocks ?? []);
+    setBookingNotices(json?.bookingNotices ?? []);
   }
 } catch (e: any) {
   if (!cancelled) {
     setBookings([]);
     setBookingBlocks([]);
+    setBookingNotices([]);
     setLoadError(e?.message || "Failed to load bookings");
   }
 } finally {
@@ -367,6 +379,31 @@ const activeBlockNotice = useMemo(() => {
     return true;
   });
 }, [bookingBlocks, selectedDate]);
+
+const activeNotice = useMemo(() => {
+  const nowMinute = getBrisbaneCurrentMinuteOfDay();
+  const today = getBrisbaneDateString();
+
+  return (bookingNotices ?? []).find((notice) => {
+    if (!notice.message) return false;
+
+    const hasTimeRange = Boolean(notice.start_time && notice.end_time);
+
+    if (!hasTimeRange) {
+      return selectedDate !== today || nowMinute < CLOSE_HOUR * 60;
+    }
+
+    if (!notice.start_time || !notice.end_time) return false;
+
+    const noticeEnd = timeToMinutes(notice.end_time);
+
+    if (selectedDate === today && nowMinute >= noticeEnd) {
+      return false;
+    }
+
+    return true;
+  });
+}, [bookingNotices, selectedDate]);
 
 useEffect(() => {
   if (loading || rescheduleLoading) return;
@@ -590,6 +627,38 @@ dismissedBlockNoticeKey !==
         className="mt-6 w-full rounded-2xl bg-black py-4 font-semibold text-white"
       >
         Accept
+      </button>
+    </div>
+  </div>
+) : null}
+
+    {activeNotice &&
+dismissedNoticeKey !==
+  `${selectedDate}-${activeNotice.id}-${activeNotice.start_time ?? "all"}-${activeNotice.end_time ?? "day"}` ? (
+  <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/70 px-4">
+    <div className="w-full max-w-md rounded-3xl bg-white p-6 text-center text-black shadow-2xl">
+      <div className="text-sm font-semibold uppercase tracking-[0.25em] text-black/50">
+        Important Information
+      </div>
+
+      <h2 className="mt-3 text-2xl font-semibold">
+        Booking notice for {selectedDate}
+      </h2>
+
+      <p className="mt-4 text-sm leading-6 text-black/70 whitespace-pre-line">
+        {activeNotice.message}
+      </p>
+
+      <button
+        type="button"
+        onClick={() =>
+          setDismissedNoticeKey(
+            `${selectedDate}-${activeNotice.id}-${activeNotice.start_time ?? "all"}-${activeNotice.end_time ?? "day"}`
+          )
+        }
+        className="mt-6 w-full rounded-2xl bg-black py-4 font-semibold text-white"
+      >
+        Got it
       </button>
     </div>
   </div>
