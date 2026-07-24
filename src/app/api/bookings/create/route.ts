@@ -105,6 +105,8 @@ export async function POST(req: Request) {
 
     let packageCreditId: string | null = null;
 
+    
+
     if (role !== "affiliate") {
       const pausedUntilRaw = profile?.membership_paused_until ?? null;
 

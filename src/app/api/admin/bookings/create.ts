@@ -15,20 +15,30 @@ type BookingRow = {
   people_count: number;
 };
 
-function timeToMinutes(t: string) {
-  const [hh, mm] = t.split(":");
-  return Number(hh) * 60 + Number(mm);
+function timeToMinutes(time: string) {
+  const [hours, minutes] = time.split(":");
+
+  return Number(hours) * 60 + Number(minutes);
 }
 
 function minutesToHHMMSS(totalMinutes: number) {
-  const hh = String(Math.floor(totalMinutes / 60)).padStart(2, "0");
-  const mm = String(totalMinutes % 60).padStart(2, "0");
-  return `${hh}:${mm}:00`;
+  const hours = String(
+    Math.floor(totalMinutes / 60)
+  ).padStart(2, "0");
+
+  const minutes = String(
+    totalMinutes % 60
+  ).padStart(2, "0");
+
+  return `${hours}:${minutes}:00`;
 }
 
-function isActivePass(expiresAt: string | null) {
-  if (!expiresAt) return false;
-  return new Date(expiresAt).getTime() > Date.now();
+function isFutureDate(value: string | null) {
+  if (!value) return false;
+
+  const timestamp = new Date(value).getTime();
+
+  return Number.isFinite(timestamp) && timestamp > Date.now();
 }
 
 export async function POST(req: Request) {
@@ -37,175 +47,391 @@ export async function POST(req: Request) {
 
     const {
       data: { user },
-      error: userErr,
+      error: userError,
     } = await supabase.auth.getUser();
 
-    if (userErr || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (userError || !user) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
     }
 
-    const { data: profile, error: profErr } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("role,phone,full_name,membership_status,membership_expires_at,membership_paused_until")
+      .select(
+        "role,phone,full_name,membership_plan,membership_status,membership_expires_at,membership_paused_until"
+      )
       .eq("id", user.id)
       .single();
 
-    if (profErr) {
-      return NextResponse.json({ error: profErr.message }, { status: 500 });
+    if (profileError || !profile) {
+      return NextResponse.json(
+        {
+          error:
+            profileError?.message ||
+            "Profile could not be found.",
+        },
+        { status: 500 }
+      );
     }
 
-    if (!profile?.phone) {
+    if (!profile.phone) {
       return NextResponse.json(
-        { error: "Phone number is required. Please update your profile." },
+        {
+          error:
+            "Phone number is required. Please update your profile.",
+        },
         { status: 400 }
       );
     }
 
-    const role = String(profile?.role ?? "").toLowerCase();
+    const role = String(
+      profile.role ?? ""
+    ).toLowerCase();
 
+    /*
+     * Affiliates bypass normal membership and
+     * package-access checks.
+     */
     if (role !== "affiliate") {
-      const pausedUntilRaw = profile?.membership_paused_until ?? null;
+      /*
+       * Check whether the customer has an active
+       * package credit.
+       */
+      const {
+        data: packageCredit,
+        error: packageCreditError,
+      } = await supabase
+        .from("package_credits")
+        .select("id,remaining_sessions,status")
+        .eq("user_id", user.id)
+        .eq("status", "active")
+        .gt("remaining_sessions", 0)
+        .limit(1)
+        .maybeSingle();
 
-      if (pausedUntilRaw) {
-        const pausedUntil = new Date(pausedUntilRaw);
+      if (packageCreditError) {
+        return NextResponse.json(
+          { error: packageCreditError.message },
+          { status: 500 }
+        );
+      }
 
-        if (pausedUntil.getTime() > Date.now()) {
-          return NextResponse.json(
-            {
-              error: "Your membership is currently paused.",
-              paused_until: pausedUntil.toISOString(),
-            },
-            { status: 403 }
-          );
-        }
+      /*
+       * Block customers whose membership is paused.
+       */
+      const pausedUntilRaw =
+        profile.membership_paused_until ?? null;
 
+      if (isFutureDate(pausedUntilRaw)) {
+        return NextResponse.json(
+          {
+            error:
+              "Your membership is currently paused.",
+            paused_until: pausedUntilRaw,
+          },
+          { status: 403 }
+        );
+      }
+
+      /*
+       * Clear a pause date that has already passed.
+       *
+       * Do not automatically change the membership
+       * status here because the customer's plan may
+       * also have expired.
+       */
+      if (pausedUntilRaw && !isFutureDate(pausedUntilRaw)) {
         await supabase
           .from("profiles")
-          .update({ membership_paused_until: null, membership_status: "active" })
+          .update({
+            membership_paused_until: null,
+          })
           .eq("id", user.id);
       }
 
-      const status = String(profile?.membership_status ?? "inactive");
-      const ok = status === "active" || isActivePass(profile?.membership_expires_at ?? null);
+      const status = String(
+        profile.membership_status ?? "inactive"
+      ).toLowerCase();
 
-      if (!ok) {
+      const membershipPlan = String(
+        profile.membership_plan ?? ""
+      ).toLowerCase();
+
+      const hasFutureExpiry = isFutureDate(
+        profile.membership_expires_at ?? null
+      );
+
+      const hasPackageCredit = Boolean(
+        packageCredit?.id
+      );
+
+      const activeMembershipStatuses = [
+        "active",
+        "trialing",
+        "cancellation_requested",
+      ];
+
+      const isFixedDurationPlan =
+        membershipPlan === "pass7" ||
+        membershipPlan === "monthly";
+
+      let hasMembershipAccess = false;
+
+      /*
+       * Fixed-duration plans must have a future
+       * expiry date.
+       *
+       * An active status cannot override an
+       * expired 7-day or monthly pass.
+       */
+      if (isFixedDurationPlan) {
+        hasMembershipAccess =
+          activeMembershipStatuses.includes(status) &&
+          hasFutureExpiry;
+      } else {
+        /*
+         * Ongoing memberships may be active without
+         * a fixed expiry.
+         *
+         * Cancelled memberships retain access only
+         * until their paid-through expiry.
+         */
+        hasMembershipAccess =
+          activeMembershipStatuses.includes(status) ||
+          (status === "cancelled" && hasFutureExpiry);
+      }
+
+      const hasAccess =
+        hasMembershipAccess ||
+        hasPackageCredit;
+
+      if (!hasAccess) {
+        /*
+         * Mark expired fixed-duration plans inactive.
+         */
+        if (isFixedDurationPlan && !hasFutureExpiry) {
+          await supabase
+            .from("profiles")
+            .update({
+              membership_status: "inactive",
+            })
+            .eq("id", user.id);
+        }
+
+        let errorMessage =
+          "No active membership or package credit. Please purchase access to book.";
+
+        if (
+          membershipPlan === "pass7" &&
+          !hasFutureExpiry
+        ) {
+          errorMessage =
+            "Your 7-day pass has expired. Please purchase another pass or make a single booking.";
+        }
+
+        if (
+          membershipPlan === "monthly" &&
+          !hasFutureExpiry
+        ) {
+          errorMessage =
+            "Your monthly access has expired. Please renew or make a single booking.";
+        }
+
         return NextResponse.json(
-          { error: "No active membership. Please join to book." },
+          { error: errorMessage },
           { status: 403 }
         );
       }
     }
 
     const body = await req.json().catch(() => null);
-    const booking_date: string | undefined = body?.booking_date;
-    const start_minute: number | undefined = body?.start_minute;
-    const duration_minutes: number | undefined = body?.duration_minutes;
 
-    const people_count = 1;
+    const bookingDate: string | undefined =
+      body?.booking_date;
 
-    if (!booking_date || typeof start_minute !== "number" || !duration_minutes) {
-      return NextResponse.json({ error: "Missing fields" }, { status: 400 });
-    }
+    const startMinute: number | undefined =
+      body?.start_minute;
 
-    if (![60, 90, 120].includes(duration_minutes)) {
-      return NextResponse.json({ error: "Invalid duration" }, { status: 400 });
-    }
+    const durationMinutes: number | undefined =
+      body?.duration_minutes;
 
-    const openMinute = OPEN_HOUR * 60;
-    const closeMinute = CLOSE_HOUR * 60;
-    const end_minute = start_minute + duration_minutes;
+    const peopleCount = 1;
 
-    if (start_minute < openMinute || start_minute >= closeMinute) {
-      return NextResponse.json({ error: "Outside opening hours" }, { status: 400 });
-    }
-
-    if (end_minute > closeMinute) {
-      return NextResponse.json({ error: "Booking exceeds closing time" }, { status: 400 });
-    }
-
-    if (start_minute % INTERVAL !== 0) {
+    if (
+      !bookingDate ||
+      typeof startMinute !== "number" ||
+      typeof durationMinutes !== "number"
+    ) {
       return NextResponse.json(
-        { error: "Start time must be 15-minute aligned" },
+        { error: "Missing fields" },
         { status: 400 }
       );
     }
 
-    const start_time = minutesToHHMMSS(start_minute);
-    const end_time = minutesToHHMMSS(end_minute);
+    if (![60, 90, 120].includes(durationMinutes)) {
+      return NextResponse.json(
+        { error: "Invalid duration" },
+        { status: 400 }
+      );
+    }
 
-    const { data: rows, error: fetchErr } = await supabase
-      .from("bookings")
-      .select("start_time,end_time,people_count")
-      .eq("booking_date", booking_date)
-      .neq("status", "cancelled")
-      .lt("start_time", end_time)
-      .gt("end_time", start_time);
+    const openMinute = OPEN_HOUR * 60;
+    const closeMinute = CLOSE_HOUR * 60;
+    const endMinute = startMinute + durationMinutes;
 
-    if (fetchErr) {
-      return NextResponse.json({ error: fetchErr.message }, { status: 500 });
+    if (
+      startMinute < openMinute ||
+      startMinute >= closeMinute
+    ) {
+      return NextResponse.json(
+        { error: "Outside opening hours" },
+        { status: 400 }
+      );
+    }
+
+    if (endMinute > closeMinute) {
+      return NextResponse.json(
+        { error: "Booking exceeds closing time" },
+        { status: 400 }
+      );
+    }
+
+    if (startMinute % INTERVAL !== 0) {
+      return NextResponse.json(
+        {
+          error:
+            "Start time must be 15-minute aligned",
+        },
+        { status: 400 }
+      );
+    }
+
+    const startTime =
+      minutesToHHMMSS(startMinute);
+
+    const endTime =
+      minutesToHHMMSS(endMinute);
+
+    const { data: rows, error: bookingFetchError } =
+      await supabase
+        .from("bookings")
+        .select(
+          "start_time,end_time,people_count"
+        )
+        .eq("booking_date", bookingDate)
+        .neq("status", "cancelled")
+        .lt("start_time", endTime)
+        .gt("end_time", startTime);
+
+    if (bookingFetchError) {
+      return NextResponse.json(
+        { error: bookingFetchError.message },
+        { status: 500 }
+      );
     }
 
     const bookings = (rows ?? []) as BookingRow[];
 
-    for (let m = start_minute; m < end_minute; m += INTERVAL) {
-      const slotStart = m;
-      const slotEnd = m + INTERVAL;
+    for (
+      let minute = startMinute;
+      minute < endMinute;
+      minute += INTERVAL
+    ) {
+      const slotStart = minute;
+      const slotEnd = minute + INTERVAL;
 
-      let used = 0;
+      let usedCapacity = 0;
 
-      for (const b of bookings) {
-        if (!b.end_time) continue;
+      for (const booking of bookings) {
+        if (!booking.end_time) continue;
 
-        const bStart = timeToMinutes(b.start_time);
-        const bEnd = timeToMinutes(b.end_time);
+        const existingStart =
+          timeToMinutes(booking.start_time);
 
-        if (bStart < slotEnd && bEnd > slotStart) {
-          used += b.people_count ?? 1;
+        const existingEnd =
+          timeToMinutes(booking.end_time);
+
+        const overlaps =
+          existingStart < slotEnd &&
+          existingEnd > slotStart;
+
+        if (overlaps) {
+          usedCapacity +=
+            booking.people_count ?? 1;
         }
       }
 
-      if (used + people_count > MAX_CAPACITY) {
+      if (
+        usedCapacity + peopleCount >
+        MAX_CAPACITY
+      ) {
         return NextResponse.json(
-          { error: "This time is no longer available. Please choose another slot." },
+          {
+            error:
+              "This time is no longer available. Please choose another slot.",
+          },
           { status: 409 }
         );
       }
     }
 
-    // Must match your DB check constraint
-    const booking_type = "single";
+    /*
+     * This value must match the existing database
+     * check constraint.
+     */
+    const bookingType = "single";
 
-    const { data: inserted, error: insertErr } = await supabase
-      .from("bookings")
-      .insert({
-        user_id: user.id,
-        booking_date,
-        start_time,
-        end_time,
-        duration_minutes,
-        people_count,
-        booking_type,
-        customer_phone: profile.phone,
-        customer_email: user.email,
-        customer_name: profile.full_name ?? null,
-        total_amount_cents: 0,
-        status: "confirmed",
-      })
-      .select("id")
-      .single();
+    const { data: inserted, error: insertError } =
+      await supabase
+        .from("bookings")
+        .insert({
+          user_id: user.id,
+          booking_date: bookingDate,
+          start_time: startTime,
+          end_time: endTime,
+          duration_minutes: durationMinutes,
+          people_count: peopleCount,
+          booking_type: bookingType,
+          customer_phone: profile.phone,
+          customer_email: user.email,
+          customer_name:
+            profile.full_name ?? null,
+          total_amount_cents: 0,
+          status: "confirmed",
+        })
+        .select("id")
+        .single();
 
-    if (insertErr) {
-      return NextResponse.json({ error: insertErr.message }, { status: 500 });
+    if (insertError) {
+      return NextResponse.json(
+        { error: insertError.message },
+        { status: 500 }
+      );
     }
 
     if (role === "affiliate") {
-      await supabase.rpc("increment_affiliate_visits", { p_user_id: user.id });
+      await supabase.rpc(
+        "increment_affiliate_visits",
+        {
+          p_user_id: user.id,
+        }
+      );
     }
 
-    return NextResponse.json({ ok: true, booking_id: inserted.id });
-  } catch (e: any) {
+    return NextResponse.json({
+      ok: true,
+      booking_id: inserted.id,
+    });
+  } catch (error: unknown) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Booking failed";
+
     return NextResponse.json(
-      { error: e?.message || "Booking failed" },
+      { error: message },
       { status: 500 }
     );
   }

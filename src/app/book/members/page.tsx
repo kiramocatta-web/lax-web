@@ -5,8 +5,9 @@ import BookMembersClient from "../BookMembersClient";
 function isFutureDate(value: string | null) {
   if (!value) return false;
 
-  const ts = new Date(value).getTime();
-  return Number.isFinite(ts) && ts > Date.now();
+  const timestamp = new Date(value).getTime();
+
+  return Number.isFinite(timestamp) && timestamp > Date.now();
 }
 
 export default async function BookMembersPage() {
@@ -14,9 +15,10 @@ export default async function BookMembersPage() {
 
   const {
     data: { user },
+    error: userError,
   } = await supabase.auth.getUser();
 
-  if (!user) {
+  if (userError || !user) {
     redirect("/pricing-membership-and-packages");
   }
 
@@ -34,7 +36,18 @@ export default async function BookMembersPage() {
 
   const role = String(profile.role ?? "").toLowerCase();
 
-  const { data: packageCredit } = await supabase
+  /*
+   * Affiliates are allowed to use the members booking page
+   * without a membership or package.
+   */
+  if (role === "affiliate") {
+    return <BookMembersClient />;
+  }
+
+  /*
+   * Check whether the customer has an active package credit.
+   */
+  const { data: packageCredit, error: packageCreditError } = await supabase
     .from("package_credits")
     .select("id,remaining_sessions,status")
     .eq("user_id", user.id)
@@ -43,30 +56,96 @@ export default async function BookMembersPage() {
     .limit(1)
     .maybeSingle();
 
-  if (role === "affiliate") {
-    return <BookMembersClient />;
+  if (packageCreditError) {
+    redirect("/pricing-membership-and-packages");
   }
 
+  /*
+   * Paused memberships cannot make member bookings.
+   */
   const pausedUntil = profile.membership_paused_until ?? null;
 
   if (isFutureDate(pausedUntil)) {
     redirect("/profile");
   }
 
-  const status = String(profile.membership_status ?? "inactive").toLowerCase();
-  const membershipPlan = String(profile.membership_plan ?? "").toLowerCase();
-  const hasFutureExpiry = isFutureDate(profile.membership_expires_at ?? null);
+  const status = String(
+    profile.membership_status ?? "inactive"
+  ).toLowerCase();
+
+  const membershipPlan = String(
+    profile.membership_plan ?? ""
+  ).toLowerCase();
+
+  const hasFutureExpiry = isFutureDate(
+    profile.membership_expires_at ?? null
+  );
+
   const hasPackageCredit = Boolean(packageCredit?.id);
 
+  const activeMembershipStatuses = [
+    "active",
+    "trialing",
+    "cancellation_requested",
+  ];
+
+  const isWeeklyMembership =
+  membershipPlan === "weekly";
+
+const isFixedDurationPlan =
+  membershipPlan === "pass7" ||
+  membershipPlan === "monthly";
+
+const isPackagePlan =
+  membershipPlan === "pack5" ||
+  membershipPlan === "pack10";
+
+  let hasMembershipAccess = false;
+
+if (isFixedDurationPlan) {
+  /*
+   * 7-day and monthly passes require both:
+   * - an accepted active status
+   * - a future expiry date
+   */
+  hasMembershipAccess =
+    activeMembershipStatuses.includes(status) &&
+    hasFutureExpiry;
+} else if (isWeeklyMembership) {
+  /*
+   * Weekly is an ongoing Stripe subscription.
+   */
+  hasMembershipAccess =
+    activeMembershipStatuses.includes(status) ||
+    (status === "cancelled" && hasFutureExpiry);
+} else if (isPackagePlan) {
+  /*
+   * Packages receive access only from remaining credits.
+   * membership_status must not grant unlimited access.
+   */
+  hasMembershipAccess = false;
+}
+
   const hasAccess =
-    status === "active" ||
-    status === "trialing" ||
-    status === "cancellation_requested" ||
-    (status === "cancelled" && hasFutureExpiry) ||
-    (membershipPlan === "pass7" && hasFutureExpiry) ||
+    hasMembershipAccess ||
     hasPackageCredit;
 
   if (!hasAccess) {
+    /*
+     * Clean up an expired fixed-duration membership.
+     *
+     * Access is denied regardless of whether this
+     * database update succeeds.
+     */
+    if (isFixedDurationPlan && !hasFutureExpiry) {
+      await supabase
+        .from("profiles")
+        .update({
+          membership_status: "inactive",
+        })
+        .eq("id", user.id);
+    }
+
     redirect("/pricing-membership-and-packages");
   }
 

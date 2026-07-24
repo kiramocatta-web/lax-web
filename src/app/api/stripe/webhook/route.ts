@@ -704,70 +704,118 @@ if (flow === "package_gift") {
       }
 
       if (
-  userId &&
-  expanded.mode === "payment" &&
-  ["pass7", "monthly", "pack5", "pack10"].includes(plan ?? "")
-) {
-  const expiresAt =
-    plan === "monthly"
-      ? addDaysISO(28)
-      : plan === "pass7"
-        ? addDaysISO(7)
-        : null;
+        userId &&
+        expanded.mode === "payment" &&
+        (plan === "pass7" || plan === "monthly")
+      ) {
+        const expiresAt =
+          plan === "monthly" ? addDaysISO(28) : addDaysISO(7);
 
-  const { error } = await supabaseAdmin
-    .from("profiles")
-    .update({
-      stripe_customer_id: customerId,
-      stripe_subscription_id: null,
-      membership_plan: plan,
-      membership_status: "active",
-      membership_expires_at: expiresAt,
-      stripe_current_period_end: null,
-    })
-    .eq("id", userId);
+        const { error } = await supabaseAdmin
+          .from("profiles")
+          .update({
+            stripe_customer_id: customerId,
+            stripe_subscription_id: null,
+            membership_plan: plan,
+            membership_status: "active",
+            membership_expires_at: expiresAt,
+            stripe_current_period_end: null,
+          })
+          .eq("id", userId);
 
-  if (error) {
-    console.error(`profile update for ${plan} failed:`, error);
+        if (error) {
+          console.error(`profile update for ${plan} failed:`, error);
+          return NextResponse.json(
+            { error: "DB update failed" },
+            { status: 500 }
+          );
+        }
 
-    return NextResponse.json(
-      { error: "DB update failed" },
-      { status: 500 }
-    );
-  }
+        if (customerEmail) {
+          try {
+            await sendMembershipEmail({
+              to: customerEmail,
+              plan,
+            });
+          } catch (emailError) {
+            console.error(`${plan} email failed:`, emailError);
+          }
+        }
+      }
 
-  if (plan === "pack5" || plan === "pack10") {
-    const totalSessions = plan === "pack5" ? 5 : 10;
+      if (
+        userId &&
+        expanded.mode === "payment" &&
+        (plan === "pack5" || plan === "pack10")
+      ) {
+        const totalSessions = plan === "pack5" ? 5 : 10;
 
-    const { error: packageErr } = await supabaseAdmin
-      .from("package_credits")
-      .insert({
-        user_id: userId,
-        plan,
-        total_sessions: totalSessions,
-        remaining_sessions: totalSessions,
-        stripe_checkout_session_id: expanded.id,
-        status: "active",
-      });
+        if (customerId) {
+          const { error: customerUpdateError } = await supabaseAdmin
+            .from("profiles")
+            .update({
+              stripe_customer_id: customerId,
+            })
+            .eq("id", userId);
 
-    if (packageErr) {
-      console.error("package credit insert failed:", packageErr);
-    }
-  }
+          if (customerUpdateError) {
+            console.error(
+              "Stripe customer ID update for package failed:",
+              customerUpdateError
+            );
+          }
+        }
 
-  const emailPlan = plan as "weekly" | "pass7" | "pack5" | "pack10" | "monthly";
+        const { data: existingPackage, error: existingPackageError } =
+          await supabaseAdmin
+            .from("package_credits")
+            .select("id")
+            .eq("stripe_checkout_session_id", expanded.id)
+            .maybeSingle();
 
-  if (customerEmail) {
-    try {
-      await sendMembershipEmail({
-        to: customerEmail,
-        plan: emailPlan, 
-      });
-    } catch (e) {
-      console.error(`${plan} email failed:`, e);
-    }
-  }
-}
+        if (existingPackageError) {
+          console.error(
+            "Package duplicate check failed:",
+            existingPackageError
+          );
+          return NextResponse.json(
+            { error: "Package lookup failed" },
+            { status: 500 }
+          );
+        }
+
+        if (!existingPackage) {
+          const { error: packageError } = await supabaseAdmin
+            .from("package_credits")
+            .insert({
+              user_id: userId,
+              plan,
+              total_sessions: totalSessions,
+              remaining_sessions: totalSessions,
+              stripe_checkout_session_id: expanded.id,
+              status: "active",
+            });
+
+          if (packageError) {
+            console.error("Package credit insert failed:", packageError);
+            return NextResponse.json(
+              { error: "Package credit insert failed" },
+              { status: 500 }
+            );
+          }
+        }
+
+        if (customerEmail) {
+          try {
+            await sendMembershipEmail({
+              to: customerEmail,
+              plan,
+            });
+          } catch (emailError) {
+            console.error(`${plan} email failed:`, emailError);
+          }
+        }
+      }
 
       const isSingleBooking =
         expanded.mode === "payment" &&
