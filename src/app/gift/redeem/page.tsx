@@ -3,10 +3,17 @@ import { supabaseServer } from "@/lib/supabase/server";
 export default async function GiftRedeemPage({
   searchParams,
 }: {
-  searchParams: { token?: string };
+  searchParams: Promise<{
+    token?: string;
+  }>;
 }) {
-  const token = String(searchParams.token ?? "").trim();
-  const claimHref = `/gift/claim?token=${token}`;
+  const { token: rawToken } = await searchParams;
+
+  const token = String(rawToken ?? "").trim();
+
+  const claimHref = token
+    ? `/gift/claim?token=${encodeURIComponent(token)}`
+    : "/pricing-membership-and-packages?gift=missing-token";
 
   const supabase = await supabaseServer();
 
@@ -33,7 +40,7 @@ export default async function GiftRedeemPage({
           </p>
         ) : (
           <p className="mt-4 text-white/70">
-            Create an account or log in first to redeem your package.
+            Create an account or log in first to redeem your gift.
           </p>
         )}
 
@@ -48,14 +55,18 @@ export default async function GiftRedeemPage({
           ) : (
             <>
               <a
-                href={`/signup?returnTo=${encodeURIComponent(claimHref)}`}
+                href={`/signup?returnTo=${encodeURIComponent(
+                  claimHref
+                )}`}
                 className="rounded-2xl bg-white px-5 py-4 font-semibold text-black"
               >
                 Create account
               </a>
 
               <a
-                href={`/login?returnTo=${encodeURIComponent(claimHref)}`}
+                href={`/login?returnTo=${encodeURIComponent(
+                  claimHref
+                )}`}
                 className="rounded-2xl border border-white/15 px-5 py-4 font-semibold text-white"
               >
                 Log in

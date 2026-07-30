@@ -23,12 +23,12 @@ export default async function BookMembersPage() {
   }
 
   const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select(
-      "role,membership_plan,membership_status,membership_expires_at,membership_paused_until"
-    )
-    .eq("id", user.id)
-    .single();
+  .from("profiles")
+  .select(
+    "role,membership_plan,membership_status,membership_expires_at,membership_paused_until"
+  )
+  .eq("id", user.id)
+  .single();
 
   if (profileError || !profile) {
     redirect("/pricing-membership-and-packages");
@@ -37,22 +37,29 @@ export default async function BookMembersPage() {
   const role = String(profile.role ?? "").toLowerCase();
 
   /*
-   * Affiliates are allowed to use the members booking page
-   * without a membership or package.
+   * Affiliates receive booking access without a membership
+   * or package.
    */
   if (role === "affiliate") {
-    return <BookMembersClient />;
+    return <BookMembersClient membershipExpiresAt={null} />;
   }
 
+  const pausedUntil = profile.membership_paused_until ?? null;
+
   /*
-   * Check whether the customer has an active package credit.
+   * Paused recurring memberships cannot make bookings.
    */
+  if (isFutureDate(pausedUntil)) {
+    redirect("/profile");
+  }
+
   const { data: packageCredit, error: packageCreditError } = await supabase
     .from("package_credits")
     .select("id,remaining_sessions,status")
     .eq("user_id", user.id)
     .eq("status", "active")
     .gt("remaining_sessions", 0)
+    .order("purchased_at", { ascending: true })
     .limit(1)
     .maybeSingle();
 
@@ -60,28 +67,18 @@ export default async function BookMembersPage() {
     redirect("/pricing-membership-and-packages");
   }
 
-  /*
-   * Paused memberships cannot make member bookings.
-   */
-  const pausedUntil = profile.membership_paused_until ?? null;
-
-  if (isFutureDate(pausedUntil)) {
-    redirect("/profile");
-  }
-
-  const status = String(
-    profile.membership_status ?? "inactive"
-  ).toLowerCase();
-
   const membershipPlan = String(
     profile.membership_plan ?? ""
   ).toLowerCase();
 
-  const hasFutureExpiry = isFutureDate(
-    profile.membership_expires_at ?? null
-  );
+  const membershipStatus = String(
+    profile.membership_status ?? "inactive"
+  ).toLowerCase();
 
-  const hasPackageCredit = Boolean(packageCredit?.id);
+  const membershipExpiresAt =
+    profile.membership_expires_at ?? null;
+
+  const hasFutureExpiry = isFutureDate(membershipExpiresAt);
 
   const activeMembershipStatuses = [
     "active",
@@ -89,42 +86,51 @@ export default async function BookMembersPage() {
     "cancellation_requested",
   ];
 
-  const isWeeklyMembership =
-  membershipPlan === "weekly";
+  /*
+   * A normal weekly membership is an ongoing Stripe
+   * subscription.
+   */
+  const isRecurringWeekly =
+    membershipPlan === "weekly";
 
-const isFixedDurationPlan =
-  membershipPlan === "pass7" ||
-  membershipPlan === "monthly";
+  /*
+   * These plans grant unlimited access only until their
+   * membership_expires_at date.
+   *
+   * Keep both current and gifted plan names here so the
+   * booking system supports either naming approach.
+   */
+  const isFixedDurationPlan =
+    membershipPlan === "pass7" ||
+    membershipPlan === "monthly" ||
+    membershipPlan === "gift_weekly" ||
+    membershipPlan === "gift_monthly";
 
-const isPackagePlan =
-  membershipPlan === "pack5" ||
-  membershipPlan === "pack10";
+  /*
+   * Packs receive access through package_credits only.
+   */
+  const isPackagePlan =
+    membershipPlan === "pack5" ||
+    membershipPlan === "pack10";
+
+  const hasPackageCredit = Boolean(packageCredit?.id);
 
   let hasMembershipAccess = false;
 
-if (isFixedDurationPlan) {
-  /*
-   * 7-day and monthly passes require both:
-   * - an accepted active status
-   * - a future expiry date
-   */
-  hasMembershipAccess =
-    activeMembershipStatuses.includes(status) &&
-    hasFutureExpiry;
-} else if (isWeeklyMembership) {
-  /*
-   * Weekly is an ongoing Stripe subscription.
-   */
-  hasMembershipAccess =
-    activeMembershipStatuses.includes(status) ||
-    (status === "cancelled" && hasFutureExpiry);
-} else if (isPackagePlan) {
-  /*
-   * Packages receive access only from remaining credits.
-   * membership_status must not grant unlimited access.
-   */
-  hasMembershipAccess = false;
-}
+  if (isRecurringWeekly) {
+    hasMembershipAccess =
+      activeMembershipStatuses.includes(membershipStatus) ||
+      (
+        ["cancelled", "canceled"].includes(membershipStatus) &&
+        hasFutureExpiry
+      );
+  } else if (isFixedDurationPlan) {
+    hasMembershipAccess =
+      activeMembershipStatuses.includes(membershipStatus) &&
+      hasFutureExpiry;
+  } else if (isPackagePlan) {
+    hasMembershipAccess = false;
+  }
 
   const hasAccess =
     hasMembershipAccess ||
@@ -132,16 +138,18 @@ if (isFixedDurationPlan) {
 
   if (!hasAccess) {
     /*
-     * Clean up an expired fixed-duration membership.
+     * Clean up an expired fixed-duration plan.
      *
-     * Access is denied regardless of whether this
-     * database update succeeds.
+     * Access is denied even if this database update fails.
      */
     if (isFixedDurationPlan && !hasFutureExpiry) {
       await supabase
         .from("profiles")
         .update({
           membership_status: "inactive",
+          membership_paused_until: null,
+          stripe_subscription_id: null,
+          stripe_current_period_end: null,
         })
         .eq("id", user.id);
     }
@@ -149,5 +157,19 @@ if (isFixedDurationPlan) {
     redirect("/pricing-membership-and-packages");
   }
 
-  return <BookMembersClient />;
+  /*
+   * Only timed plans need an expiry passed into the client.
+   * Package users and ongoing weekly subscribers do not need
+   * a maximum booking date.
+   */
+  const bookingExpiry =
+    isFixedDurationPlan
+      ? membershipExpiresAt
+      : null;
+
+  return (
+    <BookMembersClient
+      membershipExpiresAt={bookingExpiry}
+    />
+  );
 }

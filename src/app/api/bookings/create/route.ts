@@ -29,25 +29,57 @@ type BookingBlockRow = {
   reason: string | null;
 };
 
-function timeToMinutes(t: string) {
-  const [hh, mm] = t.split(":");
-  return Number(hh) * 60 + Number(mm);
+function timeToMinutes(time: string) {
+  const [hours, minutes] = time.split(":");
+
+  return Number(hours) * 60 + Number(minutes);
 }
 
 function minutesToHHMMSS(totalMinutes: number) {
-  const hh = String(Math.floor(totalMinutes / 60)).padStart(2, "0");
-  const mm = String(totalMinutes % 60).padStart(2, "0");
-  return `${hh}:${mm}:00`;
+  const hours = String(
+    Math.floor(totalMinutes / 60)
+  ).padStart(2, "0");
+
+  const minutes = String(
+    totalMinutes % 60
+  ).padStart(2, "0");
+
+  return `${hours}:${minutes}:00`;
 }
 
 function isFutureDate(value: string | null) {
   if (!value) return false;
-  const ts = new Date(value).getTime();
-  return Number.isFinite(ts) && ts > Date.now();
+
+  const timestamp = new Date(value).getTime();
+
+  return Number.isFinite(timestamp) && timestamp > Date.now();
 }
 
-function getBookingStartDateTime(bookingDate: string, startTime: string) {
-  return new Date(`${bookingDate}T${startTime}`);
+function getBookingStartDateTime(
+  bookingDate: string,
+  startTime: string
+) {
+  /*
+   * The venue operates in Brisbane time.
+   * Brisbane is UTC+10 year-round.
+   */
+  return new Date(`${bookingDate}T${startTime}+10:00`);
+}
+
+function formatExpiryDate(value: string) {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return date.toLocaleDateString("en-AU", {
+    timeZone: "Australia/Brisbane",
+    weekday: "short",
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
 }
 
 export async function POST(req: Request) {
@@ -56,145 +88,340 @@ export async function POST(req: Request) {
 
     const {
       data: { user },
-      error: userErr,
+      error: userError,
     } = await supabase.auth.getUser();
 
-    if (userErr || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (userError || !user) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
     }
 
     const body = await req.json().catch(() => null);
 
-    const booking_date: string | undefined = body?.booking_date;
-    const start_minute: number | undefined = body?.start_minute;
-    const duration_minutes: number | undefined = body?.duration_minutes;
+    const bookingDate: string | undefined =
+      body?.booking_date;
+
+    const startMinute: number | undefined =
+      body?.start_minute;
+
+    const durationMinutes: number | undefined =
+      body?.duration_minutes;
+
     const rescheduleBookingId =
       Number(body?.reschedule_booking_id ?? 0) || null;
 
-    const people_count = 1;
+    const peopleCount = 1;
 
-    if (!booking_date || typeof start_minute !== "number" || !duration_minutes) {
-      return NextResponse.json({ error: "Missing fields" }, { status: 400 });
-    }
-
-    if (![60, 90, 120].includes(duration_minutes)) {
-      return NextResponse.json({ error: "Invalid duration" }, { status: 400 });
-    }
-
-    const { data: profile, error: profErr } = await supabase
-      .from("profiles")
-      .select(
-        "role,phone,full_name,membership_plan,membership_status,membership_expires_at,membership_paused_until"
-      )
-      .eq("id", user.id)
-      .single();
-
-    if (profErr) {
-      return NextResponse.json({ error: profErr.message }, { status: 500 });
-    }
-
-    if (!profile?.phone) {
+    if (
+      !bookingDate ||
+      typeof startMinute !== "number" ||
+      !durationMinutes
+    ) {
       return NextResponse.json(
-        { error: "Phone number is required. Please update your profile." },
+        { error: "Missing fields" },
         { status: 400 }
       );
     }
 
-    const role = String(profile?.role ?? "").toLowerCase();
-    const status = String(profile?.membership_status ?? "inactive").toLowerCase();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(bookingDate)) {
+      return NextResponse.json(
+        { error: "Invalid booking date" },
+        { status: 400 }
+      );
+    }
+
+    if (
+      !Number.isInteger(startMinute) ||
+      startMinute < 0 ||
+      startMinute >= 1440
+    ) {
+      return NextResponse.json(
+        { error: "Invalid start time" },
+        { status: 400 }
+      );
+    }
+
+    if (![60, 90, 120].includes(durationMinutes)) {
+      return NextResponse.json(
+        { error: "Invalid duration" },
+        { status: 400 }
+      );
+    }
+
+   const { data: profile, error: profileError } = await supabase
+  .from("profiles")
+  .select(
+    "role,phone,full_name,membership_plan,membership_status,membership_expires_at,membership_paused_until"
+  )
+  .eq("id", user.id)
+  .single();
+
+    if (profileError || !profile) {
+      return NextResponse.json(
+        {
+          error:
+            profileError?.message ||
+            "Profile not found",
+        },
+        { status: 500 }
+      );
+    }
+
+    if (!profile.phone) {
+      return NextResponse.json(
+        {
+          error:
+            "Phone number is required. Please update your profile.",
+        },
+        { status: 400 }
+      );
+    }
+
+    const role = String(
+      profile.role ?? ""
+    ).toLowerCase();
+
+    const membershipPlan = String(
+      profile.membership_plan ?? ""
+    ).toLowerCase();
+
+    let membershipStatus = String(
+      profile.membership_status ?? "inactive"
+    ).toLowerCase();
+
+    const membershipExpiresAt =
+      profile.membership_expires_at ?? null;
+
+    const activeMembershipStatuses = [
+      "active",
+      "trialing",
+      "cancellation_requested",
+    ];
+
+    const isRecurringWeekly =
+      membershipPlan === "weekly";
+
+    const isFixedDurationPlan =
+      membershipPlan === "pass7" ||
+      membershipPlan === "monthly" ||
+      membershipPlan === "gift_weekly" ||
+      membershipPlan === "gift_monthly";
 
     let packageCreditId: string | null = null;
 
-    
-
-    if (role !== "affiliate") {
-      const pausedUntilRaw = profile?.membership_paused_until ?? null;
-
-      if (isFutureDate(pausedUntilRaw)) {
-        return NextResponse.json(
-          {
-            error: "Your membership is currently paused.",
-            paused_until: pausedUntilRaw,
-          },
-          { status: 403 }
-        );
-      }
-
-      if (pausedUntilRaw && !isFutureDate(pausedUntilRaw)) {
-        await supabase
-          .from("profiles")
-          .update({
-            membership_paused_until: null,
-            membership_status: "active",
-          })
-          .eq("id", user.id);
-      }
-
-      const { data: activePackageCredit, error: packageCreditErr } =
-        await supabase
-          .from("package_credits")
-          .select("id,remaining_sessions")
-          .eq("user_id", user.id)
-          .eq("status", "active")
-          .gt("remaining_sessions", 0)
-          .order("purchased_at", { ascending: true })
-          .limit(1)
-          .maybeSingle();
-
-      if (packageCreditErr) {
-        return NextResponse.json(
-          { error: packageCreditErr.message },
-          { status: 500 }
-        );
-      }
-
-      const hasActiveTimedAccess =
-        status === "active" ||
-        status === "trialing" ||
-        status === "cancellation_requested" ||
-        isFutureDate(profile?.membership_expires_at ?? null);
-
-      const hasPackageCredit = Boolean(activePackageCredit?.id);
-
-      if (!hasActiveTimedAccess && !hasPackageCredit) {
-        return NextResponse.json(
-          { error: "No active membership or package credits. Please join to book." },
-          { status: 403 }
-        );
-      }
-
-      if (!rescheduleBookingId && hasPackageCredit) {
-        packageCreditId = activePackageCredit?.id ?? null;
-      }
-    }
-
     const openMinute = OPEN_HOUR * 60;
     const closeMinute = CLOSE_HOUR * 60;
-    const end_minute = start_minute + duration_minutes;
+    const endMinute = startMinute + durationMinutes;
 
-    if (start_minute < openMinute || start_minute >= closeMinute) {
+    if (
+      startMinute < openMinute ||
+      startMinute >= closeMinute
+    ) {
       return NextResponse.json(
         { error: "Outside opening hours" },
         { status: 400 }
       );
     }
 
-    if (end_minute > closeMinute) {
+    if (endMinute > closeMinute) {
       return NextResponse.json(
         { error: "Booking exceeds closing time" },
         { status: 400 }
       );
     }
 
-    if (start_minute % INTERVAL !== 0) {
+    if (startMinute % INTERVAL !== 0) {
       return NextResponse.json(
-        { error: "Start time must be 15-minute aligned" },
+        {
+          error:
+            "Start time must be 15-minute aligned",
+        },
         { status: 400 }
       );
     }
 
-    const start_time = minutesToHHMMSS(start_minute);
-    const end_time = minutesToHHMMSS(end_minute);
+    const startTime =
+      minutesToHHMMSS(startMinute);
+
+    const endTime =
+      minutesToHHMMSS(endMinute);
+
+    const requestedBookingStart =
+      getBookingStartDateTime(
+        bookingDate,
+        startTime
+      );
+
+    if (
+      Number.isNaN(requestedBookingStart.getTime()) ||
+      requestedBookingStart.getTime() <= Date.now()
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "Please choose a future booking time.",
+        },
+        { status: 400 }
+      );
+    }
+
+    if (role !== "affiliate") {
+      const pausedUntil =
+        profile.membership_paused_until ?? null;
+
+      if (isFutureDate(pausedUntil)) {
+        return NextResponse.json(
+          {
+            error:
+              "Your membership is currently paused.",
+            paused_until: pausedUntil,
+          },
+          { status: 403 }
+        );
+      }
+
+      /*
+       * Clear a pause that has already finished.
+       *
+       * Only recurring weekly memberships should
+       * automatically return to active here.
+       */
+      if (pausedUntil && !isFutureDate(pausedUntil)) {
+        const pauseUpdate: {
+          membership_paused_until: null;
+          membership_status?: string;
+        } = {
+          membership_paused_until: null,
+        };
+
+        if (isRecurringWeekly) {
+          pauseUpdate.membership_status = "active";
+          membershipStatus = "active";
+        }
+
+        await supabase
+          .from("profiles")
+          .update(pauseUpdate)
+          .eq("id", user.id);
+      }
+
+      const {
+        data: activePackageCredit,
+        error: packageCreditError,
+      } = await supabase
+        .from("package_credits")
+        .select("id,remaining_sessions")
+        .eq("user_id", user.id)
+        .eq("status", "active")
+        .gt("remaining_sessions", 0)
+        .order("purchased_at", {
+          ascending: true,
+        })
+        .limit(1)
+        .maybeSingle();
+
+      if (packageCreditError) {
+        return NextResponse.json(
+          { error: packageCreditError.message },
+          { status: 500 }
+        );
+      }
+
+      const hasPackageCredit =
+        Boolean(activePackageCredit?.id);
+
+      let hasTimedMembershipAccess = false;
+
+      if (isRecurringWeekly) {
+        hasTimedMembershipAccess =
+          activeMembershipStatuses.includes(
+            membershipStatus
+          ) ||
+          (
+            ["cancelled", "canceled"].includes(
+              membershipStatus
+            ) &&
+            isFutureDate(membershipExpiresAt)
+          );
+      } else if (isFixedDurationPlan) {
+        hasTimedMembershipAccess =
+          activeMembershipStatuses.includes(
+            membershipStatus
+          ) &&
+          isFutureDate(membershipExpiresAt);
+      }
+
+      if (
+        !hasTimedMembershipAccess &&
+        !hasPackageCredit
+      ) {
+        if (
+          isFixedDurationPlan &&
+          !isFutureDate(membershipExpiresAt)
+        ) {
+          await supabase
+            .from("profiles")
+            .update({
+              membership_status: "inactive",
+              membership_paused_until: null,
+              stripe_subscription_id: null,
+              stripe_current_period_end: null,
+            })
+            .eq("id", user.id);
+        }
+
+        return NextResponse.json(
+          {
+            error:
+              "No active membership or package credits. Please purchase access to book.",
+          },
+          { status: 403 }
+        );
+      }
+
+      /*
+       * Fixed-duration plans cannot create a booking
+       * that starts at or after their access expiry.
+       */
+      if (
+        isFixedDurationPlan &&
+        membershipExpiresAt
+      ) {
+        const expiryTimestamp =
+          new Date(membershipExpiresAt).getTime();
+
+        if (
+          !Number.isFinite(expiryTimestamp) ||
+          requestedBookingStart.getTime() >=
+            expiryTimestamp
+        ) {
+          return NextResponse.json(
+            {
+              error: `Your access expires on ${formatExpiryDate(
+                membershipExpiresAt
+              )}. Please select an earlier booking.`,
+              membership_expires_at:
+                membershipExpiresAt,
+            },
+            { status: 403 }
+          );
+        }
+      }
+
+      /*
+       * A reschedule does not use another package
+       * session. A new booking does.
+       */
+      if (
+        !rescheduleBookingId &&
+        hasPackageCredit
+      ) {
+        packageCreditId =
+          activePackageCredit?.id ?? null;
+      }
+    }
 
     let existingBookingToReschedule:
       | {
@@ -208,73 +435,116 @@ export async function POST(req: Request) {
       | null = null;
 
     if (rescheduleBookingId) {
-      const { data: existingBooking, error: existingBookingErr } = await supabase
+      const {
+        data: existingBooking,
+        error: existingBookingError,
+      } = await supabase
         .from("bookings")
-        .select("id,booking_type,status,booking_date,start_time,user_id")
+        .select(
+  "id,booking_type,status,booking_date,start_time,user_id"
+)
         .eq("id", rescheduleBookingId)
         .eq("user_id", user.id)
         .single();
 
-      if (existingBookingErr || !existingBooking) {
+      if (
+        existingBookingError ||
+        !existingBooking
+      ) {
         return NextResponse.json(
-          { error: "Original booking not found." },
+          {
+            error:
+              "Original booking not found.",
+          },
           { status: 404 }
         );
       }
 
-      if (String(existingBooking.booking_type ?? "").toLowerCase() !== "member") {
+      if (
+        String(
+          existingBooking.booking_type ?? ""
+        ).toLowerCase() !== "member"
+      ) {
         return NextResponse.json(
-          { error: "Only member bookings can be rescheduled here." },
+          {
+            error:
+              "Only member bookings can be rescheduled here.",
+          },
           { status: 403 }
         );
       }
 
       if (
         ["cancelled", "rescheduled"].includes(
-          String(existingBooking.status ?? "").toLowerCase()
+          String(
+            existingBooking.status ?? ""
+          ).toLowerCase()
         )
       ) {
         return NextResponse.json(
-          { error: "This booking can no longer be rescheduled." },
+          {
+            error:
+              "This booking can no longer be rescheduled.",
+          },
           { status: 400 }
         );
       }
 
-      if (!existingBooking.booking_date || !existingBooking.start_time) {
+      if (
+        !existingBooking.booking_date ||
+        !existingBooking.start_time
+      ) {
         return NextResponse.json(
-          { error: "Original booking is missing date/time." },
+          {
+            error:
+              "Original booking is missing date/time.",
+          },
           { status: 400 }
         );
       }
 
-      const existingStart = getBookingStartDateTime(
-        existingBooking.booking_date,
-        existingBooking.start_time
-      );
+      const existingStart =
+        getBookingStartDateTime(
+          existingBooking.booking_date,
+          existingBooking.start_time
+        );
 
       if (
         Number.isNaN(existingStart.getTime()) ||
         existingStart.getTime() <= Date.now()
       ) {
         return NextResponse.json(
-          { error: "Past bookings cannot be rescheduled." },
+          {
+            error:
+              "Past bookings cannot be rescheduled.",
+          },
           { status: 400 }
         );
       }
 
-      existingBookingToReschedule = existingBooking;
+      existingBookingToReschedule =
+        existingBooking;
     }
 
-    const { data: blockRows, error: blockErr } = await supabase
+    const {
+      data: blockRows,
+      error: blockError,
+    } = await supabase
       .from("booking_blocks")
-      .select("is_full_day,start_time,end_time,reason")
-      .eq("block_date", booking_date);
+      .select(
+        "is_full_day,start_time,end_time,reason"
+      )
+      .eq("block_date", bookingDate);
 
-    if (blockErr) {
-      return NextResponse.json({ error: blockErr.message }, { status: 500 });
+    if (blockError) {
+      return NextResponse.json(
+        { error: blockError.message },
+        { status: 500 }
+      );
     }
 
-    const blocks = (blockRows ?? []) as BookingBlockRow[];
+    const blocks =
+      (blockRows ?? []) as BookingBlockRow[];
 
     for (const block of blocks) {
       if (block.is_full_day) {
@@ -288,11 +558,22 @@ export async function POST(req: Request) {
         );
       }
 
-      if (!block.start_time || !block.end_time) continue;
+      if (
+        !block.start_time ||
+        !block.end_time
+      ) {
+        continue;
+      }
 
-      const blockStart = timeToMinutes(block.start_time);
-      const blockEnd = timeToMinutes(block.end_time);
-      const overlaps = blockStart < end_minute && blockEnd > start_minute;
+      const blockStart =
+        timeToMinutes(block.start_time);
+
+      const blockEnd =
+        timeToMinutes(block.end_time);
+
+      const overlaps =
+        blockStart < endMinute &&
+        blockEnd > startMinute;
 
       if (overlaps) {
         return NextResponse.json(
@@ -306,174 +587,275 @@ export async function POST(req: Request) {
       }
     }
 
-    const { data: rows, error: fetchErr } = await supabase
+    const {
+      data: bookingRows,
+      error: bookingFetchError,
+    } = await supabase
       .from("bookings")
-      .select("id,start_time,end_time,people_count")
-      .eq("booking_date", booking_date)
+      .select(
+        "id,start_time,end_time,people_count"
+      )
+      .eq("booking_date", bookingDate)
       .or("status.is.null,status.neq.cancelled")
-      .lt("start_time", end_time)
-      .gt("end_time", start_time);
+      .lt("start_time", endTime)
+      .gt("end_time", startTime);
 
-    if (fetchErr) {
-      return NextResponse.json({ error: fetchErr.message }, { status: 500 });
+    if (bookingFetchError) {
+      return NextResponse.json(
+        { error: bookingFetchError.message },
+        { status: 500 }
+      );
     }
 
-    const bookings = (rows ?? []) as BookingRow[];
+    const bookings =
+      (bookingRows ?? []) as BookingRow[];
 
-    for (let m = start_minute; m < end_minute; m += INTERVAL) {
-      const slotStart = m;
-      const slotEnd = m + INTERVAL;
+    for (
+      let minute = startMinute;
+      minute < endMinute;
+      minute += INTERVAL
+    ) {
+      const slotStart = minute;
+      const slotEnd = minute + INTERVAL;
 
-      let used = 0;
+      let usedCapacity = 0;
 
-      for (const b of bookings) {
-        if (!b.end_time) continue;
-        if (rescheduleBookingId && b.id === rescheduleBookingId) continue;
+      for (const booking of bookings) {
+        if (!booking.end_time) continue;
 
-        const bStart = timeToMinutes(b.start_time);
-        const bEnd = timeToMinutes(b.end_time);
+        if (
+          rescheduleBookingId &&
+          booking.id === rescheduleBookingId
+        ) {
+          continue;
+        }
 
-        if (bStart < slotEnd && bEnd > slotStart) {
-          used += b.people_count ?? 1;
+        const existingStartMinute =
+          timeToMinutes(booking.start_time);
+
+        const existingEndMinute =
+          timeToMinutes(booking.end_time);
+
+        if (
+          existingStartMinute < slotEnd &&
+          existingEndMinute > slotStart
+        ) {
+          usedCapacity +=
+            booking.people_count ?? 1;
         }
       }
 
-      if (used + people_count > MAX_CAPACITY) {
+      if (
+        usedCapacity + peopleCount >
+        MAX_CAPACITY
+      ) {
         return NextResponse.json(
-          { error: "This time is no longer available. Please choose another slot." },
+          {
+            error:
+              "This time is no longer available. Please choose another slot.",
+          },
           { status: 409 }
         );
       }
     }
 
-    const { data: inserted, error: insertErr } = await supabase
+    const {
+      data: insertedBooking,
+      error: insertError,
+    } = await supabase
       .from("bookings")
       .insert({
         user_id: user.id,
         customer_email: user.email ?? null,
         customer_phone: profile.phone,
-        customer_name: profile.full_name ?? null,
-        booking_date,
-        start_time,
-        end_time,
-        duration_minutes,
-        people_count,
+        customer_name:
+          profile.full_name ?? null,
+        booking_date: bookingDate,
+        start_time: startTime,
+        end_time: endTime,
+        duration_minutes: durationMinutes,
+        people_count: peopleCount,
         booking_type: "member",
         total_amount_cents: 0,
         status: "confirmed",
-        rescheduled_from_booking_id: existingBookingToReschedule?.id ?? null,
+        rescheduled_from_booking_id:
+          existingBookingToReschedule?.id ??
+          null,
       })
       .select("id")
       .single();
 
-    if (insertErr) {
-      return NextResponse.json({ error: insertErr.message }, { status: 500 });
-    }
-
-    console.log("MEMBER BOOKING INSERTED:", inserted.id);
-
-    try {
-      const simpleAdminEmail = await resend.emails.send({
-        from: "LAX N LOUNGE <bookings@laxnlounge.com.au>",
-        to: "admin@laxnlounge.com.au",
-        subject: `URGENT New member booking #${inserted.id}`,
-        text: `
-New member booking made.
-
-Booking ID: ${inserted.id}
-Date: ${booking_date}
-Time: ${start_time} - ${end_time}
-Duration: ${duration_minutes} minutes
-People: ${people_count}
-Email: ${user.email ?? "N/A"}
-Phone: ${profile.phone ?? "N/A"}
-Name: ${profile.full_name ?? "N/A"}
-        `,
-      });
-
-      console.log("SIMPLE MEMBER ADMIN EMAIL SENT:", simpleAdminEmail);
-    } catch (e) {
-      console.error("SIMPLE MEMBER ADMIN EMAIL FAILED:", e);
-    }
-
-    if (packageCreditId) {
-      const { error: creditErr } = await supabase.rpc(
-        "decrement_package_credit",
+    if (
+      insertError ||
+      !insertedBooking
+    ) {
+      return NextResponse.json(
         {
-          credit_id: packageCreditId,
-        }
+          error:
+            insertError?.message ||
+            "Booking could not be created.",
+        },
+        { status: 500 }
       );
+    }
 
-      if (creditErr) {
+    console.log(
+      "MEMBER BOOKING INSERTED:",
+      insertedBooking.id
+    );
+
+    /*
+     * A package credit should ideally be decremented
+     * before sending emails.
+     */
+    if (packageCreditId) {
+      const { error: creditError } =
+        await supabase.rpc(
+          "decrement_package_credit",
+          {
+            credit_id: packageCreditId,
+          }
+        );
+
+      if (creditError) {
+        /*
+         * Remove the newly inserted booking so the
+         * customer does not receive a free package
+         * booking when credit deduction fails.
+         */
+        await supabase
+          .from("bookings")
+          .delete()
+          .eq("id", insertedBooking.id)
+          .eq("user_id", user.id);
+
         return NextResponse.json(
-          { error: creditErr.message },
+          { error: creditError.message },
           { status: 500 }
         );
       }
     }
 
     if (existingBookingToReschedule) {
-      const { error: oldUpdateErr } = await supabase
-        .from("bookings")
-        .update({
-          status: "rescheduled",
-          rescheduled_to_booking_id: inserted.id,
-        })
-        .eq("id", existingBookingToReschedule.id)
-        .eq("user_id", user.id);
+      const { error: oldBookingUpdateError } =
+        await supabase
+          .from("bookings")
+          .update({
+            status: "rescheduled",
+            rescheduled_to_booking_id:
+              insertedBooking.id,
+          })
+          .eq(
+            "id",
+            existingBookingToReschedule.id
+          )
+          .eq("user_id", user.id);
 
-      if (oldUpdateErr) {
+      if (oldBookingUpdateError) {
         return NextResponse.json(
-          { error: oldUpdateErr.message },
+          {
+            error:
+              oldBookingUpdateError.message,
+          },
           { status: 500 }
         );
       }
     }
 
     if (role === "affiliate") {
-      await supabase.rpc("increment_affiliate_visits", { p_user_id: user.id });
+      await supabase.rpc(
+        "increment_affiliate_visits",
+        {
+          p_user_id: user.id,
+        }
+      );
+    }
+
+    try {
+      await resend.emails.send({
+        from:
+          "LAX N LOUNGE <bookings@laxnlounge.com.au>",
+        to: "admin@laxnlounge.com.au",
+        subject:
+          `URGENT New member booking #${insertedBooking.id}`,
+        text: `
+New member booking made.
+
+Booking ID: ${insertedBooking.id}
+Date: ${bookingDate}
+Time: ${startTime} - ${endTime}
+Duration: ${durationMinutes} minutes
+People: ${peopleCount}
+Email: ${user.email ?? "N/A"}
+Phone: ${profile.phone ?? "N/A"}
+Name: ${profile.full_name ?? "N/A"}
+        `,
+      });
+    } catch (error) {
+      console.error(
+        "SIMPLE MEMBER ADMIN EMAIL FAILED:",
+        error
+      );
     }
 
     try {
       if (user.email) {
         await sendBookingEmail({
           to: user.email,
-          bookingDate: booking_date,
-          startTime: start_time,
-          endTime: end_time,
-          peopleCount: people_count,
+          bookingDate,
+          startTime,
+          endTime,
+          peopleCount,
         });
       }
-    } catch (e) {
-      console.warn("sendBookingEmail failed:", e);
+    } catch (error) {
+      console.warn(
+        "sendBookingEmail failed:",
+        error
+      );
     }
 
     try {
       await sendAdminBookingNotification({
-        bookingId: inserted.id,
-        bookingDate: booking_date,
-        startTime: start_time,
-        endTime: end_time,
-        peopleCount: people_count,
-        customerEmail: user.email ?? null,
+        bookingId: insertedBooking.id,
+        bookingDate,
+        startTime,
+        endTime,
+        peopleCount,
+        customerEmail:
+          user.email ?? null,
         customerPhone: profile.phone,
         totalAmountCents: 0,
-        rescheduled: Boolean(existingBookingToReschedule),
+        rescheduled: Boolean(
+          existingBookingToReschedule
+        ),
       });
-    } catch (e) {
-      console.warn("sendAdminBookingNotification failed:", e);
+    } catch (error) {
+      console.warn(
+        "sendAdminBookingNotification failed:",
+        error
+      );
     }
 
     return NextResponse.json({
       ok: true,
-      booking_id: inserted.id,
-      rescheduled: Boolean(existingBookingToReschedule),
+      booking_id: insertedBooking.id,
+      rescheduled: Boolean(
+        existingBookingToReschedule
+      ),
     });
-  } catch (e: any) {
-    console.error("BOOKING CREATE FAILED:", e);
+  } catch (error: any) {
+    console.error(
+      "BOOKING CREATE FAILED:",
+      error
+    );
 
     return NextResponse.json(
-      { error: e?.message || "Booking failed" },
+      {
+        error:
+          error?.message ||
+          "Booking failed",
+      },
       { status: 500 }
     );
   }
