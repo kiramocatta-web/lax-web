@@ -200,8 +200,15 @@ export async function POST(req: Request) {
       "cancellation_requested",
     ];
 
-    const isRecurringWeekly =
-      membershipPlan === "weekly";
+    const recurringWeeklyPlans = [
+  "weekly",
+  "secret_weekly_15",
+];
+
+const isRecurringWeekly =
+  recurringWeeklyPlans.includes(
+    membershipPlan
+  );
 
     const isFixedDurationPlan =
       membershipPlan === "pass7" ||
