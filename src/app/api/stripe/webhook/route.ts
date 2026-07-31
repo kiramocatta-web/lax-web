@@ -683,14 +683,21 @@ if (flow === "package_gift") {
           );
         }
 
-        if (customerEmail && plan === "weekly") {
+        const isWeeklyMembership =
+  plan === "weekly" ||
+  plan === "secret_weekly_15";
+
+if (customerEmail && isWeeklyMembership) {
   try {
     await sendMembershipEmail({
       to: customerEmail,
       plan: "weekly",
     });
   } catch (e) {
-    console.error("weekly membership email failed:", e);
+    console.error(
+      "weekly membership email failed:",
+      e
+    );
   }
 }
 

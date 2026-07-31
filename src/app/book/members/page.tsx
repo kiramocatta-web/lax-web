@@ -90,8 +90,15 @@ export default async function BookMembersPage() {
    * A normal weekly membership is an ongoing Stripe
    * subscription.
    */
-  const isRecurringWeekly =
-    membershipPlan === "weekly";
+  const recurringWeeklyPlans = [
+  "weekly",
+  "secret_weekly_15",
+];
+
+const isRecurringWeekly =
+  recurringWeeklyPlans.includes(
+    membershipPlan
+  );
 
   /*
    * These plans grant unlimited access only until their
