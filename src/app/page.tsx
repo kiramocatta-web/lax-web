@@ -142,18 +142,6 @@ export default function HomePage() {
   </p>
 
   <div className="mt-12 flex flex-wrap items-center justify-center gap-20">
-    <a
-      href="/athletix"
-      className="transition duration-300 hover:scale-105 hover:opacity-100 opacity-90"
-    >
-      <Image
-        src="/athletixlogo.png"
-        alt="Athletix"
-        width={360}
-        height={180}
-        className="h-auto w-auto max-h-32 object-contain"
-      />
-    </a>
 
     <a
       href="/rush-physio-and-wellness"
