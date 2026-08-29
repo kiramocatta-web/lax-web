@@ -3,6 +3,7 @@ import { supabaseServer } from "@/lib/supabase/server";
 import { sendAdminBookingNotification } from "@/lib/email/sendAdminBookingNotification";
 import { sendBookingEmail } from "@/lib/email/sendBookingEmail";
 import { Resend } from "resend";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -595,17 +596,17 @@ const isRecurringWeekly =
     }
 
     const {
-      data: bookingRows,
-      error: bookingFetchError,
-    } = await supabase
-      .from("bookings")
-      .select(
-        "id,start_time,end_time,people_count"
-      )
-      .eq("booking_date", bookingDate)
-      .or("status.is.null,status.neq.cancelled")
-      .lt("start_time", endTime)
-      .gt("end_time", startTime);
+  data: bookingRows,
+  error: bookingFetchError,
+} = await supabaseAdmin
+  .from("bookings")
+  .select(
+    "id,start_time,end_time,people_count"
+  )
+  .eq("booking_date", bookingDate)
+  .or("status.is.null,status.eq.confirmed")
+  .lt("start_time", endTime)
+  .gt("end_time", startTime);
 
     if (bookingFetchError) {
       return NextResponse.json(
