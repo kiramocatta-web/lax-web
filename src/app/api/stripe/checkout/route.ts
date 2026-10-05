@@ -172,49 +172,57 @@ export async function POST(req: Request) {
     let discounts: Stripe.Checkout.SessionCreateParams.Discount[] | undefined;
 
     if (discount_code) {
-      const isStripePromoCode = STRIPE_PROMO_CODES.includes(discount_code);
+  const isStripePromoCode = STRIPE_PROMO_CODES.includes(discount_code);
 
-      if (isStripePromoCode) {
-        const promotionCodeId = getPromoIdForCode(discount_code);
+  if (isStripePromoCode) {
+    const promotionCodeId = getPromoIdForCode(discount_code);
 
-        if (!promotionCodeId) {
-          return NextResponse.json(
-            { error: `Missing promo ID for ${discount_code}.` },
-            { status: 500 }
-          );
-        }
-
-        discounts = [{ promotion_code: promotionCodeId }];
-      } else {
-        const { data: affiliate, error: affiliateErr } = await supabase
-          .from("profiles")
-          .select("id")
-          .eq("role", "affiliate")
-          .eq("affiliate_code", discount_code)
-          .maybeSingle();
-
-        if (affiliateErr) {
-          return NextResponse.json(
-            { error: affiliateErr.message },
-            { status: 500 }
-          );
-        }
-
-        if (!affiliate?.id) {
-          return NextResponse.json(
-            { error: "Invalid discount code." },
-            { status: 400 }
-          );
-        }
-
-        affiliate_user_id = affiliate.id;
-      }
+    if (!promotionCodeId) {
+      return NextResponse.json(
+        { error: `Missing promo ID for ${discount_code}.` },
+        { status: 500 }
+      );
     }
 
-    let finalUnitAmount = unitAmount;
+    // Stripe promo codes only discount 90-minute and 120-minute bookings.
+    // On a 60-minute booking, the code remains valid but no discount is applied.
+    if (duration_minutes > 60) {
+      discounts = [{ promotion_code: promotionCodeId }];
+    }
+  } else {
+    const { data: affiliate, error: affiliateErr } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("role", "affiliate")
+      .eq("affiliate_code", discount_code)
+      .maybeSingle();
 
-if (affiliate_user_id) {
-  finalUnitAmount = Math.max(unitAmount - 500, 0);
+    if (affiliateErr) {
+      return NextResponse.json(
+        { error: affiliateErr.message },
+        { status: 500 }
+      );
+    }
+
+    if (!affiliate?.id) {
+      return NextResponse.json(
+        { error: "Invalid discount code." },
+        { status: 400 }
+      );
+    }
+
+  if (duration_minutes > 60) {
+    affiliate_user_id = affiliate.id;
+  }
+}
+}
+
+let finalUnitAmount = unitAmount;
+
+// Affiliate $5 discount only applies to 90-minute and 120-minute bookings.
+// 60-minute bookings always remain $15 per person.
+if (affiliate_user_id && duration_minutes > 60) {
+  finalUnitAmount = Math.max(unitAmount - 500, 1500);
 }
 
     const siteUrl = (
