@@ -1101,7 +1101,7 @@ function SingleEntryBookingPageContent() {
             </p>
 
             <p className="mt-2 text-center text-sm text-white/65">
-              NOTE: DISCOUNTS NOW ONLY APPLY TO 90 & 120 MINUTE BOOKINGS. 1-HOUR BOOKINGS ARE NOW A MINIMUM OF $15 PER PERSON.
+              NOTE: DISCOUNTS NOW ONLY APPLY TO 90 & 120 MINUTE BOOKINGS. 60 MINUTE BOOKINGS ARE NOW A MINIMUM OF $15 PER PERSON.
             </p>
 
             {rescheduleError ? (
