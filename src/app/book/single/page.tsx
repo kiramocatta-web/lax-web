@@ -1097,10 +1097,6 @@ function SingleEntryBookingPageContent() {
               begin your recovery.
             </p>
 
-            <p className="mt-2 text-center text-sm text-white/65">
-              NOTE: DISCOUNTS NOW ONLY APPLY TO 90 & 120 MINUTE BOOKINGS. 60 MINUTE BOOKINGS ARE NOW A MINIMUM OF $15 PER PERSON.
-            </p>
-
             {rescheduleError ? (
               <div className="mt-4 rounded-2xl border border-red-400/20 bg-red-500/10 p-4 text-red-200">
                 {rescheduleError}
