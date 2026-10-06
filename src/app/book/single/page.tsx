@@ -961,15 +961,12 @@ function SingleEntryBookingPageContent() {
               </h2>
 
               <p className="mt-4 text-sm leading-6 text-black/70">
-                Due to increased
-                bookings, usage and
-                ongoing maintenance, a{" "}
+                There is now a{" "}
                 <span className="font-semibold text-black">
                   minimum booking fee
-                  of $15 per hour
+                  of $15 per hour.
                 </span>{" "}
-                now applies to all
-                single-entry bookings.
+                
               </p>
 
               <div className="mt-5 rounded-2xl bg-black/5 px-4 py-4">
