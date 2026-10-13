@@ -947,61 +947,6 @@ function SingleEntryBookingPageContent() {
 
   return (
     <>
-      {/* NEW PRICING UPDATE POPUP */}
-      {showPricingUpdateModal &&
-        !originalBooking && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/75 px-4">
-            <div className="w-full max-w-md rounded-3xl bg-white p-7 text-center text-black shadow-2xl">
-              <div className="text-sm font-semibold uppercase tracking-[0.25em] text-black/45">
-                Pricing Update
-              </div>
-
-              <h2 className="mt-3 text-2xl font-semibold">
-                Minimum Booking Fee
-              </h2>
-
-              <p className="mt-4 text-sm leading-6 text-black/70">
-                There is now a{" "}
-                <span className="font-semibold text-black">
-                  minimum booking fee
-                  of $15 per hour.
-                </span>{" "}
-                
-              </p>
-
-              <div className="mt-5 rounded-2xl bg-black/5 px-4 py-4">
-                <p className="text-sm font-semibold text-black">
-                  Discount codes apply
-                  to 90-minute and
-                  120-minute sessions
-                  only.
-                </p>
-              </div>
-
-              <p className="mt-5 text-sm leading-6 text-black/60">
-                Thank you for your
-                understanding and
-                continued support of
-                LAX N LOUNGE. We
-                apologise for any
-                inconvenience! 🤎
-              </p>
-
-              <button
-                type="button"
-                onClick={() =>
-                  setShowPricingUpdateModal(
-                    false
-                  )
-                }
-                className="mt-6 w-full rounded-2xl bg-black py-4 font-semibold text-white transition hover:bg-black/85"
-              >
-                I understand
-              </button>
-            </div>
-          </div>
-        )}
-
       {activeBlockNotice &&
       dismissedBlockNoticeKey !==
         `${selectedDate}-${activeBlockNotice.start_time ?? "full"}-${activeBlockNotice.end_time ?? "day"}` ? (
